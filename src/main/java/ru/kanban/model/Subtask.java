@@ -1,18 +1,15 @@
 package ru.kanban.model;
 
 public class Subtask extends Task {
-    private int epicId = 1;
+    private Epic epic;
 
-    public Subtask(String name, String description, Status status, int epicId) {
+    public Subtask(String name, String description, Status status, Epic epic) {
         super(name, description, status);
-        this.epicId = epicId;
+        this.epic = epic;
     }
 
-    public int getEpicId() {
-        return epicId;
+    public Epic getEpic() {
+        return epic;
     }
 
-    public void setEpicId(int epicId) {
-        this.epicId = epicId;
-    }
 }
