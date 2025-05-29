@@ -42,4 +42,6 @@ public interface TaskManager {
 
     boolean updateSubtask(Subtask subtask, int id);
 
+    void updateStatus(Epic epic);
+
 }

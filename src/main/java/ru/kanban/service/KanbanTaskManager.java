@@ -115,7 +115,10 @@ public class KanbanTaskManager implements TaskManager {
     @Override
     public boolean deleteSubtask(int id) {
         Epic epic = getEpic(id);
-        epic.getSubtasks().removeIf(subtask -> subtask.getId() == id);
+        if (epic != null) {
+            epic.getSubtasks().removeIf(subtask -> subtask.getId() == id);
+            updateStatus(epic);
+        }
         return subtasks.remove(id) != null;
     }
 
@@ -133,6 +136,7 @@ public class KanbanTaskManager implements TaskManager {
         return result;
     }
 
+    @Override
     public void updateStatus(Epic epic) {
         boolean result = epic.getSubtasks().isEmpty() ||
                 epic.getSubtasks()
