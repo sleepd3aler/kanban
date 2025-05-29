@@ -9,17 +9,16 @@ import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
-public class KanbanTaskManager implements TaskManager {
+public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
-    private int taskIds = 1;
-    private int epicIds = 1;
-    private int subtaskIds = 1;
+
+    private int ids = 1;
 
     @Override
     public void addTask(Task task) {
-        task.setId(taskIds++);
+        task.setId(ids++);
         tasks.put(task.getId(), task);
     }
 
@@ -56,7 +55,7 @@ public class KanbanTaskManager implements TaskManager {
 
     @Override
     public void addEpic(Epic epic) {
-        epic.setId(epicIds++);
+        epic.setId(ids++);
         epics.put(epic.getId(), epic);
 
     }
@@ -96,7 +95,7 @@ public class KanbanTaskManager implements TaskManager {
         if (epic == null) {
             return;
         }
-        subtask.setId(subtaskIds++);
+        subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
         updateStatus(epic);
@@ -136,8 +135,7 @@ public class KanbanTaskManager implements TaskManager {
         return result;
     }
 
-    @Override
-    public void updateStatus(Epic epic) {
+    private void updateStatus(Epic epic) {
         boolean result = epic.getSubtasks().isEmpty() ||
                 epic.getSubtasks()
                         .stream()
