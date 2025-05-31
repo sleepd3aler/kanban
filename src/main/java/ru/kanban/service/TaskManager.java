@@ -1,6 +1,7 @@
 package ru.kanban.service;
 
 import java.util.List;
+import java.util.Optional;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
@@ -14,7 +15,7 @@ public interface TaskManager {
 
     boolean deleteTask(int id);
 
-    boolean updateTask(Task task, int id);
+    Optional<Task> updateTask(Task task);
 
     void deleteAllTasks();
 
@@ -28,7 +29,7 @@ public interface TaskManager {
 
     void deleteAllEpics();
 
-    boolean updateEpic(Epic epic, int id);
+    Optional<Epic> updateEpic(Epic epic);
 
     void addSubtask(Subtask subtask);
 
@@ -40,6 +41,6 @@ public interface TaskManager {
 
     void deleteAllSubtasks();
 
-    boolean updateSubtask(Subtask subtask, int id);
+    Optional<Subtask> updateSubtask(Subtask subtask);
 
 }

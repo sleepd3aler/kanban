@@ -1,9 +1,6 @@
 package ru.kanban.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
@@ -38,14 +35,12 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean updateTask(Task task, int id) {
-        boolean result = tasks.containsKey(id);
-        if (result) {
-            task.setId(id);
-            tasks.put(id, task);
-            return true;
+    public Optional<Task> updateTask(Task task) {
+        if (!tasks.containsKey(task.getId())) {
+            throw new NoSuchElementException("Task with id " + task.getId() + " not found");
         }
-        return false;
+        tasks.put(task.getId(), task);
+        return Optional.of(task);
     }
 
     @Override
@@ -81,12 +76,12 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean updateEpic(Epic epic, int id) {
-        boolean result = epics.containsKey(id);
-        if (result) {
-            epics.put(id, epic);
+    public Optional<Epic> updateEpic(Epic epic) {
+        if (!epics.containsKey(epic.getId())) {
+            throw new NoSuchElementException("Epic with id " + epic.getId() + " not found");
         }
-        return result;
+        epics.put(epic.getId(), epic);
+        return Optional.of(epic);
     }
 
     @Override
@@ -113,12 +108,21 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public boolean deleteSubtask(int id) {
-        Epic epic = getEpic(id);
-        if (epic != null) {
-            epic.getSubtasks().removeIf(subtask -> subtask.getId() == id);
-            updateStatus(epic);
+        if (!subtasks.containsKey(id)) {
+            return false;
         }
-        return subtasks.remove(id) != null;
+        Subtask subtask = subtasks.get(id);
+        Epic epic = getEpic(subtask.getEpic().getId());
+        epic.getSubtasks().remove(subtask);
+        updateStatus(epic);
+        return true;
+
+//        Epic epic = getEpic(id);
+//        if (epic != null) {
+//            epic.getSubtasks().removeIf(subtask -> subtask.getId() == id);
+//            updateStatus(epic);
+//        }
+//        return subtasks.remove(id) != null;
     }
 
     @Override
@@ -131,13 +135,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean updateSubtask(Subtask subtask, int id) {
-        boolean result = subtasks.containsKey(id);
-        if (result) {
-            subtasks.put(id, subtask);
-            updateStatus(epics.get(subtask.getEpic().getId()));
+    public Optional<Subtask> updateSubtask(Subtask subtask) {
+        if (!subtasks.containsKey(subtask.getId())) {
+            throw new NoSuchElementException("Subtask with id " + subtask.getId() + " not found");
         }
-        return result;
+        subtasks.put(subtask.getId(), subtask);
+        updateStatus(epics.get(subtask.getEpic().getId()));
+        return Optional.of(subtask);
     }
 
     private void updateStatus(Epic epic) {
