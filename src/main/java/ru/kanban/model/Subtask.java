@@ -12,4 +12,14 @@ public class Subtask extends Task {
         return epic;
     }
 
+    @Override
+    public String toString() {
+        String ln = System.lineSeparator();
+        return "  Subtask ID: " + getId() + ln +
+                "    Name: '" + getName() + "'" + ln +
+                "    Description: '" + getDescription() + "'" + ln +
+                "    Status: '" + getStatus() + "'" + ln +
+                "    Subtask of Epic: '" + epic.getName() + "'" + ln;
+    }
+
 }

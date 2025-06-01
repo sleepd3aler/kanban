@@ -1,6 +1,7 @@
 package ru.kanban;
 
 import java.util.List;
+import ru.kanban.exceptions.SubtaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
@@ -16,9 +17,12 @@ public class Main {
         taskManager.addSubtask(sub1);
         taskManager.addSubtask(sub2);
         System.out.println(test);
-        taskManager.deleteSubtask(2);
         List<Subtask> subtasks = test.getSubtasks();
-        subtasks.forEach(System.out::println);
-
+        try {
+            taskManager.deleteSubtask(2);
+        } catch (SubtaskNotFoundException e) {
+            System.out.println(e.getMessage());
+            subtasks.forEach(System.out::println);
+        }
     }
 }

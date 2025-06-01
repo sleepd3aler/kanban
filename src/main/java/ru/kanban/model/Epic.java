@@ -20,4 +20,14 @@ public class Epic extends Task {
         }
         subtasks.add(subtask);
     }
+
+    @Override
+    public String toString() {
+        String ln = System.lineSeparator();
+        return "Epic {" + " ID: " + getId() + ", Name: '" + getName() + "', Description: '" + getDescription() + "'" +
+                " Status: '" + getStatus() +  "' }" +
+                ln +
+                "Subtasks: " + subtasks +
+                '}';
+    }
 }

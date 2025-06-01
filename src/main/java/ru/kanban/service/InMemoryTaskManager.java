@@ -1,6 +1,9 @@
 package ru.kanban.service;
 
 import java.util.*;
+import ru.kanban.exceptions.EpicNotFoundException;
+import ru.kanban.exceptions.SubtaskNotFoundException;
+import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
@@ -30,14 +33,17 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean deleteTask(int id) {
-        return tasks.remove(id) != null;
+    public Optional<Task> deleteTask(int id) throws TaskNotFoundException {
+        if (!tasks.containsKey(id)) {
+            throw new TaskNotFoundException("Task with id " + id + " not found");
+        }
+        return Optional.of(tasks.remove(id));
     }
 
     @Override
-    public Optional<Task> updateTask(Task task) {
+    public Optional<Task> updateTask(Task task) throws TaskNotFoundException {
         if (!tasks.containsKey(task.getId())) {
-            throw new NoSuchElementException("Task with id " + task.getId() + " not found");
+            throw new TaskNotFoundException("Task with id " + task.getId() + " not found");
         }
         tasks.put(task.getId(), task);
         return Optional.of(task);
@@ -65,8 +71,11 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean deleteEpic(int id) {
-        return epics.remove(id) != null;
+    public Optional<Epic> deleteEpic(int id) throws EpicNotFoundException {
+        if (!epics.containsKey(id)) {
+            throw new EpicNotFoundException("Epic with id: " + id + " not found");
+        }
+        return Optional.of(epics.remove(id));
     }
 
     @Override
@@ -76,9 +85,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Epic> updateEpic(Epic epic) {
+    public Optional<Epic> updateEpic(Epic epic) throws EpicNotFoundException {
         if (!epics.containsKey(epic.getId())) {
-            throw new NoSuchElementException("Epic with id " + epic.getId() + " not found");
+            throw new EpicNotFoundException("Epic with id: " + epic.getId() + " not found");
         }
         epics.put(epic.getId(), epic);
         return Optional.of(epic);
@@ -107,15 +116,15 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public boolean deleteSubtask(int id) {
+    public Optional<Subtask> deleteSubtask(int id) throws SubtaskNotFoundException {
         if (!subtasks.containsKey(id)) {
-            return false;
+            throw new SubtaskNotFoundException("Subtask with id: " + id + " not found");
         }
-        Subtask subtask = subtasks.get(id);
+        Subtask subtask = subtasks.remove(id);
         Epic epic = getEpic(subtask.getEpic().getId());
         epic.getSubtasks().remove(subtask);
         updateStatus(epic);
-        return true;
+        return Optional.of(subtask);
     }
 
     @Override
@@ -128,9 +137,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Subtask> updateSubtask(Subtask subtask) {
+    public Optional<Subtask> updateSubtask(Subtask subtask) throws SubtaskNotFoundException {
         if (!subtasks.containsKey(subtask.getId())) {
-            throw new NoSuchElementException("Subtask with id " + subtask.getId() + " not found");
+            throw new SubtaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
         }
         subtasks.put(subtask.getId(), subtask);
         updateStatus(epics.get(subtask.getEpic().getId()));

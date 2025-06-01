@@ -60,11 +60,11 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", id=" + id +
-                ", status=" + status +
-                '}';
+        return "Task {" +
+                " ID: " + id +
+                ", Name: '" + name + '\'' +
+                ", Description: '" + description + '\'' +
+                ", Status: " + status +
+                " }";
     }
 }
