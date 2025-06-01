@@ -1,8 +1,6 @@
 package ru.kanban.service;
 
 import java.util.*;
-import ru.kanban.exceptions.EpicNotFoundException;
-import ru.kanban.exceptions.SubtaskNotFoundException;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
@@ -71,9 +69,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Epic> deleteEpic(int id) throws EpicNotFoundException {
+    public Optional<Epic> deleteEpic(int id) throws TaskNotFoundException {
         if (!epics.containsKey(id)) {
-            throw new EpicNotFoundException("Epic with id: " + id + " not found");
+            throw new TaskNotFoundException("Epic with id: " + id + " not found");
         }
         return Optional.of(epics.remove(id));
     }
@@ -85,9 +83,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Epic> updateEpic(Epic epic) throws EpicNotFoundException {
+    public Optional<Epic> updateEpic(Epic epic) throws TaskNotFoundException {
         if (!epics.containsKey(epic.getId())) {
-            throw new EpicNotFoundException("Epic with id: " + epic.getId() + " not found");
+            throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
         }
         epics.put(epic.getId(), epic);
         return Optional.of(epic);
@@ -116,9 +114,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Subtask> deleteSubtask(int id) throws SubtaskNotFoundException {
+    public Optional<Subtask> deleteSubtask(int id) throws TaskNotFoundException {
         if (!subtasks.containsKey(id)) {
-            throw new SubtaskNotFoundException("Subtask with id: " + id + " not found");
+            throw new TaskNotFoundException("Subtask with id: " + id + " not found");
         }
         Subtask subtask = subtasks.remove(id);
         Epic epic = getEpic(subtask.getEpic().getId());
@@ -137,9 +135,9 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Subtask> updateSubtask(Subtask subtask) throws SubtaskNotFoundException {
+    public Optional<Subtask> updateSubtask(Subtask subtask) throws TaskNotFoundException {
         if (!subtasks.containsKey(subtask.getId())) {
-            throw new SubtaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
+            throw new TaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
         }
         subtasks.put(subtask.getId(), subtask);
         updateStatus(epics.get(subtask.getEpic().getId()));
