@@ -21,11 +21,31 @@ public class Epic extends Task {
         subtasks.add(subtask);
     }
 
+    public static void updateStatus(Epic epic) {
+        boolean allNew = true;
+        boolean allDone = true;
+        for (Subtask subtask : epic.getSubtasks()) {
+            if (subtask.getStatus() != Status.NEW) {
+                allNew = false;
+            }
+            if (subtask.getStatus() != Status.DONE) {
+                allDone = false;
+            }
+        }
+        if (epic.getSubtasks().isEmpty() || allNew) {
+            epic.setStatus(Status.NEW);
+        } else if (allDone) {
+            epic.setStatus(Status.DONE);
+        } else {
+            epic.setStatus(Status.IN_PROGRESS);
+        }
+    }
+
     @Override
     public String toString() {
         String ln = System.lineSeparator();
         return "Epic {" + " ID: " + getId() + ", Name: '" + getName() + "', Description: '" + getDescription() + "'" +
-                " Status: '" + getStatus() +  "' }" +
+                " Status: '" + getStatus() + "' }" +
                 ln +
                 "Subtasks: " + subtasks +
                 '}';

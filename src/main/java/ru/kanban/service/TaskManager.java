@@ -2,7 +2,6 @@ package ru.kanban.service;
 
 import java.util.List;
 import java.util.Optional;
-import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
@@ -14,9 +13,9 @@ public interface TaskManager {
 
     List<Task> getTasks();
 
-    Optional<Task> deleteTask(int id) throws TaskNotFoundException;
+    Optional<Task> deleteTask(int id);
 
-    Optional<Task> updateTask(Task task) throws TaskNotFoundException;
+    Optional<Task> updateTask(Task task);
 
     void deleteAllTasks();
 
@@ -26,11 +25,11 @@ public interface TaskManager {
 
     List<Epic> getEpics();
 
-    Optional<Epic> deleteEpic(int id) throws TaskNotFoundException;
+    Optional<Epic> deleteEpic(int id);
 
     void deleteAllEpics();
 
-    Optional<Epic> updateEpic(Epic epic) throws TaskNotFoundException;
+    Optional<Epic> updateEpic(Epic epic);
 
     void addSubtask(Subtask subtask);
 
@@ -38,10 +37,10 @@ public interface TaskManager {
 
     List<Subtask> getSubtasks();
 
-    Optional<Subtask> deleteSubtask(int id) throws TaskNotFoundException;
+    Optional<Subtask> deleteSubtask(int id);
 
     void deleteAllSubtasks();
 
-    Optional<Subtask> updateSubtask(Subtask subtask) throws TaskNotFoundException;
+    Optional<Subtask> updateSubtask(Subtask subtask);
 
 }

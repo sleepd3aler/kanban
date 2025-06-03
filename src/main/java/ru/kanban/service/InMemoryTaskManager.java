@@ -3,9 +3,10 @@ package ru.kanban.service;
 import java.util.*;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
-import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
+
+import static ru.kanban.model.Epic.updateStatus;
 
 public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
@@ -69,7 +70,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Epic> deleteEpic(int id) throws TaskNotFoundException {
+    public Optional<Epic> deleteEpic(int id) {
         if (!epics.containsKey(id)) {
             throw new TaskNotFoundException("Epic with id: " + id + " not found");
         }
@@ -83,7 +84,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Epic> updateEpic(Epic epic) throws TaskNotFoundException {
+    public Optional<Epic> updateEpic(Epic epic) {
         if (!epics.containsKey(epic.getId())) {
             throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
         }
@@ -114,7 +115,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Subtask> deleteSubtask(int id) throws TaskNotFoundException {
+    public Optional<Subtask> deleteSubtask(int id) {
         if (!subtasks.containsKey(id)) {
             throw new TaskNotFoundException("Subtask with id: " + id + " not found");
         }
@@ -135,7 +136,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Subtask> updateSubtask(Subtask subtask) throws TaskNotFoundException {
+    public Optional<Subtask> updateSubtask(Subtask subtask) {
         if (!subtasks.containsKey(subtask.getId())) {
             throw new TaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
         }
@@ -144,21 +145,5 @@ public class InMemoryTaskManager implements TaskManager {
         return Optional.of(subtask);
     }
 
-    private void updateStatus(Epic epic) {
-        boolean result = epic.getSubtasks().isEmpty() ||
-                epic.getSubtasks()
-                        .stream()
-                        .allMatch(subtask -> subtask.getStatus() == Status.NEW);
-        if (result) {
-            epic.setStatus(Status.NEW);
-            return;
-        }
-        result = epic.getSubtasks().stream().allMatch(subtask -> subtask.getStatus() == Status.DONE);
-        if (result) {
-            epic.setStatus(Status.DONE);
-        } else {
-            epic.setStatus(Status.IN_PROGRESS);
-        }
-    }
 }
 
