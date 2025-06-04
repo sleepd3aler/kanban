@@ -9,7 +9,7 @@ import ru.kanban.model.Task;
 public interface TaskManager {
     void addTask(Task task);
 
-    Task getTask(int id);
+    Optional<Task> getTask(int id);
 
     List<Task> getTasks();
 
@@ -21,7 +21,7 @@ public interface TaskManager {
 
     void addEpic(Epic epic);
 
-    Epic getEpic(int id);
+    Optional<Epic> getEpic(int id);
 
     List<Epic> getEpics();
 
@@ -33,7 +33,7 @@ public interface TaskManager {
 
     void addSubtask(Subtask subtask);
 
-    Subtask getSubtask(int id);
+    Optional<Subtask> getSubtask(int id);
 
     List<Subtask> getSubtasks();
 
