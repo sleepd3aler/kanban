@@ -139,6 +139,9 @@ public class InMemoryTaskManager implements TaskManager {
         if (!subtasks.containsKey(subtask.getId())) {
             throw new TaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
         }
+        if (!epics.containsKey(subtask.getEpic().getId())) {
+            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+        }
         subtasks.put(subtask.getId(), subtask);
         Epic epic = getEpic(subtask.getEpic().getId());
         epic.updateStatus();
