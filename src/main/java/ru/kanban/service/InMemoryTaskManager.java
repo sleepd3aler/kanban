@@ -6,8 +6,6 @@ import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
-import static ru.kanban.model.Epic.updateStatus;
-
 public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
@@ -74,6 +72,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!epics.containsKey(id)) {
             throw new TaskNotFoundException("Epic with id: " + id + " not found");
         }
+        epics.get(id).getSubtasks().clear();
         return Optional.of(epics.remove(id));
     }
 
@@ -96,12 +95,12 @@ public class InMemoryTaskManager implements TaskManager {
     public void addSubtask(Subtask subtask) {
         Epic epic = getEpic(subtask.getEpic().getId());
         if (epic == null) {
-            return;
+            throw new TaskNotFoundException("Epic with id " + subtask.getEpic().getId() + " not found");
         }
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
-        updateStatus(epic);
+        epic.updateStatus();
     }
 
     @Override
@@ -122,7 +121,7 @@ public class InMemoryTaskManager implements TaskManager {
         Subtask subtask = subtasks.remove(id);
         Epic epic = getEpic(subtask.getEpic().getId());
         epic.getSubtasks().remove(subtask);
-        updateStatus(epic);
+        epic.updateStatus();
         return Optional.of(subtask);
     }
 
@@ -131,7 +130,7 @@ public class InMemoryTaskManager implements TaskManager {
         this.subtasks.clear();
         for (Epic epic : epics.values()) {
             epic.getSubtasks().clear();
-            updateStatus(epic);
+            epic.updateStatus();
         }
     }
 
@@ -141,7 +140,8 @@ public class InMemoryTaskManager implements TaskManager {
             throw new TaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
         }
         subtasks.put(subtask.getId(), subtask);
-        updateStatus(epics.get(subtask.getEpic().getId()));
+        Epic epic = getEpic(subtask.getEpic().getId());
+        epic.updateStatus();
         return Optional.of(subtask);
     }
 
