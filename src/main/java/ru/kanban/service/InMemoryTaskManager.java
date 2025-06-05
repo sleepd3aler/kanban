@@ -30,7 +30,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Task> deleteTask(int id) throws TaskNotFoundException {
+    public Optional<Task> deleteTask(int id) {
         if (!tasks.containsKey(id)) {
             throw new TaskNotFoundException("Task with id " + id + " not found");
         }
@@ -38,7 +38,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public Optional<Task> updateTask(Task task) throws TaskNotFoundException {
+    public Optional<Task> updateTask(Task task) {
         if (!tasks.containsKey(task.getId())) {
             throw new TaskNotFoundException("Task with id " + task.getId() + " not found");
         }
