@@ -10,6 +10,7 @@ public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
+    private List<Task> viewedTasks = new LinkedList<>();
 
     private int ids = 1;
 
@@ -21,6 +22,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Task> getTask(int id) {
+        addToHistory(tasks.containsKey(id), tasks.get(id));
         return Optional.ofNullable(tasks.get(id));
     }
 
@@ -59,6 +61,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Epic> getEpic(int id) {
+        addToHistory(epics.containsKey(id), epics.get(id));
         return Optional.ofNullable(epics.get(id));
     }
 
@@ -95,7 +98,6 @@ public class InMemoryTaskManager implements TaskManager {
     public void addSubtask(Subtask subtask) {
         Epic epic = getEpic(subtask.getEpic().getId())
                 .orElseThrow(() -> new TaskNotFoundException("Subtask with id " + subtask.getEpic().getId() + " not found"));
-
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
@@ -104,6 +106,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
+        addToHistory(subtasks.containsKey(id), subtasks.get(id));
         return Optional.ofNullable(subtasks.get(id));
     }
 
@@ -147,5 +150,19 @@ public class InMemoryTaskManager implements TaskManager {
         return Optional.of(subtask);
     }
 
+    @Override
+    public List<Task> getHistory() {
+        return new ArrayList<>(viewedTasks);
+    }
+
+    private void addToHistory(boolean taskExists, Task task) {
+        if (taskExists) {
+            task.setViewed(true);
+            if (viewedTasks.size() == 10) {
+                viewedTasks.removeFirst();
+            }
+            viewedTasks.add(task);
+        }
+    }
 }
 
