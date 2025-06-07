@@ -22,8 +22,15 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Task> getTask(int id) {
-        addToHistory(tasks.containsKey(id), tasks.get(id));
-        return Optional.ofNullable(tasks.get(id));
+        Task task = tasks.get(id);
+        if (task != null) {
+            task.setViewed(true);
+            if (viewedTasks.size() == 10) {
+                viewedTasks.remove(0);
+            }
+            viewedTasks.add(task);
+        }
+        return Optional.ofNullable(task);
     }
 
     @Override
@@ -61,8 +68,15 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        addToHistory(epics.containsKey(id), epics.get(id));
-        return Optional.ofNullable(epics.get(id));
+        Epic epic = epics.get(id);
+        if (epic != null) {
+            epic.setViewed(true);
+            if (viewedTasks.size() == 10) {
+                viewedTasks.remove(0);
+            }
+            viewedTasks.add(epic);
+        }
+        return Optional.ofNullable(epic);
     }
 
     @Override
@@ -96,8 +110,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addSubtask(Subtask subtask) {
-        Epic epic = getEpic(subtask.getEpic().getId())
-                .orElseThrow(() -> new TaskNotFoundException("Subtask with id " + subtask.getEpic().getId() + " not found"));
+        Epic epic = getEpic(subtask.getEpic().getId()).orElseThrow(() -> new TaskNotFoundException("Subtask with id " + subtask.getEpic().getId() + " not found"));
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
@@ -106,7 +119,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        addToHistory(subtasks.containsKey(id), subtasks.get(id));
+        Subtask subtask = subtasks.get(id);
+        if (subtask != null) {
+            subtask.setViewed(true);
+            if (viewedTasks.size() == 10) {
+                viewedTasks.remove(0);
+            }
+            viewedTasks.add(subtask);
+        }
         return Optional.ofNullable(subtasks.get(id));
     }
 
@@ -153,16 +173,6 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return new ArrayList<>(viewedTasks);
-    }
-
-    private void addToHistory(boolean taskExists, Task task) {
-        if (taskExists) {
-            task.setViewed(true);
-            if (viewedTasks.size() == 10) {
-                viewedTasks.removeFirst();
-            }
-            viewedTasks.add(task);
-        }
     }
 }
 
