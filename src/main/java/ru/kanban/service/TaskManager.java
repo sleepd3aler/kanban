@@ -7,6 +7,8 @@ import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
 public interface TaskManager {
+    List<Task> getHistory();
+
     void addTask(Task task);
 
     Optional<Task> getTask(int id);

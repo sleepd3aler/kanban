@@ -17,7 +17,6 @@ public class Main {
         taskManager.addSubtask(sub2);
         System.out.println(test);
         List<Subtask> subtasks = test.getSubtasks();
-//            taskManager.deleteSubtask(2);
             subtasks.forEach(System.out::println);
             taskManager.updateSubtask(sub1);
     }

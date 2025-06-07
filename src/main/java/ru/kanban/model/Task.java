@@ -7,11 +7,20 @@ public class Task {
     private String description;
     private int id = 1;
     private Status status;
+    private boolean isViewed;
 
     public Task(String name, String description, Status status) {
         this.name = name;
         this.description = description;
         this.status = status;
+    }
+
+    public boolean isViewed() {
+        return isViewed;
+    }
+
+    public void setViewed(boolean viewed) {
+        isViewed = viewed;
     }
 
     public String getName() {
