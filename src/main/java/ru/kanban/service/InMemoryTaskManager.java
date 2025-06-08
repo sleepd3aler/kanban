@@ -11,7 +11,8 @@ public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
     private List<Task> viewedTasks = new LinkedList<>();
-
+    private final int historySize = 10;
+    private final int firstInHistory = 0;
     private int ids = 1;
 
     @Override
@@ -168,8 +169,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void addToHistory(Task task) {
-        if (viewedTasks.size() == 10) {
-            viewedTasks.remove(0);
+        if (viewedTasks.size() == historySize) {
+            viewedTasks.remove(firstInHistory);
         }
         if (task.isViewed()) {
             viewedTasks.add(task);
