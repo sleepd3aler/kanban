@@ -5,14 +5,13 @@ import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
+import ru.kanban.utils.Constants;
 
 public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
     private List<Task> viewedTasks = new LinkedList<>();
-    private final int historySize = 10;
-    private final int firstInHistory = 0;
     private int ids = 1;
 
     @Override
@@ -169,8 +168,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     private void addToHistory(Task task) {
-        if (viewedTasks.size() == historySize) {
-            viewedTasks.remove(firstInHistory);
+        if (viewedTasks.size() == Constants.HISTORY_SIZE) {
+            viewedTasks.remove(Constants.FIRST_IN_HISTORY);
         }
         if (task.isViewed()) {
             viewedTasks.add(task);
