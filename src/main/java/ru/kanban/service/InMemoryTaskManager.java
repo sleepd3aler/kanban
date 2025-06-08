@@ -1,5 +1,5 @@
 package ru.kanban.service;
-//
+
 import java.util.*;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
@@ -22,8 +22,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Task> getTask(int id) {
-        addToHistory(tasks.containsKey(id), tasks.get(id));
-        return Optional.ofNullable(tasks.get(id));
+        Task task = tasks.get(id);
+        if (task != null) {
+            task.setViewed(true);
+            addToHistory(task);
+        }
+        return Optional.ofNullable(task);
     }
 
     @Override
@@ -61,8 +65,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        addToHistory(epics.containsKey(id), epics.get(id));
-        return Optional.ofNullable(epics.get(id));
+        Epic epic = epics.get(id);
+        if (epic != null) {
+            addToHistory(epic);
+        }
+        return Optional.ofNullable(epic);
     }
 
     @Override
@@ -106,8 +113,11 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        addToHistory(subtasks.containsKey(id), subtasks.get(id));
-        return Optional.ofNullable(subtasks.get(id));
+        Subtask subtask = subtasks.get(id);
+        if (subtask != null) {
+            addToHistory(subtask);
+        }
+        return Optional.ofNullable(subtask);
     }
 
     @Override
@@ -155,14 +165,14 @@ public class InMemoryTaskManager implements TaskManager {
         return new ArrayList<>(viewedTasks);
     }
 
-    private void addToHistory(boolean taskExists, Task task) {
-        if (taskExists) {
-            task.setViewed(true);
-            if (viewedTasks.size() == 10) {
-                viewedTasks.removeFirst();
-            }
+    private void addToHistory(Task task) {
+        if (viewedTasks.size() == 10) {
+            viewedTasks.remove(0);
+        }
+        if (task.isViewed()) {
             viewedTasks.add(task);
         }
     }
 }
+
 
