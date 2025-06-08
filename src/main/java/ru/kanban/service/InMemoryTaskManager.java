@@ -67,6 +67,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Epic> getEpic(int id) {
         Epic epic = epics.get(id);
         if (epic != null) {
+            epic.setViewed(true);
             addToHistory(epic);
         }
         return Optional.ofNullable(epic);
@@ -115,6 +116,7 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtasks.get(id);
         if (subtask != null) {
+            subtask.setViewed(true);
             addToHistory(subtask);
         }
         return Optional.ofNullable(subtask);
