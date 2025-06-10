@@ -6,15 +6,16 @@ import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
-import static ru.kanban.utils.Constants.FIRST_IN_HISTORY;
-import static ru.kanban.utils.Constants.HISTORY_SIZE;
-
 public class InMemoryTaskManager implements TaskManager {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
-    private List<Task> viewedTasks = new LinkedList<>();
     private int ids = 1;
+    private HistoryManager historyManager;
+
+    public InMemoryTaskManager(HistoryManager historyManager) {
+        this.historyManager = historyManager;
+    }
 
     @Override
     public void addTask(Task task) {
@@ -26,8 +27,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Task> getTask(int id) {
         Task task = tasks.get(id);
         if (task != null) {
-            task.setViewed(true);
-            addToHistory(task);
+            historyManager.setToViewed(id);
+            historyManager.addToHistory(task);
         }
         return Optional.ofNullable(task);
     }
@@ -69,8 +70,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Epic> getEpic(int id) {
         Epic epic = epics.get(id);
         if (epic != null) {
-            epic.setViewed(true);
-            addToHistory(epic);
+            historyManager.setToViewed(id);
+            historyManager.addToHistory(epic);
         }
         return Optional.ofNullable(epic);
     }
@@ -118,8 +119,8 @@ public class InMemoryTaskManager implements TaskManager {
     public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtasks.get(id);
         if (subtask != null) {
-            subtask.setViewed(true);
-            addToHistory(subtask);
+            historyManager.setToViewed(id);
+            historyManager.addToHistory(subtask);
         }
         return Optional.ofNullable(subtask);
     }
@@ -166,16 +167,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getHistory() {
-        return new ArrayList<>(viewedTasks);
-    }
-
-    private void addToHistory(Task task) {
-        if (viewedTasks.size() == HISTORY_SIZE) {
-            viewedTasks.remove(FIRST_IN_HISTORY);
-        }
-        if (task.isViewed()) {
-            viewedTasks.add(task);
-        }
+        return new ArrayList<>(historyManager.getViewedTasks());
     }
 }
 
