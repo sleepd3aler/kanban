@@ -4,7 +4,7 @@ import java.util.List;
 import ru.kanban.model.Task;
 
 public interface HistoryManager {
-    void setToViewed(int id);
+    void setToViewed(Task task);
 
     void addToHistory(Task task);
 

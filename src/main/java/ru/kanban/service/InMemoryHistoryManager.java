@@ -11,12 +11,8 @@ public class InMemoryHistoryManager implements HistoryManager {
     private List<Task> viewedTasks = new LinkedList<>();
 
     @Override
-    public void setToViewed(int id) {
-        for (Task task : viewedTasks) {
-            if (task.getId() == id) {
-                task.setViewed(true);
-            }
-        }
+    public void setToViewed(Task task) {
+        task.setViewed(true);
     }
 
     @Override

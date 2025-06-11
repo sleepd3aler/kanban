@@ -46,5 +46,8 @@ public class Main {
         taskManager.getTask(task5.getId());
         List<Task> test = taskManager.getHistory();
         test.forEach(System.out::println);
+        for (Task task : test) {
+            System.out.println(task.isViewed());
+        }
     }
 }
