@@ -20,6 +20,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (viewedTasks.size() == HISTORY_SIZE) {
             viewedTasks.remove(FIRST_IN_HISTORY);
         }
+        setToViewed(task);
         viewedTasks.add(task);
     }
 
