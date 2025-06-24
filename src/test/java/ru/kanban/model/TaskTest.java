@@ -3,7 +3,7 @@ package ru.kanban.model;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-//
+
 class TaskTest {
 
 @Test
@@ -21,11 +21,11 @@ class TaskTest {
 }
 
 @Test
-    void whenTasksHasDifferentIdsAndSameFieldsThenTrue() {
+    void whenTasksHasDifferentIdsAndSameFieldsThenNotEquals() {
     Task task1 = new Task("First", "Test", Status.NEW);
     Task task2 = new Task("First", "Test", Status.NEW);
     task2.setId(3);
-    assertThat(task1).isEqualTo(task2);
+    assertThat(task1).isNotEqualTo(task2);
 
 }
 

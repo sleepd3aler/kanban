@@ -74,10 +74,10 @@ class EpicTest {
     }
 
     @Test
-    void whenEpicsHaveDifferentIdsAndSameFieldsThenTrue() {
+    void whenEpicsHaveDifferentIdsAndSameFieldsThenNotEquals() {
         Epic first = new Epic("First", "Test", Status.NEW);
         Epic second = new Epic("First", "Test", Status.NEW);
         second.setId(3);
-        assertThat(first.equals(second)).isTrue();
+        assertThat(first).isNotEqualTo(second);
     }
 }

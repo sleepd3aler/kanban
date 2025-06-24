@@ -1,5 +1,5 @@
 package ru.kanban.model;
-//
+
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +19,15 @@ class SubtaskTest {
         Epic first = new Epic("First", "Test", Status.NEW);
         Subtask firstSubtask = new Subtask("First", "Test", Status.NEW, first);
         Subtask secondSubtask = new Subtask("Second", "Test", Status.NEW, first);
+        assertThat(firstSubtask).isNotEqualTo(secondSubtask);
+    }
+
+    @Test
+    void whenSubtaskHasDifferentIdsAndSameFieldsThenNotEquals() {
+        Epic first = new Epic("First", "Test", Status.NEW);
+        Subtask firstSubtask = new Subtask("First", "Test", Status.NEW, first);
+        Subtask secondSubtask = new Subtask("First", "Test", Status.NEW, first);
+        secondSubtask.setId(3);
         assertThat(firstSubtask).isNotEqualTo(secondSubtask);
     }
 

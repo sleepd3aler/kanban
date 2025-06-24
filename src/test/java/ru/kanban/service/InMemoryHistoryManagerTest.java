@@ -1,5 +1,5 @@
 package ru.kanban.service;
-//
+
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import ru.kanban.model.Epic;
@@ -24,13 +24,13 @@ class InMemoryHistoryManagerTest {
     void whenGetTaskThenAddToHistory() {
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
         InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        manager.addTask(new Task("Name", "Test", Status.NEW));
-        manager.addTask(new Task("Name2", "Test2", Status.NEW));
+        Task first = new Task("Name", "Test", Status.NEW);
+        manager.addTask(first);
+        Task second = new Task("Name2", "Test2", Status.NEW);
+        manager.addTask(second);
         manager.getTask(1);
         manager.getTask(2);
-        List<Task> expected = List.of(
-                new Task("Name", "Test", Status.NEW),
-                new Task("Name2", "Test2", Status.NEW));
+        List<Task> expected = List.of(first, second);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
@@ -39,13 +39,13 @@ class InMemoryHistoryManagerTest {
     void whenGetEpicThenAddToHistory() {
         InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
         InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        manager.addEpic(new Epic("Name", "Test", Status.NEW));
-        manager.addEpic(new Epic("Name2", "Test2", Status.NEW));
+        Epic first = new Epic("Name", "Test", Status.NEW);
+        manager.addEpic(first);
+        Epic second = new Epic("Name2", "Test2", Status.NEW);
+        manager.addEpic(second);
         manager.getEpic(1);
         manager.getEpic(2);
-        List<Task> expected = List.of(
-                new Epic("Name", "Test", Status.NEW),
-                new Epic("Name2", "Test2", Status.NEW));
+        List<Task> expected = List.of(first, second);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
