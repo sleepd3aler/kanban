@@ -31,4 +31,11 @@ class SubtaskTest {
         assertThat(firstSubtask).isNotEqualTo(secondSubtask);
     }
 
+    @Test
+    void whenSubtaskHasSameFieldsThenEquals() {
+        Epic first = new Epic("First", "Test", Status.NEW);
+        Subtask firstSubtask = new Subtask("First", "Test", Status.NEW, first);
+        Subtask secondSubtask = new Subtask("First", "Test", Status.NEW, first);
+        assertThat(firstSubtask).isEqualTo(secondSubtask);
+    }
 }
