@@ -40,7 +40,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Optional<Task> deleteTask(int id) {
         if (!tasks.containsKey(id)) {
-            throw new TaskNotFoundException("Task with id " + id + " not found");
+            throw new TaskNotFoundException("Task with id: " + id + " not found");
         }
         return Optional.of(tasks.remove(id));
     }
@@ -48,7 +48,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Optional<Task> updateTask(Task task) {
         if (!tasks.containsKey(task.getId())) {
-            throw new TaskNotFoundException("Task with id " + task.getId() + " not found");
+            throw new TaskNotFoundException("Task with id: " + task.getId() + " not found");
         }
         tasks.put(task.getId(), task);
         return Optional.of(task);
@@ -105,8 +105,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addSubtask(Subtask subtask) {
-        Epic epic = getEpic(subtask.getEpic().getId())
-                .orElseThrow(() -> new TaskNotFoundException("Subtask with id " + subtask.getEpic().getId() + " not found"));
+        Epic epic = subtask.getEpic();
+        if (epic == null || !epics.containsKey(epic.getId())) {
+            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+        }
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
@@ -158,6 +160,12 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subtasks.put(subtask.getId(), subtask);
         Epic epic = getEpic(subtask.getEpic().getId()).get();
+        for (int i = 0; i < epic.getSubtasks().size(); i++) {
+            if (epic.getSubtasks().get(i).getId() == subtask.getId()) {
+                epic.getSubtasks().set(i, subtask);
+                break;
+            }
+        }
         epic.updateStatus();
         return Optional.of(subtask);
     }
