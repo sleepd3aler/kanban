@@ -69,7 +69,7 @@ class EpicTest {
     @Test
     void whenEpicsHaveSameFieldsThenTrue() {
         Epic first = new Epic("First", "Test", Status.NEW);
-        Epic second = new Epic("Second", "Test", Status.NEW);
+        Epic second = new Epic("First", "Test", Status.NEW);
         assertThat(first.equals(second)).isTrue();
     }
 
