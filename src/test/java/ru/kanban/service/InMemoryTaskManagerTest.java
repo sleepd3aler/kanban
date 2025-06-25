@@ -193,7 +193,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void whenUpdateEpicThenEpicUpdated() {
+    void whenUpdateEpicWithSameStatusesThenStatusStillSame() {
         InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
         Epic epic1 = new Epic("Task", "Test", Status.NEW);
         Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
@@ -202,6 +202,26 @@ class InMemoryTaskManagerTest {
         epic2.setId(epic1.getId());
         manager.updateEpic(epic2);
         assertThat(manager.getEpics()).doesNotContain(epic1);
+        Status expectedStatus = Status.NEW;
+        Status result = manager.getEpic(1).get().getStatus();
+        assertThat(result).isEqualTo(expectedStatus);
+
+    }
+
+    @Test
+    void whenUpdateEpicWithDifferentStatusThenEpicStatusUpdatedCorrectly() {
+        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        Epic epic1 = new Epic("Task", "Test", Status.IN_PROGRESS);
+        manager.addEpic(epic1);
+        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
+        manager.addEpic(epic2);
+        epic2.setId(epic1.getId());
+        Subtask subtask = new Subtask("Test", "Test", Status.NEW, epic2);
+        manager.addSubtask(subtask);
+        manager.updateEpic(epic2);
+        Status expectedStatus = Status.NEW;
+        Status result = manager.getEpic(1).get().getStatus();
+        assertThat(result).isEqualTo(expectedStatus);
     }
 
     @Test
@@ -266,7 +286,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void whenGetSubtaskThen() {
+    void whenGetSubtaskThenExpectedResult() {
         InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
         Epic epic1 = new Epic("Epic1", "Test1", Status.NEW);
         manager.addEpic(epic1);
@@ -278,7 +298,7 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
-    void whenGetSubtasksThen() {
+    void whenGetSubtasksThenExpectedResult() {
         InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
         Epic epic1 = new Epic("Task", "Test", Status.NEW);
         manager.addEpic(epic1);

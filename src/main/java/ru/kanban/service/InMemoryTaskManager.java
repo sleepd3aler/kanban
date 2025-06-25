@@ -99,6 +99,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!epics.containsKey(epic.getId())) {
             throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
         }
+        epic.updateStatus();
         epics.put(epic.getId(), epic);
         return Optional.of(epic);
     }
