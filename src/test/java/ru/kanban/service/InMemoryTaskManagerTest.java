@@ -2,6 +2,7 @@ package ru.kanban.service;
 
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
@@ -14,390 +15,305 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
 
+    private InMemoryTaskManager taskManager;
+    private Epic firstEpic;
+    private Epic secondEpic;
+    private Task firstTask;
+    private Task secondTask;
+    private Subtask firstSubtask;
+    private Subtask secondSubtask;
+
+    @BeforeEach
+    void setUp() {
+        this.taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+        this.firstEpic = new Epic("First", "First Epic", Status.NEW);
+        this.secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        this.firstTask = new Task("First Task", "First Task", Status.NEW);
+        this.secondTask = new Task("Second Task", "Second Task", Status.NEW);
+        this.firstSubtask = new Subtask("First subtask", "Subtask of First Epic", Status.NEW, firstEpic);
+        this.secondSubtask = new Subtask("Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic);
+    }
+
     @Test
     void whenAddTaskThenManagerTasksContainsTask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task = new Task("Task", "Test", Status.NEW);
-        manager.addTask(task);
-        assertTrue(manager.getTasks().contains(task));
+        taskManager.addTask(firstTask);
+        assertTrue(taskManager.getTasks().contains(firstTask));
     }
 
     @Test
     void whenGetTaskThenReturnsExpectedTask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task = new Task("Task", "Test", Status.NEW);
-        manager.addTask(task);
-        Task expected = manager.getTask(1).get();
-        assertThat(manager.getTask(1).get()).isEqualTo(expected);
+        taskManager.addTask(firstTask);
+        Task expected = new Task("First Task", "First Task", Status.NEW);
+        assertThat(taskManager.getTask(1).get()).isEqualTo(expected);
     }
 
     @Test
     void whenGetTaskWithInvalidIdThenResultIsEmpty() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task = new Task("Task", "Test", Status.NEW);
-        manager.addTask(task);
-        Optional<Task> result = manager.getTask(666);
+        taskManager.addTask(firstTask);
+        Optional<Task> result = taskManager.getTask(666);
         assertThat(result).isEmpty();
     }
 
     @Test
     void whenGetTasksThenResultContainsAllTasks() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task1", "Test1", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
-        List<Task> result = manager.getTasks();
-        assertThat(result).contains(task1, task2);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        List<Task> result = taskManager.getTasks();
+        assertThat(result).contains(firstTask, secondTask);
     }
 
     @Test
     void whenDeleteTaskThenManagerDoesNotContainTask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task2", "Test2", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
-        manager.deleteTask(2);
-        List<Task> result = manager.getTasks();
-        assertThat(result).doesNotContain(task2);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.deleteTask(2);
+        List<Task> result = taskManager.getTasks();
+        assertThat(result).doesNotContain(secondTask);
     }
 
     @Test
     void whenDeleteTaskWithInvalidIdThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task2", "Test2", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.deleteTask(666)
+                TaskNotFoundException.class, () -> taskManager.deleteTask(666)
         );
         assertThat(exception.getMessage()).isEqualTo("Task with id: 666 not found");
-
     }
 
     @Test
     void whenUpdateTaskThenManagerDoesntContainsPreviousTask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task2", "Test2", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
-        task2.setId(task1.getId());
-        manager.updateTask(task2);
-        assertFalse(manager.getTasks().contains(task1));
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        secondTask.setId(firstTask.getId());
+        taskManager.updateTask(secondTask);
+        assertFalse(taskManager.getTasks().contains(firstTask));
     }
 
     @Test
     void whenUpdateTaskWithInvalidIdThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task2", "Test2", Status.NEW);
-        manager.addTask(task1);
-        task2.setId(777);
+        taskManager.addTask(firstTask);
+        secondTask.setId(777);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.updateTask(task2)
+                TaskNotFoundException.class, () -> taskManager.updateTask(secondTask)
         );
         assertThat(exception.getMessage()).isEqualTo("Task with id: 777 not found");
     }
 
     @Test
     void whenDeleteAllTasksThenManagerTasksIsEmpty() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task", "Test", Status.NEW);
-        Task task2 = new Task("Task2", "Test2", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
-        manager.deleteAllTasks();
-        assertTrue(manager.getTasks().isEmpty());
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.deleteAllTasks();
+        assertTrue(taskManager.getTasks().isEmpty());
     }
 
     @Test
     void whenAddEpicThenManagerContainsEpic() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        assertThat(manager.getEpics()).contains(epic1, epic2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        assertThat(taskManager.getEpics()).contains(firstEpic, secondEpic);
     }
 
     @Test
     void whenGetEpicThenResultIsSame() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        Epic result = manager.getEpic(1).get();
-        assertThat(result).isEqualTo(epic1);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        Epic result = taskManager.getEpic(1).get();
+        assertThat(result).isEqualTo(firstEpic);
     }
 
     @Test
     void whenGetEpicWithInvalidIdThenResultIsEmpty() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        Optional<Epic> result = manager.getEpic(666);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        Optional<Epic> result = taskManager.getEpic(666);
         assertThat(result).isEmpty();
     }
 
     @Test
     void whenGetEpicsThenManagersEpicListContainsEpics() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        List<Epic> result = manager.getEpics();
-        assertThat(result).contains(epic1, epic2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        List<Epic> result = taskManager.getEpics();
+        assertThat(result).contains(firstEpic, secondEpic);
     }
 
     @Test
     void whenDeleteEpicThenManagerDoesNotContainEpic() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        manager.deleteEpic(1);
-        List<Epic> result = manager.getEpics();
-        assertThat(result).doesNotContain(epic1);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.deleteEpic(1);
+        List<Epic> result = taskManager.getEpics();
+        assertThat(result).doesNotContain(firstEpic);
     }
 
     @Test
     void whenDeleteEpicWithInvalidIdThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.deleteEpic(666)
+                TaskNotFoundException.class, () -> taskManager.deleteEpic(666)
         );
         assertThat(exception.getMessage()).isEqualTo("Epic with id: 666 not found");
     }
 
     @Test
     void whenDeleteAllEpicsThenManagersEpicsIsEmpty() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        manager.deleteAllEpics();
-        assertTrue(manager.getEpics().isEmpty());
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.deleteAllEpics();
+        assertTrue(taskManager.getEpics().isEmpty());
     }
 
     @Test
     void whenUpdateEpicWithSameStatusesThenStatusStillSame() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        epic2.setId(epic1.getId());
-        manager.updateEpic(epic2);
-        assertThat(manager.getEpics()).doesNotContain(epic1);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        secondEpic.setId(firstEpic.getId());
+        taskManager.updateEpic(secondEpic);
+        assertThat(taskManager.getEpics()).doesNotContain(firstEpic);
         Status expectedStatus = Status.NEW;
-        Status result = manager.getEpic(1).get().getStatus();
+        Status result = taskManager.getEpic(1).get().getStatus();
         assertThat(result).isEqualTo(expectedStatus);
-
     }
 
     @Test
     void whenUpdateEpicWithDifferentStatusThenEpicStatusUpdatedCorrectly() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.IN_PROGRESS);
-        manager.addEpic(epic1);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic2);
-        epic2.setId(epic1.getId());
-        Subtask subtask = new Subtask("Test", "Test", Status.NEW, epic2);
-        manager.addSubtask(subtask);
-        manager.updateEpic(epic2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        secondEpic.setId(firstEpic.getId());
+        taskManager.addSubtask(firstSubtask);
+        taskManager.updateEpic(secondEpic);
         Status expectedStatus = Status.NEW;
-        Status result = manager.getEpic(1).get().getStatus();
+        Status result = taskManager.getEpic(1).get().getStatus();
         assertThat(result).isEqualTo(expectedStatus);
     }
 
     @Test
     void whenUpdateEpicWithInvalidIdThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic = new Epic("Task", "Test", Status.NEW);
-        Epic updatedEpic = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic);
-        updatedEpic.setId(666);
+        taskManager.addEpic(firstEpic);
+        firstEpic.setId(666);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.updateEpic(updatedEpic)
+                TaskNotFoundException.class, () -> taskManager.updateEpic(firstEpic)
         );
         assertThat(exception.getMessage()).isEqualTo("Epic with id: 666 not found");
     }
 
     @Test
     void whenAddSubtaskThenManagerContainsSubtask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW,
-                epic1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW,
-                epic2
-        );
-        manager.addSubtask(subtask1);
-        manager.addSubtask(subtask2);
-        assertThat(manager.getSubtasks()).contains(subtask1, subtask2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        assertThat(taskManager.getSubtasks()).contains(firstSubtask, secondSubtask);
     }
 
     @Test
     void whenAddSubtaskWithInvalidEpicThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        Epic epic2 = new Epic("Task2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        epic2.setId(666);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW,
-                epic2
-        );
+        taskManager.addEpic(firstEpic);
+        secondEpic.setId(333);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.addSubtask(subtask1)
+                TaskNotFoundException.class, () -> taskManager.addSubtask(secondSubtask)
         );
-        assertThat(exception.getMessage()).isEqualTo("Epic with id: 666 not found");
+        assertThat(exception.getMessage()).isEqualTo(
+                "Epic with id: " + secondSubtask.getEpic().getId() + " not found"
+        );
     }
 
     @Test
     void whenAddSubtaskThenEpicChangeStatus() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic = new Epic("Task", "Test", Status.DONE);
-        manager.addEpic(epic);
-        Subtask subtask1 = new Subtask("Subtask", "Test", Status.NEW, epic);
-        manager.addSubtask(subtask1);
-        assertThat(epic.getStatus()).isEqualTo(Status.NEW);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.DONE, epic);
-        manager.addSubtask(subtask2);
-        subtask1.setStatus(Status.DONE);
-        manager.updateSubtask(subtask1);
-        assertThat(epic.getStatus()).isEqualTo(Status.DONE);
+        taskManager.addEpic(firstEpic);
+        firstEpic.setStatus(Status.DONE);
+        taskManager.addSubtask(firstSubtask);
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.NEW);
+        taskManager.addSubtask(secondSubtask);
+        firstSubtask.setStatus(Status.DONE);
+        taskManager.updateSubtask(firstSubtask);
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.DONE);
     }
 
     @Test
     void whenGetSubtaskThenExpectedResult() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Epic1", "Test1", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask expected = new Subtask("Subtask1", "Test", Status.NEW,
-                epic1);
-        manager.addSubtask(expected);
-        Optional<Subtask> result = manager.getSubtask(expected.getId());
-        assertThat(result).isEqualTo(Optional.of(expected));
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        Optional<Subtask> result = taskManager.getSubtask(firstSubtask.getId());
+        assertThat(result).isEqualTo(Optional.of(firstSubtask));
     }
 
     @Test
     void whenGetSubtasksThenExpectedResult() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask2);
-        List<Subtask> expected = List.of(subtask1, subtask2);
-        List<Subtask> result = manager.getSubtasks();
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        List<Subtask> expected = List.of(firstSubtask, secondSubtask);
+        List<Subtask> result = taskManager.getSubtasks();
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
     void whenDeleteSubtaskThenManagerDoesntContainSubtask() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask2);
-        manager.deleteSubtask(subtask1.getId());
-        List<Subtask> result = manager.getSubtasks();
-        assertThat(result).doesNotContain(subtask1);
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.deleteSubtask(firstSubtask.getId());
+        List<Subtask> result = taskManager.getSubtasks();
+        assertThat(result).doesNotContain(firstSubtask);
     }
 
     @Test
     void whenDeleteSubtaskWithInvalidIdThenThrowsException() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
         TaskNotFoundException exception = assertThrows(
-                TaskNotFoundException.class, () -> manager.deleteSubtask(1)
+                TaskNotFoundException.class, () -> taskManager.deleteSubtask(1)
         );
         assertThat(exception.getMessage()).isEqualTo("Subtask with id: 1 not found");
     }
 
     @Test
     void whenDeleteAllSubtasksIsSuccessful() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask2);
-        manager.deleteAllSubtasks();
-        List<Subtask> result = manager.getSubtasks();
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.deleteAllSubtasks();
+        List<Subtask> result = taskManager.getSubtasks();
         assertThat(result).isEmpty();
     }
 
     @Test
     void whenDeleteAllSubtasksThenEpicHasNoSubtasks() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        Subtask subtask2 = new Subtask("Subtask2", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask2);
-        manager.deleteAllSubtasks();
-        assertThat(epic1.getSubtasks()).isEmpty();
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.deleteAllSubtasks();
+        assertThat(firstEpic.getSubtasks()).isEmpty();
     }
 
     @Test
     void whenUpdateSubtaskThenEpicStatusRenewed() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Epic epic1 = new Epic("Task", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask first = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(first);
-        Subtask updatedSubtask = new Subtask("Subtask2", "Test", Status.IN_PROGRESS, epic1);
-        updatedSubtask.setId(first.getId());
-        manager.updateSubtask(updatedSubtask);
-        assertThat(manager.getSubtask(updatedSubtask.getId()).get()).isEqualTo(updatedSubtask);
-        assertThat(epic1.getStatus()).isEqualTo(Status.IN_PROGRESS);
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        Subtask updatedSubtask = new Subtask("Subtask2", "Test", Status.IN_PROGRESS, firstEpic);
+        updatedSubtask.setId(taskManager.getSubtask(firstSubtask.getId()).get().getId());
+        taskManager.updateSubtask(updatedSubtask);
+        assertThat(taskManager.getSubtask(firstSubtask.getId()).get()).isEqualTo(updatedSubtask);
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.IN_PROGRESS);
     }
 
     @Test
     void whenGetHistoryThenReturnExpectedHistory() {
-        InMemoryTaskManager manager = new InMemoryTaskManager(new InMemoryHistoryManager());
-        Task task1 = new Task("Task1", "Test", Status.NEW);
-        manager.addTask(task1);
-        Task task2 = new Task("Task2", "Test", Status.NEW);
-        manager.addTask(task2);
-        Epic epic1 = new Epic("Epic", "Test", Status.NEW);
-        manager.addEpic(epic1);
-        Subtask subtask1 = new Subtask("Subtask1", "Test", Status.NEW, epic1);
-        manager.addSubtask(subtask1);
-        manager.getTask(task1.getId());
-        manager.getTask(task2.getId());
-        manager.getEpic(epic1.getId());
-        manager.getSubtask(subtask1.getId());
-        List<Task> expected = List.of(task1, task2, epic1, subtask1);
-        List<Task> result = manager.getHistory();
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.getEpic(firstEpic.getId());
+        taskManager.getSubtask(firstSubtask.getId());
+        List<Task> expected = List.of(firstTask, secondTask, firstEpic, firstSubtask);
+        List<Task> result = taskManager.getHistory();
         assertThat(result).isEqualTo(expected);
     }
 }

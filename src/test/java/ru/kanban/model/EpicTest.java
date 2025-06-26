@@ -1,69 +1,91 @@
 package ru.kanban.model;
 
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class EpicTest {
+    private Epic firstEpic;
+    private Epic secondEpic;
+    private Subtask firstSubtask;
+    private Subtask secondSubtask;
+
+    @BeforeEach
+    void setUp() {
+        this.firstEpic = new Epic("First", "First Epic", Status.NEW);
+        this.secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        this.firstSubtask = new Subtask(
+                "First subtask", "Subtask of First Epic", Status.NEW, firstEpic
+        );
+        this.secondSubtask = new Subtask(
+                "Second subtask", "Subtask of Second Epic", Status.NEW, firstEpic
+        );
+    }
 
     @Test
     void whenAddSubtaskThenEpicSubtaskListContainsCurrentSubtask() {
-        Epic epic = new Epic("Epic", "Test", Status.NEW);
-        epic.addSubtask(
-                new Subtask("Subtask", "Subtask of epic", Status.NEW, epic)
+        firstEpic.addSubtask(
+                firstSubtask
         );
-
+        List<Subtask> result = firstEpic.getSubtasks();
+        assertThat(result).containsExactly(firstSubtask);
     }
 
     @Test
     void whenEpicHaveNotSubtasksThenUpdatedStatusNEW() {
-        Epic epic = new Epic("Epic", "Test", Status.IN_PROGRESS);
-        epic.updateStatus();
-        assertThat(epic.getStatus()).isEqualTo(Status.NEW);
+        firstEpic.updateStatus();
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.NEW);
     }
 
     @Test
     void whenEpicHasAllSubtasksWithStatusIN_PROGRESSThenUpdatedStatusIN_PROGRESS() {
-        Epic epic = new Epic("Epic", "Test", Status.NEW);
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.IN_PROGRESS, epic));
-        epic.addSubtask(new Subtask("Subtask1", "Subtask of epic", Status.IN_PROGRESS, epic));
-        epic.updateStatus();
-        assertThat(epic.getStatus()).isEqualTo(Status.IN_PROGRESS);
+
+        firstSubtask.setStatus(Status.IN_PROGRESS);
+        secondSubtask.setStatus(Status.IN_PROGRESS);
+        firstEpic.addSubtask(firstSubtask);
+        firstEpic.addSubtask(secondSubtask);
+        firstEpic.updateStatus();
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.IN_PROGRESS);
     }
 
     @Test
     void whenEpicHasAllSubtasksWithStatusNEWThenUpdatedStatusNEW() {
-        Epic epic = new Epic("Epic", "Test", Status.IN_PROGRESS);
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.NEW, epic));
-        epic.addSubtask(new Subtask("Subtask2", "Subtask of epic", Status.NEW, epic));
-        epic.updateStatus();
-        assertThat(epic.getStatus()).isEqualTo(Status.NEW);
+        firstEpic.setStatus(Status.DONE);
+        firstSubtask.setStatus(Status.NEW);
+        secondSubtask.setStatus(Status.NEW);
+        firstEpic.addSubtask(firstSubtask);
+        firstEpic.addSubtask(secondSubtask);
+        firstEpic.updateStatus();
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.NEW);
     }
 
     @Test
     void whenEpicHasAllSubtasksWithStatusDONEThenUpdatedStatusDONE() {
-        Epic epic = new Epic("Epic", "Test", Status.DONE);
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.DONE, epic));
-        epic.addSubtask(new Subtask("Subtask2", "Subtask of epic", Status.DONE, epic));
-        epic.updateStatus();
-        assertThat(epic.getStatus()).isEqualTo(Status.DONE);
+        firstSubtask.setStatus(Status.DONE);
+        secondSubtask.setStatus(Status.DONE);
+        firstEpic.addSubtask(firstSubtask);
+        firstEpic.addSubtask(secondSubtask);
+        firstEpic.updateStatus();
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.DONE);
     }
 
     @Test
     void whenEpicHasSubtasksWithDifferentStatusesThenUpdatedStatusIN_PROGRESS() {
-        Epic epic = new Epic("Epic", "Test", Status.NEW);
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.DONE, epic));
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.IN_PROGRESS, epic));
-        epic.addSubtask(new Subtask("Subtask", "Subtask of epic", Status.NEW, epic));
-        epic.updateStatus();
-        assertThat(epic.getStatus()).isEqualTo(Status.IN_PROGRESS);
+        firstSubtask.setStatus(Status.IN_PROGRESS);
+        secondSubtask.setStatus(Status.NEW);
+        Subtask thirdSubtask = new Subtask("Test Subtask", "Test Subtask", Status.DONE, firstEpic);
+        firstEpic.addSubtask(firstSubtask);
+        firstEpic.addSubtask(secondSubtask);
+        firstEpic.addSubtask(thirdSubtask);
+        firstEpic.updateStatus();
+        assertThat(firstEpic.getStatus()).isEqualTo(Status.IN_PROGRESS);
     }
 
     @Test
     void whenEpicsHasDifferentFieldsThenFalse() {
-        Epic first = new Epic("First", "Test", Status.NEW);
-        Epic second = new Epic("Second", "Test", Status.NEW);
-        assertThat(first.equals(second)).isFalse();
+        assertThat(firstEpic.equals(secondEpic)).isFalse();
     }
 
     @Test
@@ -75,9 +97,8 @@ class EpicTest {
 
     @Test
     void whenEpicsHaveDifferentIdsAndSameFieldsThenNotEquals() {
-        Epic first = new Epic("First", "Test", Status.NEW);
-        Epic second = new Epic("First", "Test", Status.NEW);
-        second.setId(3);
-        assertThat(first).isNotEqualTo(second);
+        Epic anotherEpic = new Epic("First", "First Epic", Status.NEW);
+        anotherEpic.setId(3);
+        assertThat(firstEpic).isNotEqualTo(anotherEpic);
     }
 }

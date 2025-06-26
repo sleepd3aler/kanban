@@ -1,6 +1,7 @@
 package ru.kanban.service;
 
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
@@ -11,70 +12,71 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class InMemoryHistoryManagerTest {
 
+    private InMemoryHistoryManager historyManager;
+    private InMemoryTaskManager taskManager;
+    private Task firstTask;
+    private Task secondTask;
+    private Epic firstEpic;
+    private Epic secondEpic;
+    private Subtask firstSubtask;
+    private Subtask secondSubtask;
+
+    @BeforeEach
+    void setUp() {
+        this.historyManager = new InMemoryHistoryManager();
+        this.taskManager = new InMemoryTaskManager(historyManager);
+        this.firstTask = new Task("First Task", "First Task", Status.NEW);
+        this.secondTask = new Task("Second Task", "Second Task", Status.NEW);
+        this.firstEpic = new Epic("First", "First Epic", Status.NEW);
+        this.secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        this.firstSubtask = new Subtask("First subtask", "Subtask of First Epic", Status.NEW, firstEpic);
+        this.secondSubtask = new Subtask("Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic);
+    }
+
     @Test
     void whenSetToViewedThenSuccess() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        Task test = new Task("Name", "Test", Status.NEW);
+        historyManager.setToViewed(firstTask);
         boolean expected = true;
-        historyManager.setToViewed(test);
-        assertThat(test.isViewed()).isEqualTo(expected);
+        assertThat(firstTask.isViewed()).isEqualTo(expected);
     }
 
     @Test
     void whenGetTaskThenAddToHistory() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        Task first = new Task("Name", "Test", Status.NEW);
-        manager.addTask(first);
-        Task second = new Task("Name2", "Test2", Status.NEW);
-        manager.addTask(second);
-        manager.getTask(1);
-        manager.getTask(2);
-        List<Task> expected = List.of(first, second);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        List<Task> expected = List.of(firstTask, secondTask);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
     void whenGetEpicThenAddToHistory() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        Epic first = new Epic("Name", "Test", Status.NEW);
-        manager.addEpic(first);
-        Epic second = new Epic("Name2", "Test2", Status.NEW);
-        manager.addEpic(second);
-        manager.getEpic(1);
-        manager.getEpic(2);
-        List<Task> expected = List.of(first, second);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.getEpic(firstEpic.getId());
+        taskManager.getEpic(secondEpic.getId());
+        List<Task> expected = List.of(firstEpic, secondEpic);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
     void whenGetSubtaskThenAddToHistory() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        Epic epic1 = new Epic("Name", "Test", Status.NEW);
-        Epic epic2 = new Epic("Name2", "Test2", Status.NEW);
-        manager.addEpic(epic1);
-        manager.addEpic(epic2);
-        Subtask subtask1 = new Subtask("Name1", "Subtask of test", Status.NEW, epic1);
-        Subtask subtask2 = new Subtask("Name2", "Subtask of test2", Status.NEW, epic2);
-        manager.addSubtask(subtask1);
-        manager.addSubtask(subtask2);
-        manager.getSubtask(3);
-        manager.getSubtask(4);
-        List<Task> expected = List.of(subtask1, subtask2);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getSubtask(firstSubtask.getId());
+        taskManager.getSubtask(secondSubtask.getId());
+        List<Task> expected = List.of(firstSubtask, secondSubtask);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
     void whenAddMoreThanLimitThenOldestRemoved() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        InMemoryTaskManager manager = new InMemoryTaskManager(historyManager);
-        Task task1 = new Task("Name", "Test", Status.NEW);
-        Task task2 = new Task("Name2", "Test2", Status.NEW);
         Task task3 = new Task("Name3", "Test3", Status.NEW);
         Task task4 = new Task("Name4", "Test4", Status.NEW);
         Task task5 = new Task("Name5", "Test5", Status.NEW);
@@ -84,35 +86,32 @@ class InMemoryHistoryManagerTest {
         Task task9 = new Task("Name9", "Test9", Status.NEW);
         Task task10 = new Task("Name10", "Test10", Status.NEW);
         Task task11 = new Task("Name11", "Test11", Status.NEW);
-        manager.addTask(task1);
-        manager.addTask(task2);
-        manager.addTask(task3);
-        manager.addTask(task4);
-        manager.addTask(task5);
-        manager.addTask(task6);
-        manager.addTask(task7);
-        manager.addTask(task8);
-        manager.addTask(task9);
-        manager.addTask(task10);
-        manager.addTask(task11);
-        for (int id = 1; id <= manager.getTasks().size(); id++) {
-            manager.getTask(id);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addTask(task3);
+        taskManager.addTask(task4);
+        taskManager.addTask(task5);
+        taskManager.addTask(task6);
+        taskManager.addTask(task7);
+        taskManager.addTask(task8);
+        taskManager.addTask(task9);
+        taskManager.addTask(task10);
+        taskManager.addTask(task11);
+        for (int id = 1; id <= taskManager.getTasks().size(); id++) {
+            taskManager.getTask(id);
         }
         List<Task> expected = List.of(
-                task2, task3, task4, task5, task6, task7, task8, task9, task10, task11
+                secondTask, task3, task4, task5, task6, task7, task8, task9, task10, task11
         );
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
-    void whenGetHistoryThenSuccess() {
-        InMemoryHistoryManager historyManager = new InMemoryHistoryManager();
-        Task test = new Task("Name", "Test", Status.NEW);
-        Task test2 = new Task("Name2", "Test2", Status.NEW);
-        historyManager.addToHistory(test);
-        historyManager.addToHistory(test2);
-        List<Task> expected = List.of(test, test2);
+    void whenGetHistoryThenExpectedResult() {
+        historyManager.addToHistory(firstTask);
+        historyManager.addToHistory(secondTask);
+        List<Task> expected = List.of(firstTask, secondTask);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).hasSameElementsAs(expected);
     }
