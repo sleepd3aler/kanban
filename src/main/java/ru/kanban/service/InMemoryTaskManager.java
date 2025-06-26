@@ -113,7 +113,6 @@ public class InMemoryTaskManager implements TaskManager {
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
-        epic.updateStatus();
     }
 
     @Override
@@ -135,10 +134,10 @@ public class InMemoryTaskManager implements TaskManager {
         if (!subtasks.containsKey(id)) {
             throw new TaskNotFoundException("Subtask with id: " + id + " not found");
         }
+        Epic epicOfSubtask = subtasks.get(id).getEpic();
         Subtask subtask = subtasks.remove(id);
-        Epic epic = getEpic(subtask.getEpic().getId()).get();
-        epic.getSubtasks().remove(subtask);
-        epic.updateStatus();
+        epicOfSubtask.getSubtasks().remove(subtask);
+        epicOfSubtask.updateStatus();
         return Optional.of(subtask);
     }
 
@@ -160,14 +159,14 @@ public class InMemoryTaskManager implements TaskManager {
             throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
         }
         subtasks.put(subtask.getId(), subtask);
-        Epic epic = getEpic(subtask.getEpic().getId()).get();
-        for (int i = 0; i < epic.getSubtasks().size(); i++) {
-            if (epic.getSubtasks().get(i).getId() == subtask.getId()) {
-                epic.getSubtasks().set(i, subtask);
+        Epic epicOfSubtask = epics.get(subtask.getEpic().getId());
+        for (int i = 0; i < epicOfSubtask.getSubtasks().size(); i++) {
+            if (epicOfSubtask.getSubtasks().get(i).getId() == subtask.getId()) {
+                epicOfSubtask.getSubtasks().set(i, subtask);
                 break;
             }
         }
-        epic.updateStatus();
+        epicOfSubtask.updateStatus();
         return Optional.of(subtask);
     }
 

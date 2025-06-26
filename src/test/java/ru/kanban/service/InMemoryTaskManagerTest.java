@@ -262,6 +262,15 @@ class InMemoryTaskManagerTest {
     }
 
     @Test
+    void whenDeleteSubtaskThenEpicDoesntContainSubtask() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.deleteSubtask(firstSubtask.getId());
+        List<Subtask> result = firstEpic.getSubtasks();
+        assertThat(result).doesNotContain(firstSubtask);
+    }
+
+    @Test
     void whenDeleteSubtaskWithInvalidIdThenThrowsException() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
