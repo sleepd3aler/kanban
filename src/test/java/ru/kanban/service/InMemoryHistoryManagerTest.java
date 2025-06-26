@@ -23,14 +23,14 @@ class InMemoryHistoryManagerTest {
 
     @BeforeEach
     void setUp() {
-        this.historyManager = new InMemoryHistoryManager();
-        this.taskManager = new InMemoryTaskManager(historyManager);
-        this.firstTask = new Task("First Task", "First Task", Status.NEW);
-        this.secondTask = new Task("Second Task", "Second Task", Status.NEW);
-        this.firstEpic = new Epic("First", "First Epic", Status.NEW);
-        this.secondEpic = new Epic("Second", "Second Epic", Status.NEW);
-        this.firstSubtask = new Subtask("First subtask", "Subtask of First Epic", Status.NEW, firstEpic);
-        this.secondSubtask = new Subtask("Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic);
+        historyManager = new InMemoryHistoryManager();
+        taskManager = new InMemoryTaskManager(historyManager);
+        firstTask = new Task("First Task", "First Task", Status.NEW);
+        secondTask = new Task("Second Task", "Second Task", Status.NEW);
+        firstEpic = new Epic("First", "First Epic", Status.NEW);
+        secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        firstSubtask = new Subtask("First subtask", "Subtask of First Epic", Status.NEW, firstEpic);
+        secondSubtask = new Subtask("Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic);
     }
 
     @Test

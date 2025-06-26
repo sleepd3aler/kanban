@@ -13,12 +13,12 @@ class SubtaskTest {
 
     @BeforeEach
     void setUp() {
-        this.firstEpic = new Epic("First", "First Epic", Status.NEW);
-        this.secondEpic = new Epic("Second", "Second Epic", Status.NEW);
-        this.firstSubtask = new Subtask(
+        firstEpic = new Epic("First", "First Epic", Status.NEW);
+        secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        firstSubtask = new Subtask(
                 "First subtask", "Subtask of First Epic", Status.NEW, firstEpic
         );
-        this.secondSubtask = new Subtask(
+        secondSubtask = new Subtask(
                 "Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic
         );
     }

@@ -12,8 +12,8 @@ class TaskTest {
 
     @BeforeEach
     void setUp() {
-        this.firstTask = new Task("First Task", "First Task", Status.NEW);
-        this.secondTask = new Task("Second Task", "Second Task", Status.NEW);
+        firstTask = new Task("First Task", "First Task", Status.NEW);
+        secondTask = new Task("Second Task", "Second Task", Status.NEW);
     }
 
 @Test
