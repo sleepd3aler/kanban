@@ -20,8 +20,7 @@ public class Epic extends Task {
             return;
         }
         subtasks.add(subtask);
-        Epic currentEpic = this;
-        currentEpic.updateStatus();
+        updateStatus();
     }
 
     public void updateStatus() {
