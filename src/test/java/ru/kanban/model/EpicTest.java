@@ -41,12 +41,10 @@ class EpicTest {
 
     @Test
     void whenEpicHasAllSubtasksWithStatusIN_PROGRESSThenUpdatedStatusIN_PROGRESS() {
-
         firstSubtask.setStatus(Status.IN_PROGRESS);
         secondSubtask.setStatus(Status.IN_PROGRESS);
         firstEpic.addSubtask(firstSubtask);
         firstEpic.addSubtask(secondSubtask);
-        firstEpic.updateStatus();
         assertThat(firstEpic.getStatus()).isEqualTo(Status.IN_PROGRESS);
     }
 
@@ -57,7 +55,6 @@ class EpicTest {
         secondSubtask.setStatus(Status.NEW);
         firstEpic.addSubtask(firstSubtask);
         firstEpic.addSubtask(secondSubtask);
-        firstEpic.updateStatus();
         assertThat(firstEpic.getStatus()).isEqualTo(Status.NEW);
     }
 
@@ -67,7 +64,6 @@ class EpicTest {
         secondSubtask.setStatus(Status.DONE);
         firstEpic.addSubtask(firstSubtask);
         firstEpic.addSubtask(secondSubtask);
-        firstEpic.updateStatus();
         assertThat(firstEpic.getStatus()).isEqualTo(Status.DONE);
     }
 
@@ -79,7 +75,6 @@ class EpicTest {
         firstEpic.addSubtask(firstSubtask);
         firstEpic.addSubtask(secondSubtask);
         firstEpic.addSubtask(thirdSubtask);
-        firstEpic.updateStatus();
         assertThat(firstEpic.getStatus()).isEqualTo(Status.IN_PROGRESS);
     }
 
