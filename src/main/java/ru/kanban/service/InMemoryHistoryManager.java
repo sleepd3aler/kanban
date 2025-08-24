@@ -1,14 +1,11 @@
 package ru.kanban.service;
 
-import java.util.LinkedList;
 import java.util.List;
 import ru.kanban.model.Task;
-
-import static ru.kanban.utils.Constants.FIRST_IN_HISTORY;
-import static ru.kanban.utils.Constants.HISTORY_SIZE;
+import ru.kanban.utils.CustomLinkedList;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private List<Task> viewedTasks = new LinkedList<>();
+    private CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
 
     @Override
     public void setToViewed(Task task) {
@@ -17,15 +14,17 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void addToHistory(Task task) {
-        if (viewedTasks.size() == HISTORY_SIZE) {
-            viewedTasks.remove(FIRST_IN_HISTORY);
-        }
-        setToViewed(task);
         viewedTasks.add(task);
+        setToViewed(task);
+    }
+
+    @Override
+    public void remove(int id) {
+        viewedTasks.removeNode(viewedTasks.findById(id));
     }
 
     @Override
     public List<Task> getViewedTasks() {
-        return new LinkedList<>(viewedTasks);
+        return viewedTasks.getTasks();
     }
 }

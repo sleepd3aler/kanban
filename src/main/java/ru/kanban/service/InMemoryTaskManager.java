@@ -34,7 +34,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getTasks() {
-        return new ArrayList<>(tasks.values());
+        List<Task> result = new ArrayList<>(tasks.values());
+        result.forEach(Task -> {
+            Task.setViewed(true);
+            historyManager.addToHistory(Task);
+        });
+        return result;
     }
 
     @Override
@@ -42,6 +47,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!tasks.containsKey(id)) {
             throw new TaskNotFoundException("Task with id: " + id + " not found");
         }
+        historyManager.remove(id);
         return Optional.of(tasks.remove(id));
     }
 
@@ -56,6 +62,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void deleteAllTasks() {
+        tasks.keySet().forEach(Id -> historyManager.remove(Id));
         this.tasks.clear();
     }
 
@@ -76,7 +83,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Epic> getEpics() {
-        return new ArrayList<>(epics.values());
+        List<Epic> result = new ArrayList<>(epics.values());
+        result.forEach(Epic -> {
+            Epic.setViewed(true);
+            historyManager.addToHistory(Epic);
+        });
+        return result;
     }
 
     @Override
@@ -85,11 +97,14 @@ public class InMemoryTaskManager implements TaskManager {
             throw new TaskNotFoundException("Epic with id: " + id + " not found");
         }
         epics.get(id).getSubtasks().forEach(subtask -> subtasks.remove(subtask.getId()));
+        historyManager.remove(id);
         return Optional.of(epics.remove(id));
     }
 
     @Override
     public void deleteAllEpics() {
+        epics.keySet().forEach(Id -> historyManager.remove(Id));
+        subtasks.keySet().forEach(Id -> historyManager.remove(Id));
         this.epics.clear();
         this.subtasks.clear();
     }
@@ -126,7 +141,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Subtask> getSubtasks() {
-        return new ArrayList<>(subtasks.values());
+        List<Subtask> result = new ArrayList<>(subtasks.values());
+        result.forEach(Subtask -> {
+            Subtask.setViewed(true);
+            historyManager.addToHistory(Subtask);
+        });
+        return result;
     }
 
     @Override
@@ -138,16 +158,17 @@ public class InMemoryTaskManager implements TaskManager {
         Subtask subtask = subtasks.remove(id);
         epicOfSubtask.getSubtasks().remove(subtask);
         epicOfSubtask.updateStatus();
+        historyManager.remove(id);
         return Optional.of(subtask);
     }
 
     @Override
     public void deleteAllSubtasks() {
-        this.subtasks.clear();
-        for (Epic epic : epics.values()) {
-            epic.getSubtasks().clear();
-            epic.updateStatus();
-        }
+        subtasks.keySet()
+                .forEach(Id -> historyManager.remove(Id));
+        subtasks.clear();
+        epics.values()
+                .forEach(Epic -> Epic.getSubtasks().clear());
     }
 
     @Override

@@ -31,6 +31,7 @@ class InMemoryHistoryManagerTest {
         secondEpic = new Epic("Second", "Second Epic", Status.NEW);
         firstSubtask = new Subtask("First subtask", "Subtask of First Epic", Status.NEW, firstEpic);
         secondSubtask = new Subtask("Second Subtask", "Subtask of Second Epic", Status.NEW, secondEpic);
+
     }
 
     @Test
@@ -76,43 +77,281 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
-    void whenAddMoreThanLimitThenOldestRemoved() {
-        Task task3 = new Task("Name3", "Test3", Status.NEW);
-        Task task4 = new Task("Name4", "Test4", Status.NEW);
-        Task task5 = new Task("Name5", "Test5", Status.NEW);
-        Task task6 = new Task("Name6", "Test6", Status.NEW);
-        Task task7 = new Task("Name7", "Test7", Status.NEW);
-        Task task8 = new Task("Name8", "Test8", Status.NEW);
-        Task task9 = new Task("Name9", "Test9", Status.NEW);
-        Task task10 = new Task("Name10", "Test10", Status.NEW);
-        Task task11 = new Task("Name11", "Test11", Status.NEW);
-        taskManager.addTask(firstTask);
-        taskManager.addTask(secondTask);
-        taskManager.addTask(task3);
-        taskManager.addTask(task4);
-        taskManager.addTask(task5);
-        taskManager.addTask(task6);
-        taskManager.addTask(task7);
-        taskManager.addTask(task8);
-        taskManager.addTask(task9);
-        taskManager.addTask(task10);
-        taskManager.addTask(task11);
-        for (int id = 1; id <= taskManager.getTasks().size(); id++) {
-            taskManager.getTask(id);
-        }
-        List<Task> expected = List.of(
-                secondTask, task3, task4, task5, task6, task7, task8, task9, task10, task11
-        );
-        List<Task> result = historyManager.getViewedTasks();
-        assertThat(result).isEqualTo(expected);
-    }
-
-    @Test
     void whenGetHistoryThenExpectedResult() {
         historyManager.addToHistory(firstTask);
+        secondTask.setId(2);
         historyManager.addToHistory(secondTask);
         List<Task> expected = List.of(firstTask, secondTask);
         List<Task> result = historyManager.getViewedTasks();
         assertThat(result).hasSameElementsAs(expected);
+    }
+
+    @Test
+    void whenRemoveThenHistoryManagerDoesntContainsTask() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(1);
+        taskManager.getTask(2);
+        historyManager.remove(1);
+        List<Task> res = historyManager.getViewedTasks();
+        assertThat(res).doesNotContain(firstTask);
+    }
+
+    @Test
+    void whenRemoveFromTaskManagerThenHistoryDoesntContainsTask() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(1);
+        taskManager.getTask(2);
+        taskManager.deleteTask(1);
+        taskManager.deleteTask(2);
+        List<Task> res = taskManager.getHistory();
+        assertThat(res).doesNotContain(firstTask, secondTask);
+    }
+
+    @Test
+    void whenRemoveAnyKindOfTaskThenHistoryDoesntContains() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.getEpic(firstEpic.getId());
+        taskManager.getEpic(secondEpic.getId());
+        taskManager.getSubtask(firstSubtask.getId());
+        taskManager.getSubtask(secondSubtask.getId());
+        taskManager.deleteTask(secondTask.getId());
+        taskManager.deleteEpic(secondEpic.getId());
+        taskManager.deleteSubtask(firstSubtask.getId());
+        List<Task> res = taskManager.getHistory();
+        assertThat(res).doesNotContain(secondTask, secondEpic, firstSubtask);
+    }
+
+    @Test
+    void whenGetSameTaskThenHistoryDoesntContainsDuplicates() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(firstTask.getId());
+        List<Task> expected = taskManager.getHistory();
+        assertThat(expected).hasSize(1)
+                .doesNotHaveDuplicates();
+    }
+
+    @Test
+    void whenGetAllTasksThenHistoryHasAllTasks() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTasks();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(2)
+                .containsExactly(firstTask, secondTask);
+    }
+
+    @Test
+    void whenGetAllEpicsThenHistoryHasAllTasks() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.getEpics();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(2)
+                .containsExactly(firstEpic, secondEpic);
+    }
+
+    @Test
+    void whenGetAllSubtasksThenHistoryHasAllSubtasks() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getSubtasks();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(2)
+                .containsExactly(firstSubtask, secondSubtask);
+    }
+
+    @Test
+    void whenGetAllTasksEpicsAndSubtasksThenHistoryHasAllItems() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getTasks();
+        taskManager.getEpics();
+        taskManager.getSubtasks();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(6)
+                .containsExactly(firstTask, secondTask, firstEpic, secondEpic, firstSubtask, secondSubtask);
+    }
+
+    @Test
+    void whenDeleteTaskFromTheMiddle() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addTask(firstEpic);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.getTask(firstEpic.getId());
+        historyManager.remove(secondTask.getId());
+        List<Task> expected = historyManager.getViewedTasks();
+        assertThat(expected)
+                .hasSize(2)
+                .containsExactly(firstTask, firstEpic);
+    }
+
+    @Test
+    void whenDeleteFirstViewedTaskThenSecondTaskBecomesFirstViewed() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addTask(firstEpic);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.getTask(firstEpic.getId());
+        historyManager.remove(firstTask.getId());
+        List<Task> expected = historyManager.getViewedTasks();
+        assertThat(expected)
+                .hasSize(2)
+                .containsExactly(secondTask, firstEpic);
+    }
+
+    @Test
+    void whenDeleteLastViewedTaskThenSecondTaskBecomesFirstViewed() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addTask(firstEpic);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.getTask(firstEpic.getId());
+        historyManager.remove(firstEpic.getId());
+        List<Task> expected = historyManager.getViewedTasks();
+        assertThat(expected)
+                .hasSize(2)
+                .containsExactly(firstTask, secondTask);
+    }
+
+    @Test
+    void whenDeleteViewedTaskFromManagerHistoryDoesntContainsIt() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(firstTask.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.deleteTask(firstTask.getId());
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(1)
+                .doesNotContain(firstTask);
+    }
+
+    @Test
+    void whenDeleteViewedEpicFromManagerHistoryDoesntContainsIt() {
+        taskManager.addTask(firstEpic);
+        taskManager.addTask(secondTask);
+        taskManager.getTask(firstEpic.getId());
+        taskManager.getTask(secondTask.getId());
+        taskManager.deleteTask(firstEpic.getId());
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(1)
+                .doesNotContain(firstEpic);
+    }
+
+    @Test
+    void whenDeleteViewedSubtaskFromManagerThenHistoryDoesntContainsIt() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.getEpic(firstEpic.getId());
+        taskManager.getSubtask(firstSubtask.getId());
+        taskManager.deleteSubtask(firstSubtask.getId());
+        assertThat(historyManager.getViewedTasks()).hasSize(1)
+                .doesNotContain(firstSubtask);
+    }
+
+    @Test
+    void whenDeleteAllTasksFromManagerThenHistoryIsEmpty() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.getTasks();
+        taskManager.deleteAllTasks();
+        assertThat(historyManager.getViewedTasks()).isEmpty();
+    }
+
+    @Test
+    void whenDeleteAllEpicsFromManagerThenHistoryIsEmpty() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getEpics();
+        taskManager.deleteAllEpics();
+        assertThat(historyManager.getViewedTasks())
+                .isEmpty();
+    }
+
+    @Test
+    void whenDeleteAllSubtasksFromManagerThenHistoryIsEmpty() {
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getSubtasks();
+        taskManager.deleteAllSubtasks();
+        assertThat(historyManager.getViewedTasks()).isEmpty();
+    }
+
+    @Test
+    void whenHistoryContainsMixedTypesAndDeleteAllTasksFromManagerThenHistoryDoesntContainsTasksOnly() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getTasks();
+        taskManager.getEpics();
+        taskManager.getSubtasks();
+        taskManager.deleteAllTasks();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(4)
+                .doesNotContain(firstTask, secondTask)
+                .containsExactly(firstEpic, secondEpic, firstSubtask, secondSubtask);
+    }
+
+    @Test
+    void whenHistoryContainsMixedTypesAndDeleteAllEpicsFromManagerThenHistoryDoesntContainsEpicsAndSubtasks() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getTasks();
+        taskManager.getEpics();
+        taskManager.getSubtasks();
+        taskManager.deleteAllEpics();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(2)
+                .doesNotContain(firstEpic, secondEpic, firstSubtask, secondSubtask)
+                .containsExactly(firstTask, secondTask);
+    }
+
+    @Test
+    void whenHistoryContainsMixedTypesAndDeleteAllSubtasksFromManagerThenHistoryDoesntContainsSubtasks() {
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addEpic(firstEpic);
+        taskManager.addEpic(secondEpic);
+        taskManager.addSubtask(firstSubtask);
+        taskManager.addSubtask(secondSubtask);
+        taskManager.getTasks();
+        taskManager.getEpics();
+        taskManager.getSubtasks();
+        taskManager.deleteAllSubtasks();
+        assertThat(historyManager.getViewedTasks())
+                .hasSize(4)
+                .doesNotContain(firstSubtask, secondSubtask)
+                .containsExactly(firstTask, secondTask, firstEpic, secondEpic);
     }
 }
