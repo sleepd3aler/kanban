@@ -1,14 +1,15 @@
 package ru.kanban.service;
 
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import ru.kanban.model.Task;
-
-import static ru.kanban.utils.Constants.FIRST_IN_HISTORY;
-import static ru.kanban.utils.Constants.HISTORY_SIZE;
+import ru.kanban.utils.CustomLinkedList;
+import ru.kanban.utils.Node;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private List<Task> viewedTasks = new LinkedList<>();
+    private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
+    private final CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
 
     @Override
     public void setToViewed(Task task) {
@@ -17,15 +18,23 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void addToHistory(Task task) {
-        if (viewedTasks.size() == HISTORY_SIZE) {
-            viewedTasks.remove(FIRST_IN_HISTORY);
+        if (historyMap.containsKey(task.getId())) {
+            viewedTasks.removeNode(historyMap.get(task.getId()));
         }
-        setToViewed(task);
-        viewedTasks.add(task);
+        Node<Task> lastViewed = viewedTasks.linkLast(task);
+        historyMap.put(task.getId(), lastViewed);
+    }
+
+    @Override
+    public void remove(int id) {
+        if (historyMap.containsKey(id)) {
+            viewedTasks.removeNode(historyMap.remove(id));
+        }
     }
 
     @Override
     public List<Task> getViewedTasks() {
-        return new LinkedList<>(viewedTasks);
+        return viewedTasks.getTasks();
     }
+
 }
