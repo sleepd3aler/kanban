@@ -1,27 +1,15 @@
 package ru.kanban.utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import ru.kanban.model.Task;
 
 public class CustomLinkedList<T> implements Iterable<Task> {
-    private Map<Integer, Node<Task>> viewedTasks = new HashMap<>();
     private Node<Task> head;
     private Node<Task> tail;
     private int size;
 
-    public void add(Task task) {
-        if (viewedTasks.containsKey(task.getId())) {
-            removeNode(viewedTasks.get(task.getId()));
-            viewedTasks.put(task.getId(), linkLast(task));
-        } else {
-            viewedTasks.put(task.getId(), linkLast(task));
-        }
-    }
-
-    Node<Task> linkLast(Task value) {
+    public Node<Task> linkLast(Task value) {
         Node<Task> last = tail;
         Node<Task> newNode = new Node<>(last, value, null);
         tail = newNode;
@@ -63,10 +51,6 @@ public class CustomLinkedList<T> implements Iterable<Task> {
         }
     }
 
-    public Node<Task> findById(int id) {
-        return viewedTasks.get(id);
-    }
-
     @Override
     public Iterator<Task> iterator() {
         return new Iterator<>() {
@@ -89,7 +73,7 @@ public class CustomLinkedList<T> implements Iterable<Task> {
         };
     }
 
-    private static class Node<E> {
+    public static class Node<E> {
         private Node<Task> prev;
         private Task item;
         private Node<Task> next;

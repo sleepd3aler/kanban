@@ -55,25 +55,13 @@ class CustomLinkedListTest {
     }
 
     @Test
-    void whenAddTasksThenMapContains() {
-        CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
-        viewedTasks.add(firstTask);
-        secondTask.setId(2);
-        viewedTasks.add(secondTask);
-        firstEpic.setId(3);
-        viewedTasks.add(firstEpic);
-        List<Task> expected = viewedTasks.getTasks();
-        assertThat(expected).hasSize(3)
-                .contains(firstTask, secondTask, firstEpic);
+    void whenRemoveNodeThenListDoesntContainsTask() {
+        CustomLinkedList<Task> test = new CustomLinkedList<>();
+        CustomLinkedList.Node<Task> toRemove = test.linkLast(firstTask);
+        test.linkLast(secondTask);
+        test.removeNode(toRemove);
+        assertThat(test).hasSize(1)
+                .doesNotContain(firstTask);
     }
 
-    @Test
-    void whenAddViewedTaskThenMapDoesntContainsTask() {
-        CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
-        viewedTasks.add(firstTask);
-        secondTask.setId(2);
-        viewedTasks.add(secondTask);
-        viewedTasks.add(firstTask);
-        assertThat(viewedTasks).hasSize(2);
-    }
 }
