@@ -2,16 +2,15 @@ package ru.kanban.utils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import ru.kanban.model.Task;
 
-public class CustomLinkedList<T> implements Iterable<Task> {
-    private Node<Task> head;
-    private Node<Task> tail;
+public class CustomLinkedList<T> implements Iterable<T> {
+    private Node<T> head;
+    private Node<T> tail;
     private int size;
 
-    public Node<Task> linkLast(Task value) {
-        Node<Task> last = tail;
-        Node<Task> newNode = new Node<>(last, value, null);
+    public Node<T> linkLast(T value) {
+        Node<T> last = tail;
+        Node<T> newNode = new Node<>(last, value, null);
         tail = newNode;
         if (last == null) {
             head = newNode;
@@ -22,18 +21,18 @@ public class CustomLinkedList<T> implements Iterable<Task> {
         return newNode;
     }
 
-    public ArrayList<Task> getTasks() {
-        ArrayList<Task> result = new ArrayList<>();
-        for (Task task : this) {
+    public ArrayList<T> getTasks() {
+        ArrayList<T> result = new ArrayList<>();
+        for (T task : this) {
             result.add(task);
         }
         return result;
     }
 
-    public void removeNode(Node<Task> nodeToRemove) {
+    public void removeNode(Node<T> nodeToRemove) {
         if (nodeToRemove != null) {
-            Node<Task> prev = nodeToRemove.prev;
-            Node<Task> next = nodeToRemove.next;
+            Node<T> prev = nodeToRemove.prev;
+            Node<T> next = nodeToRemove.next;
             if (prev == null) {
                 head = next;
             } else {
@@ -52,9 +51,9 @@ public class CustomLinkedList<T> implements Iterable<Task> {
     }
 
     @Override
-    public Iterator<Task> iterator() {
+    public Iterator<T> iterator() {
         return new Iterator<>() {
-            private Node<Task> current = head;
+            private Node<T> current = head;
 
             @Override
             public boolean hasNext() {
@@ -62,27 +61,15 @@ public class CustomLinkedList<T> implements Iterable<Task> {
             }
 
             @Override
-            public Task next() {
+            public T next() {
                 if (hasNext()) {
-                    Task result = current.item;
+                    T result = current.item;
                     current = current.next;
                     return result;
                 }
                 return null;
             }
         };
-    }
-
-    public static class Node<E> {
-        private Node<Task> prev;
-        private Task item;
-        private Node<Task> next;
-
-        public Node(Node<Task> prev, Task item, Node<Task> next) {
-            this.prev = prev;
-            this.item = item;
-            this.next = next;
-        }
     }
 
 }

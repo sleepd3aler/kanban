@@ -57,7 +57,7 @@ class CustomLinkedListTest {
     @Test
     void whenRemoveNodeThenListDoesntContainsTask() {
         CustomLinkedList<Task> test = new CustomLinkedList<>();
-        CustomLinkedList.Node<Task> toRemove = test.linkLast(firstTask);
+        Node<Task> toRemove = test.linkLast(firstTask);
         test.linkLast(secondTask);
         test.removeNode(toRemove);
         assertThat(test).hasSize(1)

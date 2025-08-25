@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Map;
 import ru.kanban.model.Task;
 import ru.kanban.utils.CustomLinkedList;
+import ru.kanban.utils.Node;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    private Map<Integer, CustomLinkedList.Node<Task>> historyMap = new HashMap<>();
-    private CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
+    private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
+    private final CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
 
     @Override
     public void setToViewed(Task task) {
@@ -20,13 +21,13 @@ public class InMemoryHistoryManager implements HistoryManager {
         if (historyMap.containsKey(task.getId())) {
             viewedTasks.removeNode(historyMap.get(task.getId()));
         }
-        CustomLinkedList.Node<Task> lastViewed = viewedTasks.linkLast(task);
+        Node<Task> lastViewed = viewedTasks.linkLast(task);
         historyMap.put(task.getId(), lastViewed);
     }
 
     @Override
     public void remove(int id) {
-        CustomLinkedList.Node<Task> removed = historyMap.remove(id);
+        Node<Task> removed = historyMap.remove(id);
         viewedTasks.removeNode(removed);
     }
 
