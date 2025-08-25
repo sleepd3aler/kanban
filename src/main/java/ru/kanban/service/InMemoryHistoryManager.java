@@ -28,7 +28,9 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void remove(int id) {
         Node<Task> removed = historyMap.remove(id);
-        viewedTasks.removeNode(removed);
+        if (removed != null) {
+            viewedTasks.removeNode(removed);
+        }
     }
 
     @Override

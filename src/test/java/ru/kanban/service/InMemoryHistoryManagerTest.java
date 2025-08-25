@@ -259,6 +259,18 @@ class InMemoryHistoryManagerTest {
     }
 
     @Test
+    void whenDeleteNonViewedTaskThenHistoryIsSame() {
+        Task thirdTask = new Task("Third", "Test", Status.NEW);
+        taskManager.addTask(firstTask);
+        taskManager.addTask(secondTask);
+        taskManager.addTask(thirdTask);
+        taskManager.getTasks();
+        historyManager.remove(4);
+        assertThat(historyManager.getViewedTasks()).hasSize(3)
+                .containsExactly(firstTask, secondTask, thirdTask);
+    }
+
+    @Test
     void whenDeleteViewedSubtaskFromManagerThenHistoryDoesntContainsIt() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
