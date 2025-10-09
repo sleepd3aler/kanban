@@ -8,11 +8,13 @@ public class Task {
     private int id = 1;
     private Status status;
     private boolean isViewed;
+    private  TaskType type;
 
     public Task(String name, String description, Status status) {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.type = TaskType.TASK;
     }
 
     public boolean isViewed() {
@@ -51,8 +53,16 @@ public class Task {
         return status;
     }
 
+    public TaskType getType() {
+        return type;
+    }
+
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setType(TaskType type) {
+        this.type = type;
     }
 
     @Override
@@ -77,4 +87,4 @@ public class Task {
                 " }";
     }
 }
-//Task{ID:1,Name:Name,Description:desc,Status:status}
+
