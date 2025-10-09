@@ -7,8 +7,6 @@ import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
-import static ru.kanban.model.TaskType.*;
-
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private Path path;
 
@@ -42,11 +40,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public String toString(Task task) {
-        TaskType taskType = task instanceof Epic ? EPIC
-                : task instanceof Subtask ? SUBTASK
-                : TASK;
         return String.format("%d,%s,%s,%s,%s,%s",
-                task.getId(), taskType, task.getName(), task.getStatus(), task.getDescription(),
+                task.getId(), task.getType(), task.getName(), task.getStatus(), task.getDescription(),
                 task instanceof Subtask ? ((Subtask) task).getEpic().getId() : "");
     }
 
@@ -250,7 +245,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         epics.forEach(System.out::println);
         List<Subtask> subtasks = loadedManager.getSubtasks();
         subtasks.forEach(System.out::println);
-        loadedManager.getHistory().forEach(System.out::println);
+        List<Task> test = loadedManager.getHistory();
+        test.forEach(System.out::println);
 
     }
 }
