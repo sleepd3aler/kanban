@@ -19,10 +19,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addTask(Task task) {
-        //Актуальна ли такая проверка?
-//        if (task == null) {
-//            return;
-//        }
+        if (task == null) {
+            return;
+        }
         task.setId(ids++);
         tasks.put(task.getId(), task);
     }

@@ -2,10 +2,12 @@ package ru.kanban.service;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
+import static ru.kanban.model.TaskType.EPIC;
 import static ru.kanban.model.TaskType.SUBTASK;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -87,34 +89,27 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 historyManager
         );
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            reader.lines()
+            List<String> tasks = reader.lines().toList();
+            tasks.stream()
                     .skip(1)
-                    .takeWhile(string -> !string.startsWith("History"))
+                    .takeWhile(string -> !string.startsWith("History: "))
                     .forEach(string -> {
-                        System.out.println(string);
                         Task task = fileBackedTaskManager.fromString(string);
-                        if (task instanceof Epic) {
+                        if (task.getType().equals(EPIC)) {
                             fileBackedTaskManager.addEpic((Epic) task);
                             return;
                         }
-                        if (task instanceof Subtask) {
+                        if (task.getType().equals(SUBTASK)) {
                             fileBackedTaskManager.addSubtask((Subtask) task);
                         } else {
                             fileBackedTaskManager.addTask(task);
                         }
-                    })
-            ;
-            reader.lines()
-                    .dropWhile(string -> string.startsWith("History"))
+                    });
+
+            tasks.stream()
+                    .dropWhile(string -> !string.startsWith("History: "))
                     .skip(1)
-                    .forEach(string -> {
-                        if (string == null) {
-                            return;
-                        }
-                                Task task = fileBackedTaskManager.fromString(string);
-                                historyManager.addToHistory(task);
-                            }
-                    );
+                    .forEach(string -> historyManager.addToHistory(fileBackedTaskManager.fromString(string)));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -218,41 +213,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Optional<Epic> res = super.getEpic(id);
         save();
         return res;
-    }
-
-    public static void main(String[] args) throws IOException {
-        File tempFile = File.createTempFile("temp", "csv");
-        HistoryManager historyManager = Managers.getDefaultHistoryManager();
-        FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
-        Task task1 = new Task("Task 1", "Description 1", Status.IN_PROGRESS);
-        Task task2 = new Task("Task 2", "Description 2", Status.IN_PROGRESS);
-        Epic epic1 = new Epic("Epic 1", "Description 1", Status.IN_PROGRESS);
-        Epic epic2 = new Epic("Epic 2", "Description 2", Status.IN_PROGRESS);
-        Subtask subtask1 = new Subtask("Subtask1", "Description1", Status.NEW, epic1);
-        Subtask subtask2 = new Subtask("Subtask2", "Description2", Status.NEW, epic2);
-        fileBackedTaskManager.addTask(task1);
-        fileBackedTaskManager.addTask(task2);
-        fileBackedTaskManager.addEpic(epic1);
-        fileBackedTaskManager.addEpic(epic2);
-        fileBackedTaskManager.addSubtask(subtask1);
-        fileBackedTaskManager.addSubtask(subtask2);
-        fileBackedTaskManager.updateEpic(epic1);
-        fileBackedTaskManager.getTask(1);
-        fileBackedTaskManager.getTask(2);
-        fileBackedTaskManager.getEpic(3);
-        fileBackedTaskManager.getSubtask(6);
-        fileBackedTaskManager.getHistory();
-//        try (BufferedReader reader = new BufferedReader(new FileReader(tempFile))) {
-//            reader.lines().forEach(System.out::println);
-//        }
-        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-//        List<Task> tasks = loadedManager.getTasks();
-//        tasks.forEach(System.out::println);
-//        List<Epic> epics = loadedManager.getEpics();
-//        epics.forEach(System.out::println);
-//        List<Subtask> subtasks = loadedManager.getSubtasks();
-//        subtasks.forEach(System.out::println);
-//        List<Task> test = loadedManager.getHistory();
-//        test.forEach(System.out::println);
     }
 }
