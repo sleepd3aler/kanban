@@ -1,6 +1,7 @@
 package ru.kanban.model;
 
 import java.util.Objects;
+//
 
 public class Task {
     private String name;
