@@ -1,6 +1,7 @@
 package ru.kanban.service;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +20,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public void save() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(path.toFile()))) {
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(path.toFile()), StandardCharsets.UTF_8))) {
             writer.println("id,type,name,status,description,epic");
             for (Task task : getTasks()) {
                 writer.println(toString(task));
@@ -88,7 +91,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 file.toPath(),
                 historyManager
         );
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                        new FileInputStream(file), StandardCharsets.UTF_8
+                ))) {
             List<String> tasks = reader.lines().toList();
             tasks.stream()
                     .skip(1)
