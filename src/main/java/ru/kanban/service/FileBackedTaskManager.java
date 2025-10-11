@@ -2,10 +2,11 @@ package ru.kanban.service;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
+
+import static ru.kanban.model.TaskType.SUBTASK;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private Path path;
@@ -40,12 +41,16 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public String toString(Task task) {
+        TaskType type = task.getType();
         return String.format("%d,%s,%s,%s,%s,%s",
                 task.getId(), task.getType(), task.getName(), task.getStatus(), task.getDescription(),
-                task instanceof Subtask ? ((Subtask) task).getEpic().getId() : "");
+                type.equals(SUBTASK) ? ((Subtask) task).getEpic().getId() : "");
     }
 
     public Task fromString(String value) {
+        if (value.isEmpty()) {
+            return null;
+        }
         String[] parts = value.split(",");
         int id = Integer.parseInt(parts[0]);
         TaskType type = TaskType.valueOf(parts[1]);
@@ -63,15 +68,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 return epic;
             case SUBTASK:
                 int epicId = Integer.parseInt(parts[5]);
-                Optional<Epic> checkEpic = getEpic(epicId);
-                if (checkEpic.isPresent()) {
-                    Epic current = checkEpic.get();
+                Epic current = super.getEpicById(epicId);
+                if (current != null) {
                     Subtask subtask = new Subtask(name, description, status, current);
                     subtask.setId(id);
                     return subtask;
                 }
             default:
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Subtask: " + name + ", missing Epic");
         }
 
     }
@@ -87,6 +91,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .skip(1)
                     .takeWhile(string -> !string.startsWith("History"))
                     .forEach(string -> {
+                        System.out.println(string);
                         Task task = fileBackedTaskManager.fromString(string);
                         if (task instanceof Epic) {
                             fileBackedTaskManager.addEpic((Epic) task);
@@ -103,6 +108,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .dropWhile(string -> string.startsWith("History"))
                     .skip(1)
                     .forEach(string -> {
+                        if (string == null) {
+                            return;
+                        }
                                 Task task = fileBackedTaskManager.fromString(string);
                                 historyManager.addToHistory(task);
                             }
@@ -228,25 +236,23 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         fileBackedTaskManager.addEpic(epic2);
         fileBackedTaskManager.addSubtask(subtask1);
         fileBackedTaskManager.addSubtask(subtask2);
-        fileBackedTaskManager.getSubtask(5).get().setStatus(Status.DONE);
         fileBackedTaskManager.updateEpic(epic1);
         fileBackedTaskManager.getTask(1);
         fileBackedTaskManager.getTask(2);
-        fileBackedTaskManager.getSubtask(6);
         fileBackedTaskManager.getEpic(3);
+        fileBackedTaskManager.getSubtask(6);
         fileBackedTaskManager.getHistory();
-        try (BufferedReader reader = new BufferedReader(new FileReader(tempFile))) {
-            reader.lines().forEach(System.out::println);
-        }
+//        try (BufferedReader reader = new BufferedReader(new FileReader(tempFile))) {
+//            reader.lines().forEach(System.out::println);
+//        }
         FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(tempFile);
-        List<Task> tasks = loadedManager.getTasks();
-        tasks.forEach(System.out::println);
-        List<Epic> epics = loadedManager.getEpics();
-        epics.forEach(System.out::println);
-        List<Subtask> subtasks = loadedManager.getSubtasks();
-        subtasks.forEach(System.out::println);
-        List<Task> test = loadedManager.getHistory();
-        test.forEach(System.out::println);
-
+//        List<Task> tasks = loadedManager.getTasks();
+//        tasks.forEach(System.out::println);
+//        List<Epic> epics = loadedManager.getEpics();
+//        epics.forEach(System.out::println);
+//        List<Subtask> subtasks = loadedManager.getSubtasks();
+//        subtasks.forEach(System.out::println);
+//        List<Task> test = loadedManager.getHistory();
+//        test.forEach(System.out::println);
     }
 }

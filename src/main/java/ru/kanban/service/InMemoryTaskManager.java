@@ -19,6 +19,10 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addTask(Task task) {
+        //Актуальна ли такая проверка?
+//        if (task == null) {
+//            return;
+//        }
         task.setId(ids++);
         tasks.put(task.getId(), task);
     }
@@ -77,6 +81,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Epic> getEpics() {
         return new ArrayList<>(epics.values());
+    }
+
+    public Epic getEpicById(int id) {
+        return epics.get(id);
     }
 
     @Override
