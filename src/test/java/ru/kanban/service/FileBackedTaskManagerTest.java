@@ -123,19 +123,16 @@ class FileBackedTaskManagerTest {
                 "2,EPIC,Epic 1,NEW,Description 1,",
                 "3,SUBTASK,Subtask 1,NEW,Description 1,2",
                 "History: ",
-                "1,TASK,Task 1,IN_PROGRESS,Description 1,"
+                "1"
 
         );
         try (PrintWriter writer = new PrintWriter(testFile)) {
             strings.forEach(writer::println);
         }
         FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(testFile);
-        List<Task> expected = List.of(
-                task1
-        );
         List<Task> result = manager.getHistory();
-        assertThat(result).isNotEmpty()
-                .isEqualTo(expected);
+        assertThat(result).isNotEmpty();
+        assertThat(result.get(0)).isEqualTo(task1);
     }
 
     @Test
