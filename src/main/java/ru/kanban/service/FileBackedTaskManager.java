@@ -106,6 +106,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             List<String> tasks = reader.lines().toList();
             tasks.stream()
                     .skip(1)
+                    .filter(string -> !string.isBlank())
                     .takeWhile(string -> !string.startsWith("History:"))
                     .forEach(string -> {
                         Task task = fileBackedTaskManager.fromString(string);
@@ -123,9 +124,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             tasks.stream()
                     .dropWhile(string -> !string.startsWith("History:"))
                     .skip(1)
+                    .filter(string -> !string.isBlank())
                     .forEach(string -> {
                                 Task task = fileBackedTaskManager.fromString(string);
-                                historyManager.addToHistory(task);
+                                if (task != null) {
+                                    historyManager.addToHistory(task);
+                                }
                             }
                     );
 
