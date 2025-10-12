@@ -36,8 +36,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 writer.println(toString(subtask));
             }
 
-            writer.println("History: ");
-            for (Task task : getHistory()) {
+            writer.println("History:");
+            List<Task> history = getHistory();
+            for (Task task : history) {
                 writer.println(toString(task));
             }
         } catch (IOException e) {
@@ -98,7 +99,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             List<String> tasks = reader.lines().toList();
             tasks.stream()
                     .skip(1)
-                    .takeWhile(string -> !string.startsWith("History: "))
+                    .takeWhile(string -> !string.startsWith("History:"))
                     .forEach(string -> {
                         Task task = fileBackedTaskManager.fromString(string);
                         if (task.getType().equals(EPIC)) {
@@ -113,7 +114,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     });
 
             tasks.stream()
-                    .dropWhile(string -> !string.startsWith("History: "))
+                    .dropWhile(string -> !string.startsWith("History:"))
                     .skip(1)
                     .forEach(string -> historyManager.addToHistory(fileBackedTaskManager.fromString(string)));
         } catch (IOException e) {
@@ -196,27 +197,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public Optional<Task> updateTask(Task task) {
         Optional<Task> res = super.updateTask(task);
-        save();
-        return res;
-    }
-
-    @Override
-    public Optional<Task> getTask(int id) {
-        Optional<Task> res = super.getTask(id);
-        save();
-        return res;
-    }
-
-    @Override
-    public Optional<Subtask> getSubtask(int id) {
-        Optional<Subtask> res = super.getSubtask(id);
-        save();
-        return res;
-    }
-
-    @Override
-    public Optional<Epic> getEpic(int id) {
-        Optional<Epic> res = super.getEpic(id);
         save();
         return res;
     }
