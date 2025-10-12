@@ -17,7 +17,7 @@ import static ru.kanban.model.Status.NEW;
 
 class FileBackedTaskManagerTest {
     private FileBackedTaskManager fileBackedTaskManager;
-    private HistoryManager historyManager = Managers.getDefaultHistoryManager();
+    private HistoryManager historyManager;
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
@@ -25,6 +25,7 @@ class FileBackedTaskManagerTest {
     @BeforeEach
     void init() throws IOException {
         File tempFile = File.createTempFile("temp", "csv");
+        historyManager = Managers.getDefaultHistoryManager();
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
@@ -91,7 +92,7 @@ class FileBackedTaskManagerTest {
     void loadFromFileTest() throws IOException {
         File testFile = File.createTempFile("test", "csv");
         List<String> strings = List.of(
-                "id,type,name,status,description,epic,",
+                "id,type,name,status,description,epic",
                 "1,TASK,Task 1,IN_PROGRESS,Description 1,",
                 "2,EPIC,Epic 1,NEW,Description 1,",
                 "3,SUBTASK,Subtask 1,NEW,Description 1,2"
@@ -122,7 +123,7 @@ class FileBackedTaskManagerTest {
                 "2,EPIC,Epic 1,NEW,Description 1,",
                 "3,SUBTASK,Subtask 1,NEW,Description 1,2",
                 "History: ",
-                "1,TASK,Task 1,IN_PROGRESS,Description 1"
+                "1,TASK,Task 1,IN_PROGRESS,Description 1,"
 
         );
         try (PrintWriter writer = new PrintWriter(testFile)) {
