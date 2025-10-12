@@ -47,7 +47,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             writer.println("History:");
             StringJoiner historyIds = new StringJoiner(",");
             for (Task task : history) {
-                historyIds.add(String.valueOf(task.getId()));
+                historyIds.add(toString(task));
             }
             writer.println(historyIds);
         }
