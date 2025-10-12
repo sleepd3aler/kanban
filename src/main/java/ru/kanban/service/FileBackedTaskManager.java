@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
@@ -35,14 +36,19 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (Subtask subtask : getSubtasks()) {
                 writer.println(toString(subtask));
             }
-
-            writer.println("History:");
-            List<Task> history = getHistory();
-            for (Task task : history) {
-                writer.println(toString(task));
-            }
+            saveHistory(getHistory(), writer);
         } catch (IOException e) {
             throw new ManagerSaveException();
+        }
+    }
+
+    private void saveHistory(List<Task> history, PrintWriter writer) {
+        if (history != null) {
+            writer.println("History:");
+            StringJoiner historyIds = new StringJoiner(",");
+            history.forEach(task -> historyIds.add(String.valueOf(task.getId()))
+            );
+            writer.println(historyIds);
         }
     }
 

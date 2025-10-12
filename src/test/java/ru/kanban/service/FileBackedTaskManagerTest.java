@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
@@ -18,7 +17,6 @@ import static ru.kanban.model.Status.NEW;
 
 class FileBackedTaskManagerTest {
     private FileBackedTaskManager fileBackedTaskManager;
-    private HistoryManager historyManager;
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
@@ -26,7 +24,7 @@ class FileBackedTaskManagerTest {
     @BeforeEach
     void init() throws IOException {
         File tempFile = File.createTempFile("temp", "csv");
-        historyManager = Managers.getDefaultHistoryManager();
+        HistoryManager historyManager = Managers.getDefaultHistoryManager();
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
@@ -85,9 +83,9 @@ class FileBackedTaskManagerTest {
     @Test
     void whenFromStringToSubtaskWithMissingEpicThenExceptionThrown() {
         String string = "1,SUBTASK,Subtask 1,NEW,Description 1,3";
-        assertThatThrownBy(() -> {
-            fileBackedTaskManager.fromString(string);
-        }).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() ->
+                fileBackedTaskManager.fromString(string)
+        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -117,7 +115,6 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
-    @Disabled
     void whenLoadFromFileThenGetHistory() throws IOException {
         File testFile = File.createTempFile("test", "csv");
         List<String> strings = List.of(
@@ -142,7 +139,6 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
-    @Disabled
     void whenLoadFromFileThenHistoryIsEmpty() throws IOException {
         File testFile = File.createTempFile("test", "csv");
         List<String> strings = List.of(
@@ -160,29 +156,4 @@ class FileBackedTaskManagerTest {
         assertThat(result).isEmpty();
     }
 
-    @Test
-    void whenLoadFromFileThenGetHistory2() throws IOException {
-        File testFile = File.createTempFile("test", "csv");
-        List<String> strings = List.of(
-                "id,type,name,status,description,epic",
-                "1,TASK,Task 1,IN_PROGRESS,Description 1,",
-                "2,EPIC,Epic 1,NEW,Description 1,",
-                "3,SUBTASK,Subtask 1,NEW,Description 1,2",
-                "History: ",
-                "1,TASK,Task 1,IN_PROGRESS,Description 1,"
-
-        );
-        try (PrintWriter writer = new PrintWriter(testFile)) {
-            strings.forEach(writer::println);
-        }
-        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(testFile);
-        List<Task> result = manager.getHistory();
-
-        assertThat(result).hasSize(1);
-        Task historyTask = result.get(0);
-        assertThat(historyTask.getId()).isEqualTo(1);
-        assertThat(historyTask.getName()).isEqualTo("Task 1");
-        assertThat(historyTask.getDescription()).isEqualTo("Description 1");
-        assertThat(historyTask.getStatus()).isEqualTo(IN_PROGRESS);
-    }
 }
