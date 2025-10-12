@@ -3,7 +3,6 @@ package ru.kanban.service;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -124,21 +123,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             tasks.stream()
                     .dropWhile(string -> !string.startsWith("History:"))
                     .skip(1)
-                    .flatMap(line -> Arrays.stream(line.split(",")))
-                    .map(Integer::parseInt)
-                    .forEach(id -> {
-                                Task task = fileBackedTaskManager.getTask(id).orElse(null);
-                                if (task == null) {
-                                    task = fileBackedTaskManager.getEpic(id).orElse(null);
-                                }
-                                if (task == null) {
-                                    task = fileBackedTaskManager.getSubtask(id).orElse(null);
-                                }
-                                if (task != null) {
-                                    historyManager.addToHistory(task);
-                                }
+                    .forEach(string -> {
+                                Task task = fileBackedTaskManager.fromString(string);
+                                historyManager.addToHistory(task);
                             }
-                            );
+                    );
 
         } catch (IOException e) {
             e.printStackTrace();

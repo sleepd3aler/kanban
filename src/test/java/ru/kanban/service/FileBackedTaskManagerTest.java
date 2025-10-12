@@ -17,14 +17,16 @@ import static ru.kanban.model.Status.NEW;
 
 class FileBackedTaskManagerTest {
     private FileBackedTaskManager fileBackedTaskManager;
+    private File tempFile;
+    private HistoryManager historyManager;
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
 
     @BeforeEach
     void init() throws IOException {
-        File tempFile = File.createTempFile("temp", "csv");
-        HistoryManager historyManager = Managers.getDefaultHistoryManager();
+        tempFile = File.createTempFile("temp", "csv");
+        historyManager = Managers.getDefaultHistoryManager();
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
@@ -123,7 +125,7 @@ class FileBackedTaskManagerTest {
                 "2,EPIC,Epic 1,NEW,Description 1,",
                 "3,SUBTASK,Subtask 1,NEW,Description 1,2",
                 "History: ",
-                "1"
+                "1,TASK,Task 1,IN_PROGRESS,Description 1"
 
         );
         try (PrintWriter writer = new PrintWriter(testFile)) {
@@ -153,4 +155,29 @@ class FileBackedTaskManagerTest {
         assertThat(result).isEmpty();
     }
 
+    @Test
+    void whenWriteToFileThenLoadFromFileSuccessful() throws IOException {
+        fileBackedTaskManager.getTask(1);
+        fileBackedTaskManager.getEpic(2);
+        fileBackedTaskManager.getSubtask(3);
+        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(tempFile);
+        Task task = manager.getTask(1).get();
+        Epic epic = manager.getEpic(2).get();
+        Subtask subtask = manager.getSubtask(3).get();
+        List<Task> result = manager.getHistory();
+        assertThat(task).isNotNull().isEqualTo(task1);
+        assertThat(epic).isNotNull();
+        assertThat(epic.getName()).isEqualTo(epic1.getName());
+        assertThat(subtask).isNotNull();
+        assertThat(subtask.getName()).isEqualTo(subtask1.getName());
+        assertThat(result).isNotEmpty()
+                .contains(task, epic, subtask);
+    }
+
+    @Test
+    void whenWriteToFileWithEmptyHistory() {
+        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(tempFile);
+        List<Task> result = manager.getHistory();
+        assertThat(result).isEmpty();
+    }
 }
