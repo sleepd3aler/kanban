@@ -19,6 +19,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void addTask(Task task) {
+        if (task == null) {
+            return;
+        }
         task.setId(ids++);
         tasks.put(task.getId(), task);
     }
@@ -89,6 +92,10 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.addToHistory(Epic);
         });
         return result;
+    }
+
+    public Epic getEpicById(int id) {
+        return epics.get(id);
     }
 
     @Override

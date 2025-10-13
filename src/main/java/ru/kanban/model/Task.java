@@ -8,7 +8,7 @@ public class Task {
     private int id = 1;
     private Status status;
     private boolean isViewed;
-    private  TaskType type;
+    private TaskType type;
 
     public Task(String name, String description, Status status) {
         this.name = name;
