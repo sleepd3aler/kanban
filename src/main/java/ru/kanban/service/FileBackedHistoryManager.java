@@ -36,6 +36,10 @@ public class FileBackedHistoryManager extends InMemoryHistoryManager {
         }
     }
 
+    public void addWithoutWrite(Task task) {
+        super.addToHistory(task);
+    }
+
     private String toString(Task task) {
         TaskType type = task.getType();
         return String.format("%d,%s,%s,%s,%s,%s",

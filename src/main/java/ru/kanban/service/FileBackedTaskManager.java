@@ -36,7 +36,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (Subtask subtask : getSubtasks()) {
                 writer.println(toString(subtask));
             }
-//            saveHistory(getHistory(), writer);
         } catch (IOException e) {
             throw new ManagerSaveException();
         }
@@ -94,7 +93,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public static FileBackedTaskManager loadFromFile(File file) {
-//        HistoryManager historyManager = Managers.getDefaultHistoryManager();
         FileBackedHistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager();
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
                 file.toPath(),
@@ -131,7 +129,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .forEach(string -> {
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task != null) {
-                                    historyManager.addToHistory(task);
+                                    historyManager.addWithoutWrite(task);
                                 }
                             }
                     );
