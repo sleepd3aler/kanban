@@ -12,4 +12,8 @@ public class Managers {
     public static HistoryManager getDefaultHistoryManager() {
         return new InMemoryHistoryManager();
     }
+
+    public static FileBackedHistoryManager getDefaultFileBackedHistoryManager() {
+        return new FileBackedHistoryManager();
+    }
 }

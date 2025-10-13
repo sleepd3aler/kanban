@@ -36,7 +36,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             for (Subtask subtask : getSubtasks()) {
                 writer.println(toString(subtask));
             }
-            saveHistory(getHistory(), writer);
+//            saveHistory(getHistory(), writer);
         } catch (IOException e) {
             throw new ManagerSaveException();
         }
@@ -94,20 +94,25 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public static FileBackedTaskManager loadFromFile(File file) {
-        HistoryManager historyManager = Managers.getDefaultHistoryManager();
+//        HistoryManager historyManager = Managers.getDefaultHistoryManager();
+        FileBackedHistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager();
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
                 file.toPath(),
                 historyManager
         );
-        try (BufferedReader reader = new BufferedReader(
+        try (BufferedReader taskReader = new BufferedReader(
                 new InputStreamReader(
                         new FileInputStream(file), StandardCharsets.UTF_8
-                ))) {
-            List<String> tasks = reader.lines().toList();
+                ));
+        BufferedReader historyReader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(historyManager.getHistoryFile()), StandardCharsets.UTF_8
+        ))
+                ) {
+            List<String> tasks = taskReader.lines().toList();
+            List<String> history = historyReader.lines().toList();
             tasks.stream()
                     .skip(1)
                     .filter(string -> !string.isBlank())
-                    .takeWhile(string -> !string.startsWith("History:"))
                     .forEach(string -> {
                         Task task = fileBackedTaskManager.fromString(string);
                         if (task.getType().equals(EPIC)) {
@@ -121,10 +126,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                         }
                     });
 
-            tasks.stream()
-                    .dropWhile(string -> !string.startsWith("History:"))
-                    .skip(1)
-                    .filter(string -> !string.isBlank())
+            history.stream()
+                    .filter(string -> !string.isEmpty())
                     .forEach(string -> {
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task != null) {
