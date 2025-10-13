@@ -114,13 +114,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .forEach(string -> {
                         Task task = fileBackedTaskManager.fromString(string);
                         if (task.getType().equals(EPIC)) {
-                            fileBackedTaskManager.addEpic((Epic) task);
+                            fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
                             return;
                         }
                         if (task.getType().equals(SUBTASK)) {
-                            fileBackedTaskManager.addSubtask((Subtask) task);
+                            fileBackedTaskManager.addSubtaskWithoutSaving((Subtask) task);
                         } else {
-                            fileBackedTaskManager.addTask(task);
+                            fileBackedTaskManager.addTaskWithoutFileSaving(task);
                         }
                     });
 
@@ -163,6 +163,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void addEpic(Epic epic) {
         super.addEpic(epic);
         save();
+    }
+
+    private void addTaskWithoutFileSaving(Task task) {
+        super.addTask(task);
+    }
+
+    private void addEpicWithoutFileSaving(Epic epic) {
+        super.addEpic(epic);
+    }
+
+    private void addSubtaskWithoutSaving(Subtask subtask) {
+        super.addSubtask(subtask);
     }
 
     @Override
