@@ -11,6 +11,7 @@ import ru.kanban.service.InMemoryTaskManager;
 public class Main {
     public static void main(String[] args) {
         InMemoryTaskManager taskManager = new InMemoryTaskManager(new InMemoryHistoryManager());
+
         Task task1 = new Task("Task 1", "Description 1", Status.IN_PROGRESS);
         Task task2 = new Task("Task 2", "Description 2", Status.IN_PROGRESS);
         Task task3 = new Task("Task 3", "Description 3", Status.IN_PROGRESS);

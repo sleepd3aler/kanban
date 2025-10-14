@@ -1,11 +1,10 @@
 package ru.kanban.service;
-//
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.StringJoiner;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
@@ -38,17 +37,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
         } catch (IOException e) {
             throw new ManagerSaveException();
-        }
-    }
-
-    private void saveHistory(List<Task> history, PrintWriter writer) {
-        if (history != null && !history.isEmpty()) {
-            writer.println("History:");
-            StringJoiner historyIds = new StringJoiner(",");
-            for (Task task : history) {
-                historyIds.add(toString(task));
-            }
-            writer.println(historyIds);
         }
     }
 
@@ -92,38 +80,38 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     }
 
-    public static FileBackedTaskManager loadFromFile(File file) {
-        FileBackedHistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager();
+    public static FileBackedTaskManager loadFromFile(File taskFile, File historyFile) {
+        FileBackedHistoryManager historyManager = new FileBackedHistoryManager();
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
-                file.toPath(),
+                taskFile.toPath(),
                 historyManager
         );
         try (BufferedReader taskReader = new BufferedReader(
                 new InputStreamReader(
-                        new FileInputStream(file), StandardCharsets.UTF_8
+                        new FileInputStream(taskFile), StandardCharsets.UTF_8
                 ));
-        BufferedReader historyReader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(historyManager.getHistoryFile()), StandardCharsets.UTF_8
-        ))
-                ) {
+             BufferedReader historyReader = new BufferedReader(new InputStreamReader(
+                     new FileInputStream(historyFile), StandardCharsets.UTF_8
+             ))
+        ) {
             List<String> tasks = taskReader.lines().toList();
             List<String> history = historyReader.lines().toList();
             tasks.stream()
                     .skip(1)
                     .filter(string -> !string.isBlank())
                     .forEach(string -> {
-                        Task task = fileBackedTaskManager.fromString(string);
-                        if (task.getType().equals(EPIC)) {
-                            fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
-                            return;
-                        }
-                        if (task.getType().equals(SUBTASK)) {
-                            fileBackedTaskManager.addSubtaskWithoutSaving((Subtask) task);
-                        } else {
-                            fileBackedTaskManager.addTaskWithoutFileSaving(task);
-                        }
-                    });
-
+                                Task task = fileBackedTaskManager.fromString(string);
+                                if (task.getType().equals(EPIC)) {
+                                    fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
+                                    return;
+                                }
+                                if (task.getType().equals(SUBTASK)) {
+                                    fileBackedTaskManager.addSubtaskWithoutSaving((Subtask) task);
+                                } else {
+                                    fileBackedTaskManager.addTaskWithoutFileSaving(task);
+                                }
+                            }
+                    );
             history.stream()
                     .filter(string -> !string.isEmpty())
                     .forEach(string -> {
@@ -133,7 +121,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                                 }
                             }
                     );
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -229,4 +216,5 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
         return res;
     }
+
 }

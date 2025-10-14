@@ -9,15 +9,13 @@ import ru.kanban.model.TaskType;
 import static ru.kanban.model.TaskType.SUBTASK;
 
 public class FileBackedHistoryManager extends InMemoryHistoryManager {
-   private final File historyFile = new File("./src/main/resources/history.csv");
+    private final File historyFile;
 
     public FileBackedHistoryManager() {
+        this.historyFile = new File("./src/main/resources/history.csv");
         try {
-            if (historyFile.exists()) {
-                Files.deleteIfExists(historyFile.toPath());
-                Files.createFile(historyFile.toPath());
-            }
-
+            Files.deleteIfExists(historyFile.toPath());
+            Files.createFile(historyFile.toPath());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -30,7 +28,6 @@ public class FileBackedHistoryManager extends InMemoryHistoryManager {
                 new FileOutputStream(historyFile, true))
         )) {
             historyWriter.println(toString(task));
-
         } catch (IOException e) {
             e.printStackTrace();
         }
