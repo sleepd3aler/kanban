@@ -37,7 +37,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Task> getTasks() {
-        return new ArrayList<>(tasks.values());
+        List<Task> result = new ArrayList<>(tasks.values());
+        result.forEach(Task -> {
+            Task.setViewed(true);
+            historyManager.addToHistory(Task);
+        });
+        return result;
     }
 
     @Override
@@ -79,7 +84,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Epic> getEpics() {
-        return new ArrayList<>(epics.values());
+        List<Epic> result = new ArrayList<>(epics.values());
+        result.forEach(Epic -> {
+            Epic.setViewed(true);
+            historyManager.addToHistory(Epic);
+        });
+        return result;
     }
 
     public Epic getEpicById(int id) {
@@ -133,7 +143,12 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public List<Subtask> getSubtasks() {
-        return new ArrayList<>(subtasks.values());
+        List<Subtask> result = new ArrayList<>(subtasks.values());
+        result.forEach(Subtask -> {
+            Subtask.setViewed(true);
+            historyManager.addToHistory(Subtask);
+        });
+        return result;
     }
 
     @Override
@@ -180,6 +195,18 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public List<Task> getHistory() {
         return new ArrayList<>(historyManager.getViewedTasks());
+    }
+
+    public List<Task> getTasksWithoutAddingToHistory() {
+        return new ArrayList<>(tasks.values());
+    }
+
+    public List<Epic> getEpicsWithoutAddingToHistory() {
+        return new ArrayList<>(epics.values());
+    }
+
+    public List<Subtask> getSubtasksWithoutAddingToHistory() {
+        return new ArrayList<>(subtasks.values());
     }
 }
 

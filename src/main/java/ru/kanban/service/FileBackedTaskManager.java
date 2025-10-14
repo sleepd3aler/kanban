@@ -22,17 +22,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void save() {
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(path.toFile()), StandardCharsets.UTF_8))) {
+                        new FileOutputStream(path.toFile()), StandardCharsets.UTF_8))
+        ) {
             writer.println("id,type,name,status,description,epic");
-            for (Task task : getTasks()) {
+            for (Task task : getTasksWithoutAddingToHistory()) {
                 writer.println(toString(task));
             }
 
-            for (Epic epic : getEpics()) {
+            for (Epic epic : getEpicsWithoutAddingToHistory()) {
                 writer.println(toString(epic));
             }
 
-            for (Subtask subtask : getSubtasks()) {
+            for (Subtask subtask : getSubtasksWithoutAddingToHistory()) {
                 writer.println(toString(subtask));
             }
         } catch (IOException e) {
