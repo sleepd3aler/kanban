@@ -17,7 +17,6 @@ import static ru.kanban.model.Status.NEW;
 class FileBackedTaskManagerTest {
     private FileBackedTaskManager fileBackedTaskManager;
     private File tempFile;
-    private HistoryManager historyManager;
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
@@ -25,7 +24,8 @@ class FileBackedTaskManagerTest {
     @BeforeEach
     void init() throws IOException {
         tempFile = File.createTempFile("temp", "csv");
-        historyManager = Managers.getDefaultFileBackedHistoryManager();
+        File tempHistoryFile = File.createTempFile("temp_history", "csv");
+        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile);
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);

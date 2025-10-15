@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
@@ -26,7 +25,8 @@ class FileBackedHistoryManagerTest {
     @BeforeEach
     void init() throws IOException {
         tempFile = File.createTempFile("temp", "csv");
-        historyManager = Managers.getDefaultFileBackedHistoryManager();
+        File tempHistory = File.createTempFile("temp_history", "csv");
+        historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistory);
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
@@ -51,14 +51,13 @@ class FileBackedHistoryManagerTest {
 
     @Test
     void whenAddToHistoryWithoutWritingToFileThenFileIsEmpty() {
-        historyManager = new FileBackedHistoryManager();
+        historyManager = new FileBackedHistoryManager(tempFile);
         historyManager.addWithoutWrite(task1);
         historyManager.addWithoutWrite(epic1);
         assertThat(historyManager.getHistoryFile()).isEmpty();
     }
 
     @Test
-    @Disabled
     void whenLoadFromFileThenHistoryExpected() {
         fileBackedTaskManager.addTask(task1);
         fileBackedTaskManager.addEpic(epic1);

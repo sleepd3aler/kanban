@@ -1,5 +1,7 @@
 package ru.kanban.service;
 
+import java.io.File;
+
 public class Managers {
     private Managers() {
 
@@ -13,7 +15,7 @@ public class Managers {
         return new InMemoryHistoryManager();
     }
 
-    public static FileBackedHistoryManager getDefaultFileBackedHistoryManager() {
-        return new FileBackedHistoryManager();
+    public static FileBackedHistoryManager getDefaultFileBackedHistoryManager(File file) {
+        return new FileBackedHistoryManager(file);
     }
 }

@@ -97,7 +97,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public static FileBackedTaskManager loadFromFile(File taskFile, File historyFile) {
-        FileBackedHistoryManager historyManager = new FileBackedHistoryManager();
+        FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyFile);
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
                 taskFile.toPath(),
                 historyManager
@@ -116,6 +116,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .skip(1)
                     .filter(string -> !string.isBlank())
                     .forEach(string -> {
+                        System.out.println(string);
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task.getType().equals(EPIC)) {
                                     fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);

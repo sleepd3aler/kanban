@@ -1,7 +1,6 @@
 package ru.kanban.service;
 
 import java.io.*;
-import java.nio.file.Files;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 import ru.kanban.model.TaskType;
@@ -11,14 +10,8 @@ import static ru.kanban.model.TaskType.SUBTASK;
 public class FileBackedHistoryManager extends InMemoryHistoryManager {
     private final File historyFile;
 
-    public FileBackedHistoryManager() {
-        this.historyFile = new File("./src/main/resources/history.csv");
-        try {
-            Files.deleteIfExists(historyFile.toPath());
-            Files.createFile(historyFile.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public FileBackedHistoryManager(File file) {
+        this.historyFile = file;
     }
 
     @Override
