@@ -41,6 +41,21 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
+    public void writeToFile(Task task) {
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(path.toFile(), true), StandardCharsets.UTF_8)
+        )
+        ) {
+            if (path.toFile().length() == 0) {
+                writer.println("id,type,name,status,description,epic");
+            }
+                writer.println(toString(task));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public String toString(Task task) {
         TaskType type = task.getType();
         return String.format("%d,%s,%s,%s,%s,%s",
@@ -82,7 +97,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public static FileBackedTaskManager loadFromFile(File taskFile, File historyFile) {
-        FileBackedHistoryManager historyManager = new FileBackedHistoryManager();
+        FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyFile);
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
                 taskFile.toPath(),
                 historyManager
@@ -101,6 +116,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .skip(1)
                     .filter(string -> !string.isBlank())
                     .forEach(string -> {
+                        System.out.println(string);
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task.getType().equals(EPIC)) {
                                     fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
@@ -131,7 +147,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public void addTask(Task task) {
         super.addTask(task);
-        save();
+        writeToFile(task);
     }
 
     @Override
@@ -150,7 +166,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public void addEpic(Epic epic) {
         super.addEpic(epic);
-        save();
+        writeToFile(epic);
     }
 
     private void addTaskWithoutFileSaving(Task task) {
@@ -188,7 +204,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     @Override
     public void addSubtask(Subtask subtask) {
         super.addSubtask(subtask);
-        save();
+        writeToFile(subtask);
     }
 
     @Override
