@@ -202,6 +202,18 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
         return new ArrayList<>(historyManager.getViewedTasks());
     }
+
+    public List<Task> getTasksWithoutAddingToHistory() {
+        return new ArrayList<>(tasks.values());
+    }
+
+    public List<Epic> getEpicsWithoutAddingToHistory() {
+        return new ArrayList<>(epics.values());
+    }
+
+    public List<Subtask> getSubtasksWithoutAddingToHistory() {
+        return new ArrayList<>(subtasks.values());
+    }
 }
 
 
