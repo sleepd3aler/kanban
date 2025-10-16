@@ -71,5 +71,6 @@ class FileBackedHistoryManagerTest {
         List<Task> res = newManager.getHistory();
         assertThat(res).hasSize(3);
     }
+
 }
 
