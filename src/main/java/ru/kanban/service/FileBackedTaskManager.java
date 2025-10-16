@@ -103,9 +103,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     "Not enough arguments, for execute. Enter paths: to TaskManager and History"
             );
         }
-//        if (!args[0].endsWith(".csv") || args[1].endsWith(".csv")) {
-//            throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
-//        }
+        if (!args[0].endsWith(".csv") || !args[1].endsWith(".csv")) {
+            throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
+        }
         if (!Files.exists(Path.of(args[0]))) {
             throw new FileNotFoundException("File with tasks not found");
         }
