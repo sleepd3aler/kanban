@@ -25,8 +25,8 @@ class FileBackedTaskManagerTest {
     void init() throws IOException {
         tempFile = File.createTempFile("temp", "csv");
         File tempHistoryFile = File.createTempFile("temp_history", "csv");
-        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile);
-        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
+        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
+        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
         subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
@@ -101,21 +101,4 @@ class FileBackedTaskManagerTest {
                 fileBackedTaskManager.fromString(string)
         ).isInstanceOf(IllegalArgumentException.class);
     }
-
-//    @Test
-//    void whenWriteToFileThenLoadFromFileSuccessful() throws IOException {
-//        fileBackedTaskManager.getTask(1);
-//        fileBackedTaskManager.getEpic(2);
-//        fileBackedTaskManager.getSubtask(3);
-//        FileBackedTaskManager manager = FileBackedTaskManager.loadFromFile(tempFile);
-//        Task task = manager.getTask(1).get();
-//        Epic epic = manager.getEpic(2).get();
-//        Subtask subtask = manager.getSubtask(3).get();
-//        assertThat(task).isNotNull().isEqualTo(task1);
-//        assertThat(epic).isNotNull();
-//        assertThat(epic.getName()).isEqualTo(epic1.getName());
-//        assertThat(subtask).isNotNull();
-//        assertThat(subtask.getName()).isEqualTo(subtask1.getName());
-//    }
-
 }
