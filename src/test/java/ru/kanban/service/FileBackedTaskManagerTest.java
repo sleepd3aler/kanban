@@ -23,8 +23,8 @@ class FileBackedTaskManagerTest {
 
     @BeforeEach
     void init() throws IOException {
-        tempFile = File.createTempFile("temp", "csv");
-        File tempHistoryFile = File.createTempFile("temp_history", "csv");
+        tempFile = File.createTempFile("temp", ".csv");
+        File tempHistoryFile = File.createTempFile("temp_history", ".csv");
         HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
@@ -100,5 +100,23 @@ class FileBackedTaskManagerTest {
         assertThatThrownBy(() ->
                 fileBackedTaskManager.fromString(string)
         ).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void whenIncorrectPathThenExceptionThrown() throws IOException {
+        tempFile = File.createTempFile("temp", "csv");
+        File tempHistoryFile = File.createTempFile("temp_history", "csv");
+        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
+        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
+        task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
+        epic1 = new Epic("Epic 1", "Description 1", NEW);
+        subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
+        fileBackedTaskManager.addTask(task1);
+        fileBackedTaskManager.addEpic(epic1);
+        fileBackedTaskManager.addSubtask(subtask1);
+        String[] args = {tempFile.toString(), tempHistoryFile.toString()};
+        assertThatThrownBy(() ->
+                FileBackedTaskManager.loadFromFile(args))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
