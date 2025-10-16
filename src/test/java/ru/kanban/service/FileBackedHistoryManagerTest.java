@@ -21,16 +21,18 @@ class FileBackedHistoryManagerTest {
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
+    private String[] args;
 
     @BeforeEach
     void init() throws IOException {
-        tempFile = File.createTempFile("temp", "csv");
-        File tempHistory = File.createTempFile("temp_history", "csv");
-        historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistory);
-        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toPath(), historyManager);
+        tempFile = File.createTempFile("temp", ".csv");
+        File tempHistory = File.createTempFile("temp_history", ".csv");
+        historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistory.toString());
+        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
         subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
+        args = new String[]{tempFile.toString(), tempHistory.toString()};
     }
 
     @Test
@@ -51,7 +53,7 @@ class FileBackedHistoryManagerTest {
 
     @Test
     void whenAddToHistoryWithoutWritingToFileThenFileIsEmpty() {
-        historyManager = new FileBackedHistoryManager(tempFile);
+        historyManager = new FileBackedHistoryManager(tempFile.toString());
         historyManager.addWithoutWrite(task1);
         historyManager.addWithoutWrite(epic1);
         assertThat(historyManager.getHistoryFile()).isEmpty();
@@ -65,8 +67,7 @@ class FileBackedHistoryManagerTest {
         fileBackedTaskManager.getTask(1);
         fileBackedTaskManager.getEpic(2);
         fileBackedTaskManager.getSubtask(3);
-        File history = historyManager.getHistoryFile();
-        FileBackedTaskManager newManager = FileBackedTaskManager.loadFromFile(tempFile, history);
+        FileBackedTaskManager newManager = FileBackedTaskManager.loadFromFile(args);
         List<Task> res = newManager.getHistory();
         assertThat(res).hasSize(3);
     }

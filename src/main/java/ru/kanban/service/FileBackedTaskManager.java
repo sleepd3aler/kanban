@@ -2,6 +2,7 @@ package ru.kanban.service;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -12,17 +13,17 @@ import static ru.kanban.model.TaskType.EPIC;
 import static ru.kanban.model.TaskType.SUBTASK;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
-    private Path path;
+    private final String filePath;
 
-    public FileBackedTaskManager(Path path, HistoryManager historyManager) {
+    public FileBackedTaskManager(String path, HistoryManager historyManager) {
         super(historyManager);
-        this.path = path;
+        this.filePath = path;
     }
 
     public void save() {
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(path.toFile()), StandardCharsets.UTF_8))
+                        new FileOutputStream(filePath), StandardCharsets.UTF_8))
         ) {
             writer.println("id,type,name,status,description,epic");
             for (Task task : getTasksWithoutAddingToHistory()) {
@@ -44,13 +45,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void writeToFile(Task task) {
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(
-                        new FileOutputStream(path.toFile(), true), StandardCharsets.UTF_8)
+                        new FileOutputStream(filePath, true), StandardCharsets.UTF_8)
         )
         ) {
-            if (path.toFile().length() == 0) {
+            if (Files.size(Path.of(filePath)) == 0) {
                 writer.println("id,type,name,status,description,epic");
             }
-                writer.println(toString(task));
+            writer.println(toString(task));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -96,18 +97,44 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     }
 
-    public static FileBackedTaskManager loadFromFile(File taskFile, File historyFile) {
-        FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyFile);
+    private static void validateArgs(String[] args) throws FileNotFoundException {
+        if (args.length < 2) {
+            throw new IllegalArgumentException(
+                    "Not enough arguments, for execute. Enter paths: to TaskManager and History"
+            );
+        }
+//        if (!args[0].endsWith(".csv") || args[1].endsWith(".csv")) {
+//            throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
+//        }
+        if (!Files.exists(Path.of(args[0]))) {
+            throw new FileNotFoundException("File with tasks not found");
+        }
+
+        if (!Files.exists(Path.of(args[1]))) {
+            throw new FileNotFoundException("File with history nt found");
+        }
+
+    }
+
+    public static FileBackedTaskManager loadFromFile(String[]args)  {
+        try {
+            validateArgs(args);
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+        String taskPath = args[0];
+        String historyPath = args[1];
+        FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyPath);
         FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
-                taskFile.toPath(),
+                taskPath,
                 historyManager
         );
         try (BufferedReader taskReader = new BufferedReader(
                 new InputStreamReader(
-                        new FileInputStream(taskFile), StandardCharsets.UTF_8
+                        new FileInputStream(taskPath), StandardCharsets.UTF_8
                 ));
              BufferedReader historyReader = new BufferedReader(new InputStreamReader(
-                     new FileInputStream(historyFile), StandardCharsets.UTF_8
+                     new FileInputStream(historyPath), StandardCharsets.UTF_8
              ))
         ) {
             List<String> tasks = taskReader.lines().toList();
@@ -116,7 +143,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .skip(1)
                     .filter(string -> !string.isBlank())
                     .forEach(string -> {
-                        System.out.println(string);
+                                System.out.println(string);
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task.getType().equals(EPIC)) {
                                     fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
@@ -232,6 +259,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Optional<Task> res = super.updateTask(task);
         save();
         return res;
+    }
+
+    public static void main(String[] args) {
+
     }
 
 }

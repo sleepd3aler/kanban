@@ -8,10 +8,10 @@ import ru.kanban.model.TaskType;
 import static ru.kanban.model.TaskType.SUBTASK;
 
 public class FileBackedHistoryManager extends InMemoryHistoryManager {
-    private final File historyFile;
+    private final String historyFile;
 
-    public FileBackedHistoryManager(File file) {
-        this.historyFile = file;
+    public FileBackedHistoryManager(String path) {
+        this.historyFile = path;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class FileBackedHistoryManager extends InMemoryHistoryManager {
     }
 
     public File getHistoryFile() {
-        return historyFile;
+        return new File(historyFile);
     }
 
 }
