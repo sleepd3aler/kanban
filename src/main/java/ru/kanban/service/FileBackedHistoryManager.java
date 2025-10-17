@@ -30,15 +30,15 @@ public class FileBackedHistoryManager extends InMemoryHistoryManager {
         super.addToHistory(task);
     }
 
+    public File getHistoryFile() {
+        return new File(historyFile);
+    }
+
     private String toString(Task task) {
         TaskType type = task.getType();
         return String.format("%d,%s,%s,%s,%s,%s",
                 task.getId(), task.getType(), task.getName(), task.getStatus(), task.getDescription(),
                 type.equals(SUBTASK) ? ((Subtask) task).getEpic().getId() : "");
-    }
-
-    public File getHistoryFile() {
-        return new File(historyFile);
     }
 
 }

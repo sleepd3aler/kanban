@@ -9,8 +9,8 @@ import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
-import static ru.kanban.model.TaskType.EPIC;
-import static ru.kanban.model.TaskType.SUBTASK;
+import static ru.kanban.model.Status.*;
+import static ru.kanban.model.TaskType.*;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final String filePath;
@@ -38,7 +38,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 writer.println(toString(subtask));
             }
         } catch (IOException e) {
-            throw new ManagerSaveException();
+            throw new ManagerSaveException("File writing exception");
         }
     }
 
@@ -97,26 +97,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     }
 
-    private static void validateArgs(String[] args) throws FileNotFoundException {
-        if (args.length < 2) {
-            throw new IllegalArgumentException(
-                    "Not enough arguments, for execute. Enter paths: to TaskManager and History"
-            );
-        }
-        if (!args[0].endsWith(".csv") || !args[1].endsWith(".csv")) {
-            throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
-        }
-        if (!Files.exists(Path.of(args[0]))) {
-            throw new FileNotFoundException("File with tasks not found");
-        }
-
-        if (!Files.exists(Path.of(args[1]))) {
-            throw new FileNotFoundException("File with history nt found");
-        }
-
-    }
-
-    public static FileBackedTaskManager loadFromFile(String[]args)  {
+    public static FileBackedTaskManager loadFromFile(String[] args) {
         try {
             validateArgs(args);
         } catch (FileNotFoundException e) {
@@ -143,7 +124,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     .skip(1)
                     .filter(string -> !string.isBlank())
                     .forEach(string -> {
-                                System.out.println(string);
+                                validateFormat(string);
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task.getType().equals(EPIC)) {
                                     fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
@@ -159,6 +140,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             history.stream()
                     .filter(string -> !string.isEmpty())
                     .forEach(string -> {
+                                validateFormat(string);
                                 Task task = fileBackedTaskManager.fromString(string);
                                 if (task != null) {
                                     historyManager.addWithoutWrite(task);
@@ -194,18 +176,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void addEpic(Epic epic) {
         super.addEpic(epic);
         writeToFile(epic);
-    }
-
-    private void addTaskWithoutFileSaving(Task task) {
-        super.addTask(task);
-    }
-
-    private void addEpicWithoutFileSaving(Epic epic) {
-        super.addEpic(epic);
-    }
-
-    private void addSubtaskWithoutSaving(Subtask subtask) {
-        super.addSubtask(subtask);
     }
 
     @Override
@@ -261,8 +231,75 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         return res;
     }
 
-    public static void main(String[] args) {
+    private static void validateArgs(String[] args) throws FileNotFoundException {
+        if (args.length < 2) {
+            throw new IllegalArgumentException(
+                    "Not enough arguments, for execute. Enter paths: to TaskManager and History"
+            );
+        }
+        if (!args[0].endsWith(".csv") || !args[1].endsWith(".csv")) {
+            throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
+        }
+        if (!Files.exists(Path.of(args[0]))) {
+            throw new FileNotFoundException("File with tasks not found");
+        }
 
+        if (!Files.exists(Path.of(args[1]))) {
+            throw new FileNotFoundException("File with history nt found");
+        }
     }
 
+    private static void validateFormat(String string) {
+        String[] parts = string.split(",");
+        if (parts.length < 5 || parts.length > 6) {
+            throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
+        }
+        try {
+            Integer.parseInt(parts[0]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Task ID is missing.");
+        }
+        boolean correctType = parts[1].equals(TASK.name())
+                || parts[1].equals(EPIC.name())
+                || parts[1].equals(SUBTASK.name());
+        boolean correctName = !parts[2].isBlank();
+        boolean correctStatus = parts[3].equals(NEW.name())
+                || parts[3].equals(IN_PROGRESS.name())
+                || parts[3].equals(DONE.name());
+        boolean correctDescription = !parts[4].isBlank();
+
+        if (!correctType) {
+            throw new IllegalArgumentException("Illegal task type.");
+        }
+        if (!correctName) {
+            throw new IllegalArgumentException("Task name is missing");
+        }
+        if (!correctStatus) {
+            throw new IllegalArgumentException("Illegal status provided");
+        }
+
+        if (!correctDescription) {
+            throw new IllegalArgumentException("Description is missing");
+        }
+
+        if (parts[1].equals(SUBTASK.name())) {
+            try {
+                Integer.parseInt(parts[5]);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + "is missing");
+            }
+        }
+    }
+
+    private void addTaskWithoutFileSaving(Task task) {
+        super.addTask(task);
+    }
+
+    private void addEpicWithoutFileSaving(Epic epic) {
+        super.addEpic(epic);
+    }
+
+    private void addSubtaskWithoutSaving(Subtask subtask) {
+        super.addSubtask(subtask);
+    }
 }

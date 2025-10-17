@@ -46,7 +46,6 @@ public class Subtask extends Task {
                 "    Name: '" + getName() + "'" + ln +
                 "    Description: '" + getDescription() + "'" + ln +
                 "    Status: '" + getStatus() + "'" + ln +
-                "    Subtask of Epic: '" + epic.getName() + "'" + ln;
+                "    Subtask of Epic: '" + epic + "'" + ln;
     }
-
 }
