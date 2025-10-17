@@ -123,7 +123,7 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
-    void whenThen() {
+    void whenThenLoadFromFileThenManagerHasSameContent() {
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         List<Task> tasksBeforeLoad = fileBackedTaskManager.getTasks();
         List<Epic> epicsBeforeLoad = fileBackedTaskManager.getEpics();
@@ -135,14 +135,5 @@ class FileBackedTaskManagerTest {
         assertThat(tasksAfterLoad).containsAll(tasksBeforeLoad);
         assertThat(epicsAfterLoad).containsAll(epicsBeforeLoad);
         assertThat(subtasksAfterLoad).containsAll(subtasksBeforeLoad);
-//        assertThat(tasksAfterLoad)
-//                .extracting(Task::getId)
-//                .containsAll(tasksBeforeLoad.stream().map(Task::getId).toList());
-//        assertThat(epicsAfterLoad)
-//                .extracting(Task::getId)
-//                .containsAll(epicsBeforeLoad.stream().map(Task::getId).toList());
-//        assertThat(subtasksAfterLoad)
-//                .extracting(Task::getId)
-//                .containsAll(subtasksBeforeLoad.stream().map(Task::getId).toList());
     }
 }
