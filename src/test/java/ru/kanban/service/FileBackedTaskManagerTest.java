@@ -3,6 +3,7 @@ package ru.kanban.service;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.kanban.model.Epic;
@@ -17,6 +18,7 @@ import static ru.kanban.model.Status.NEW;
 class FileBackedTaskManagerTest {
     private FileBackedTaskManager fileBackedTaskManager;
     private File tempFile;
+    private File tempHistoryFile;
     private Task task1;
     private Epic epic1;
     private Subtask subtask1;
@@ -24,7 +26,7 @@ class FileBackedTaskManagerTest {
     @BeforeEach
     void init() throws IOException {
         tempFile = File.createTempFile("temp", ".csv");
-        File tempHistoryFile = File.createTempFile("temp_history", ".csv");
+        tempHistoryFile = File.createTempFile("temp_history", ".csv");
         HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
         fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
@@ -118,5 +120,29 @@ class FileBackedTaskManagerTest {
         assertThatThrownBy(() ->
                 FileBackedTaskManager.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void whenThen() {
+        String[] args = {tempFile.toString(), tempHistoryFile.toString()};
+        fileBackedTaskManager.addTask(task1);
+        fileBackedTaskManager.addEpic(epic1);
+        fileBackedTaskManager.addSubtask(subtask1);
+        List<Task> tasksBeforeLoad = fileBackedTaskManager.getTasks();
+        List<Epic> epicsBeforeLoad = fileBackedTaskManager.getEpics();
+        List<Subtask> subtasksBeforeLoad = fileBackedTaskManager.getSubtasks();
+        FileBackedTaskManager newManager = FileBackedTaskManager.loadFromFile(args);
+        List<Task> tasksAfterLoad = newManager.getTasks();
+        List<Epic> epicsAfterLoad = newManager.getEpics();
+        List<Subtask> subtasksAfterLoad = newManager.getSubtasks();
+        assertThat(tasksAfterLoad)
+                .extracting(Task::getId)
+                .containsAll(tasksBeforeLoad.stream().map(Task::getId).toList());
+        assertThat(epicsAfterLoad)
+                .extracting(Task::getId)
+                .containsAll(epicsBeforeLoad.stream().map(Task::getId).toList());
+        assertThat(subtasksAfterLoad)
+                .extracting(Task::getId)
+                .containsAll(subtasksBeforeLoad.stream().map(Task::getId).toList());
     }
 }
