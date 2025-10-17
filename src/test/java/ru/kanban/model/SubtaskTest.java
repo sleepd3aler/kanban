@@ -15,6 +15,7 @@ class SubtaskTest {
     void setUp() {
         firstEpic = new Epic("First", "First Epic", Status.NEW);
         secondEpic = new Epic("Second", "Second Epic", Status.NEW);
+        secondEpic.setId(2);
         firstSubtask = new Subtask(
                 "First subtask", "Subtask of First Epic", Status.NEW, firstEpic
         );
@@ -39,9 +40,6 @@ class SubtaskTest {
 
     @Test
     void whenSubtaskHasDifferentIdsAndSameFieldsThenNotEquals() {
-        Subtask anotherSubtask = new Subtask(
-                "First subtask", "Subtask of First Epic", Status.NEW, firstEpic
-        );
         firstSubtask.setId(3);
         assertThat(firstSubtask).isNotEqualTo(secondSubtask);
     }
