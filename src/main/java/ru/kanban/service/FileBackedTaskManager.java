@@ -1,5 +1,5 @@
 package ru.kanban.service;
-//
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -116,9 +116,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         ) {
             List<String> tasks = taskReader.lines().toList();
             List<String> history = historyReader.lines().toList();
+            if (!tasks.get(0).equals("id,type,name,status,description,epic")) {
+                throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
+            }
             tasks.stream()
                     .skip(1)
-                    .filter(string -> !string.isBlank())
                     .forEach(string -> {
                                 validateFormat(string);
                                 Task task = fileBackedTaskManager.fromString(string);
