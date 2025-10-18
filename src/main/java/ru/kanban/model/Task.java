@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Task {
     private String name;
     private String description;
-    private int id = 1;
+    private int id;
     private Status status;
     private boolean isViewed;
     private TaskType type;
@@ -69,12 +69,12 @@ public class Task {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Task task = (Task) o;
-        return id == task.id && Objects.equals(name, task.name) && status == task.status;
+        return id == task.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, id, status);
+        return Objects.hash(id);
     }
 
     @Override

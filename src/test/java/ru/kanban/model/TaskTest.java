@@ -24,6 +24,7 @@ class TaskTest {
 
 @Test
     void whenTasksHasDifferentFieldsThenFalse() {
+        secondTask.setId(2);
     assertThat(firstTask).isNotEqualTo(secondTask);
 }
 

@@ -60,7 +60,7 @@ public class Epic extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return Objects.equals(subtasks, epic.subtasks);
+        return (getId() == epic.getId()) && Objects.equals(subtasks, epic.subtasks);
     }
 
     @Override
@@ -74,7 +74,8 @@ public class Epic extends Task {
         return "Epic {" + " ID: " + getId() + ", Name: '" + getName() + "', Description: '" + getDescription() + "'" +
                 " Status: '" + getStatus() + "' }" +
                 ln +
-                "Subtasks: " + subtasks +
+                "Subtasks: " + subtasks.stream().map(Task::getId) +
                 '}';
     }
+
 }

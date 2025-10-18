@@ -1,6 +1,7 @@
 package ru.kanban.service;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -38,6 +39,7 @@ class FileBackedHistoryManagerTest {
     @Test
     void whenAddTaskToHistoryThenFileContainsTask() throws IOException {
         File history = historyManager.getHistoryFile();
+        task1.setId(1);
         epic1.setId(2);
         subtask1.setId(3);
         historyManager.addToHistory(task1);
@@ -60,7 +62,7 @@ class FileBackedHistoryManagerTest {
     }
 
     @Test
-    void whenLoadFromFileThenHistoryExpected() {
+    void whenLoadFromFileThenHistoryExpected() throws FileNotFoundException {
         fileBackedTaskManager.addTask(task1);
         fileBackedTaskManager.addEpic(epic1);
         fileBackedTaskManager.addSubtask(subtask1);

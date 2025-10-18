@@ -53,7 +53,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             }
             writer.println(toString(task));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("File writing exception");
         }
     }
 
@@ -97,12 +97,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     }
 
-    public static FileBackedTaskManager loadFromFile(String[] args) {
-        try {
-            validateArgs(args);
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
+    public static FileBackedTaskManager loadFromFile(String[] args) throws FileNotFoundException {
+        validateArgs(args);
         String taskPath = args[0];
         String historyPath = args[1];
         FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyPath);
@@ -245,7 +241,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
 
         if (!Files.exists(Path.of(args[1]))) {
-            throw new FileNotFoundException("File with history nt found");
+            throw new FileNotFoundException("File with history not found");
         }
     }
 
@@ -284,9 +280,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         if (parts[1].equals(SUBTASK.name())) {
             try {
-                Integer.parseInt(parts[5]);
+                String epicId = parts[5];
+                Integer.parseInt(epicId);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + " is missing");
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + "is missing");
+                throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + " is invalid");
             }
         }
     }
@@ -301,5 +300,19 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void addSubtaskWithoutSaving(Subtask subtask) {
         super.addSubtask(subtask);
+    }
+
+    public static void main(String[] args) throws IOException {
+        File taskPath = File.createTempFile("test", ".csv");
+        File historyPath = File.createTempFile("history_test", ".csv");
+        HistoryManager history = Managers.getDefaultFileBackedHistoryManager(historyPath.toString());
+        FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(taskPath.toString(), history);
+        Task task1 = new Task("task1", "desc", NEW);
+        Epic epic1 = new Epic("epic1", "desc", NEW);
+        Subtask subtask1 = new Subtask("subtask1", "desc", NEW, epic1);
+        fileBackedTaskManager.addTask(task1);
+        fileBackedTaskManager.addEpic(epic1);
+        fileBackedTaskManager.addSubtask(subtask1);
+        fileBackedTaskManager.getSubtasks().forEach(System.out::println);
     }
 }
