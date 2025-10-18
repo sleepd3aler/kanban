@@ -1,5 +1,5 @@
 package ru.kanban.model;
-
+//
 import java.util.Objects;
 
 public class Subtask extends Task {
@@ -31,12 +31,12 @@ public class Subtask extends Task {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         Subtask subtask = (Subtask) o;
-        return Objects.equals(epic.getId(), subtask.epic.getId());
+        return (getId() == subtask.getId()) && getEpic().getId() == subtask.getEpic().getId();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), epic.getId());
+        return Objects.hash(super.hashCode(), getEpic().getId());
     }
 
     @Override
@@ -46,6 +46,7 @@ public class Subtask extends Task {
                 "    Name: '" + getName() + "'" + ln +
                 "    Description: '" + getDescription() + "'" + ln +
                 "    Status: '" + getStatus() + "'" + ln +
-                "    Subtask of Epic: '" + epic + "'" + ln;
+                "    Subtask of Epic: '" + epic.getId() + "'" + ln;
     }
+
 }

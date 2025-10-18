@@ -1,5 +1,5 @@
 package ru.kanban.service;
-
+//
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +44,7 @@ class InMemoryTaskManagerTest {
     void whenGetTaskThenReturnsExpectedTask() {
         taskManager.addTask(firstTask);
         Task expected = new Task("First Task", "First Task", Status.NEW);
+        expected.setId(1);
         assertThat(taskManager.getTask(1).get()).isEqualTo(expected);
     }
 
@@ -87,7 +88,9 @@ class InMemoryTaskManagerTest {
         taskManager.addTask(secondTask);
         secondTask.setId(firstTask.getId());
         taskManager.updateTask(secondTask);
-        assertFalse(taskManager.getTasks().contains(firstTask));
+        String expectedName = secondTask.getName();
+        String result = taskManager.getTask(1).get().getName();
+        assertThat(result).isEqualTo(expectedName);
     }
 
     @Test
@@ -168,11 +171,12 @@ class InMemoryTaskManagerTest {
 
     @Test
     void whenUpdateEpicWithSameStatusesThenStatusStillSame() {
+        Epic updatedEpic = new Epic("updated", "desc", Status.NEW);
+        updatedEpic.setId(1);
         taskManager.addEpic(firstEpic);
         taskManager.addEpic(secondEpic);
-        secondEpic.setId(firstEpic.getId());
-        taskManager.updateEpic(secondEpic);
-        assertThat(taskManager.getEpics()).doesNotContain(firstEpic);
+        taskManager.updateEpic(updatedEpic);
+        assertThat(taskManager.getEpics().toString()).doesNotContain(firstEpic.getName());
         Status expectedStatus = Status.NEW;
         Status result = taskManager.getEpic(1).get().getStatus();
         assertThat(result).isEqualTo(expectedStatus);
@@ -227,6 +231,7 @@ class InMemoryTaskManagerTest {
         firstEpic.setStatus(Status.DONE);
         taskManager.addSubtask(firstSubtask);
         assertThat(firstEpic.getStatus()).isEqualTo(Status.NEW);
+        secondEpic.setId(1);
         taskManager.addSubtask(secondSubtask);
         firstSubtask.setStatus(Status.DONE);
         taskManager.updateSubtask(firstSubtask);
@@ -245,6 +250,7 @@ class InMemoryTaskManagerTest {
     void whenGetSubtasksThenExpectedResult() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
+        taskManager.addEpic(secondEpic);
         taskManager.addSubtask(secondSubtask);
         List<Subtask> expected = List.of(firstSubtask, secondSubtask);
         List<Subtask> result = taskManager.getSubtasks();
@@ -255,6 +261,7 @@ class InMemoryTaskManagerTest {
     void whenDeleteSubtaskThenManagerDoesntContainSubtask() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
+        taskManager.addEpic(secondEpic);
         taskManager.addSubtask(secondSubtask);
         taskManager.deleteSubtask(firstSubtask.getId());
         List<Subtask> result = taskManager.getSubtasks();
@@ -274,6 +281,7 @@ class InMemoryTaskManagerTest {
     void whenDeleteSubtaskWithInvalidIdThenThrowsException() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
+        taskManager.addEpic(secondEpic);
         taskManager.addSubtask(secondSubtask);
         TaskNotFoundException exception = assertThrows(
                 TaskNotFoundException.class, () -> taskManager.deleteSubtask(1)
@@ -285,6 +293,7 @@ class InMemoryTaskManagerTest {
     void whenDeleteAllSubtasksIsSuccessful() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
+        taskManager.addEpic(secondEpic);
         taskManager.addSubtask(secondSubtask);
         taskManager.deleteAllSubtasks();
         List<Subtask> result = taskManager.getSubtasks();
@@ -295,6 +304,7 @@ class InMemoryTaskManagerTest {
     void whenDeleteAllSubtasksThenEpicHasNoSubtasks() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);
+        taskManager.addEpic(secondEpic);
         taskManager.addSubtask(secondSubtask);
         taskManager.deleteAllSubtasks();
         assertThat(firstEpic.getSubtasks()).isEmpty();

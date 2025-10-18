@@ -80,6 +80,7 @@ class EpicTest {
 
     @Test
     void whenEpicsHasDifferentFieldsThenFalse() {
+        secondEpic.setId(2);
         assertThat(firstEpic.equals(secondEpic)).isFalse();
     }
 
