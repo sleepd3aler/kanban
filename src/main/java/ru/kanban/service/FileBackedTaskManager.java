@@ -147,7 +147,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                             }
                     );
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("File writing exception");
         }
         return fileBackedTaskManager;
     }
