@@ -9,6 +9,7 @@ import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
+import static ru.kanban.utils.Constants.HEADER;
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 
@@ -25,7 +26,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 new OutputStreamWriter(
                         new FileOutputStream(filePath), StandardCharsets.UTF_8))
         ) {
-            writer.println("id,type,name,status,description,epic");
+            writer.println(HEADER);
             for (Task task : getTasksWithoutAddingToHistory()) {
                 writer.println(toString(task));
             }
@@ -49,7 +50,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         )
         ) {
             if (Files.size(Path.of(filePath)) == 0) {
-                writer.println("id,type,name,status,description,epic");
+                writer.println(HEADER);
             }
             writer.println(toString(task));
         } catch (IOException e) {
@@ -116,7 +117,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         ) {
             List<String> tasks = taskReader.lines().toList();
             List<String> history = historyReader.lines().toList();
-            if (!tasks.get(0).equals("id,type,name,status,description,epic")) {
+            if (!tasks.get(0).equals(HEADER)) {
                 throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
             }
             tasks.stream()
