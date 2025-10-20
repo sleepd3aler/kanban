@@ -1,5 +1,6 @@
 package ru.kanban.service;
 import java.io.*;
+import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 import ru.kanban.model.TaskType;
@@ -21,7 +22,7 @@ public class FileBackedHistoryManager extends InMemoryHistoryManager {
         )) {
             historyWriter.println(toString(task));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException("File writing exception");
         }
     }
 

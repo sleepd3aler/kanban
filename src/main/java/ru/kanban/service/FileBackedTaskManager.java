@@ -9,9 +9,9 @@ import java.util.Optional;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
-import static ru.kanban.utils.Constants.HEADER;
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
+import static ru.kanban.utils.Constants.HEADER;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final String filePath;
@@ -66,12 +66,14 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     public Task fromString(String value) {
-        if (value.isEmpty()) {
-            return null;
-        }
         String[] parts = value.split(",");
         int id = Integer.parseInt(parts[0]);
-        TaskType type = TaskType.valueOf(parts[1]);
+        TaskType type;
+        try {
+            type = TaskType.valueOf(parts[1]);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Illegal task type.");
+        }
         String name = parts[2];
         Status status = Status.valueOf(parts[3]);
         String description = parts[4];
@@ -87,15 +89,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             case SUBTASK:
                 int epicId = Integer.parseInt(parts[5]);
                 Epic current = super.getEpicById(epicId);
-                if (current != null) {
-                    Subtask subtask = new Subtask(name, description, status, current);
-                    subtask.setId(id);
-                    return subtask;
-                }
+                Subtask subtask = new Subtask(name, description, status, current);
+                subtask.setId(id);
+                return subtask;
             default:
-                throw new IllegalArgumentException("Subtask: " + name + ", missing Epic");
+                throw new IllegalArgumentException("Unsupported task type.");
         }
-
     }
 
     public static FileBackedTaskManager loadFromFile(String[] args) throws FileNotFoundException {
