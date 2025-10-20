@@ -58,9 +58,8 @@ public class Epic extends Task {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
         Epic epic = (Epic) o;
-        return (getId() == epic.getId()) && Objects.equals(subtasks, epic.subtasks);
+        return super.equals(o) && Objects.equals(subtasks, epic.subtasks);
     }
 
     @Override
