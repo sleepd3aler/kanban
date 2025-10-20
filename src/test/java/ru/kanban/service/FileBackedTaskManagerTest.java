@@ -84,6 +84,15 @@ class FileBackedTaskManagerTest {
     }
 
     @Test
+    void whenFromStringWithIllegalTaskThenExceptionThrown() {
+        String string = "1,SUBTASKk,Subtask 1,NEW,Description 1,3";
+        assertThatThrownBy(() ->
+                fileBackedTaskManager.fromString(string)
+        ).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Illegal task type.");
+    }
+
+    @Test
     void whenSaveThenFileContainsExpectedContent() throws IOException {
         File file = File.createTempFile("fileToCompare", "csv");
         try (PrintWriter writer = new PrintWriter((file.toString()))) {
@@ -94,14 +103,6 @@ class FileBackedTaskManagerTest {
         }
 
         assertThat(tempFile).hasSameTextualContentAs(file);
-    }
-
-    @Test
-    void whenFromStringToSubtaskWithMissingEpicThenExceptionThrown() {
-        String string = "1,SUBTASK,Subtask 1,NEW,Description 1,3";
-        assertThatThrownBy(() ->
-                fileBackedTaskManager.fromString(string)
-        ).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
