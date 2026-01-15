@@ -9,12 +9,15 @@ create table if not exists tasks
     epic_id     int references tasks (id)
 );
 
-alter table tasks
-    add constraint allowed_statuses
-        check ( status is not null and status in ('NEW', 'IN_PROGRESS', 'DONE')),
-    add constraint allowed_type
-        check ( type is not null and type in ('TASK', 'EPIC', 'SUBTASK')),
-    add constraint type_id_compatibility
-        check (type = 'SUBTASK' and epic_id is not null and epic_id != id
+alter table tasks add constraint allowed_statuses
+    check (status is not null and status in ('NEW', 'IN_PROGRESS', 'DONE'));
+
+alter table tasks add constraint allowed_type
+    check (type is not null and type in ('TASK', 'EPIC', 'SUBTASK'));
+
+alter table tasks add constraint type_id_compatibility
+    check (
+        (type = 'SUBTASK' and epic_id is not null and epic_id != id)
             or
-               type != 'SUBTASK' and epic_id is null );
+        (type != 'SUBTASK' and epic_id is null)
+        );
