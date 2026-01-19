@@ -15,10 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ru.kanban.model.Status.IN_PROGRESS;
 import static ru.kanban.model.Status.NEW;
 
-class JdbcHistoryManagerTest {
+class DbHistoryManagerTest {
     private static Connection connection;
 
-    private JdbcManager manager;
+    private DbManager manager;
     private HistoryManager historyManager;
 
     private Task task1;
@@ -32,7 +32,7 @@ class JdbcHistoryManagerTest {
 
     @BeforeAll
     static void initConnection() {
-        try (InputStream in = JdbcHistoryManager.class.getClassLoader().getResourceAsStream(
+        try (InputStream in = DbHistoryManager.class.getClassLoader().getResourceAsStream(
                 "db/test.properties")) {
             Properties config = new Properties();
             config.load(in);
@@ -63,8 +63,8 @@ class JdbcHistoryManagerTest {
 
     @BeforeEach
     void setUp() {
-        historyManager = new JdbcHistoryManager(connection);
-        manager = new JdbcManager(connection, historyManager);
+        historyManager = new DbHistoryManager(connection);
+        manager = new DbManager(connection, historyManager);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);

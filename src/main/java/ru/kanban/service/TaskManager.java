@@ -1,5 +1,7 @@
 package ru.kanban.service;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import ru.kanban.model.Epic;
@@ -44,5 +46,15 @@ public interface TaskManager {
     void deleteAllSubtasks();
 
     Optional<Subtask> updateSubtask(Subtask subtask);
+
+    default void closeConnection(Connection connection) {
+        try {
+            String url = connection.getCatalog();
+            System.out.println("Connection to database : " + url + " closed");
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

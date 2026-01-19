@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import ru.kanban.configutations.Config;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
@@ -12,12 +13,12 @@ import ru.kanban.model.Task;
 import static ru.kanban.model.Status.*;
 import static ru.kanban.utils.Constants.*;
 
-public class JdbcManager implements TaskManager {
+public class DbManager implements TaskManager {
     private Connection connection;
 
     private HistoryManager historyManager;
 
-    public JdbcManager(Connection connection, HistoryManager historyManager) {
+    public DbManager(Connection connection, HistoryManager historyManager) {
         this.connection = connection;
         this.historyManager = historyManager;
     }
@@ -460,14 +461,6 @@ public class JdbcManager implements TaskManager {
         }
     }
 
-    // private void updateToViewed(int id) throws SQLException {
-    // PreparedStatement statement = connection.prepareStatement(
-    // "UPDATE tasks set viewed = ? where id = ?");
-    // statement.setBoolean(1, true);
-    // statement.setInt(2, id);
-    // statement.execute();
-    // }
-
     private static void setId(ResultSet resultSet, Task task) throws SQLException {
         while (resultSet.next()) {
             task.setId(resultSet.getInt(1));
@@ -484,17 +477,6 @@ public class JdbcManager implements TaskManager {
         return statement.getGeneratedKeys();
     }
 
-//    private boolean removeIfViewedUpdated(Task task) throws SQLException {
-//        try (PreparedStatement statement = connection.prepareStatement(
-//                "delete from history where task_id = ? and viewed_at = ?"
-//        )) {
-//            statement.setInt(1, task.getId());
-//            statement.setBoolean(2, false);
-//            statement.execute();
-//            return true;
-//        }
-//    }
-
     public static void main(String[] args) throws SQLException {
         Config config = new Config();
         config.load("/db/liquibase.properties");
@@ -502,8 +484,8 @@ public class JdbcManager implements TaskManager {
                 config.get("url"),
                 config.get("username"),
                 config.get("password"));
-        HistoryManager historyManager = new JdbcHistoryManager(connection);
-        TaskManager manager = new JdbcManager(connection, historyManager);
+        HistoryManager historyManager = new DbHistoryManager(connection);
+        TaskManager manager = new DbManager(connection, historyManager);
         Task task1 = new Task("task1", "desc", NEW);
         Task task2 = new Task("task2", "desc", NEW);
         Task task3 = new Task("task3", "desc", NEW);
@@ -518,8 +500,8 @@ public class JdbcManager implements TaskManager {
         for (Task task : historyManager.getViewedTasks()) {
             System.out.println("Task is in history: " + task);
         }
-        // System.out.println("Task is viewed: " +
-        // manager.getTask(task3.getId()).get().isViewed());
-
+         System.out.println("Task is viewed: " +
+         manager.getTask(task3.getId()).get().isViewed());
+            manager.closeConnection(connection);
     }
 }

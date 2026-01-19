@@ -10,10 +10,10 @@ import ru.kanban.model.Task;
 
 import static ru.kanban.utils.Constants.*;
 
-public class JdbcHistoryManager implements HistoryManager {
+public class DbHistoryManager implements HistoryManager {
     private Connection connection;
 
-    public JdbcHistoryManager(Connection connection) {
+    public DbHistoryManager(Connection connection) {
         this.connection = connection;
     }
 
