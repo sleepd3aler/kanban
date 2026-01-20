@@ -4,22 +4,20 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import ru.kanban.configutations.Config;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
-import ru.kanban.utils.DbUtils;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.utils.Constants.*;
 
-public class DbManager implements TaskManager {
+public class DbTaskManager implements TaskManager, AutoCloseable {
     private Connection connection;
 
     private HistoryManager historyManager;
 
-    public DbManager(Connection connection, HistoryManager historyManager) {
+    public DbTaskManager(Connection connection, HistoryManager historyManager) {
         this.connection = connection;
         this.historyManager = historyManager;
     }
@@ -478,30 +476,9 @@ public class DbManager implements TaskManager {
         return statement.getGeneratedKeys();
     }
 
-    public static void main(String[] args) throws SQLException {
-        Config config = new Config();
-        config.load("/db/liquibase.properties");
-        try (Connection connection = DbUtils.getConnection(config)) {
-            HistoryManager historyManager = new DbHistoryManager(connection);
-            TaskManager manager = new DbManager(connection, historyManager);
-            Task task1 = new Task("task1", "desc", NEW);
-            Task task2 = new Task("task2", "desc", NEW);
-            Task task3 = new Task("task3", "desc", NEW);
-            manager.addTask(task1);
-            manager.addTask(task2);
-            manager.addTask(task3);
-            for (Task task : manager.getTasks()) {
-                System.out.println("Task is viewed: " + task.isViewed());
-                historyManager.addToHistory(task);
-            }
-            List<Task> viewed = historyManager.getViewedTasks();
-            for (Task task : historyManager.getViewedTasks()) {
-                System.out.println("Task is in history: " + task);
-            }
-            System.out.println("Task is viewed: " +
-                    manager.getTask(task3.getId()).get().isViewed());
-
-        }
-
+    @Override
+    public void close() throws Exception {
+        connection.close();
     }
+
 }

@@ -27,7 +27,7 @@ public class Managers {
         return new DbHistoryManager(connection);
     }
 
-    public static DbManager getDbManager(Connection connection, HistoryManager historyManager) {
-    return new DbManager(connection, historyManager);
+    public static DbTaskManager getDbManager(Connection connection, HistoryManager historyManager) {
+    return new DbTaskManager(connection, historyManager);
     }
 }

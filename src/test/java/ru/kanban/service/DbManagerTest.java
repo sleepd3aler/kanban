@@ -32,7 +32,7 @@ class DbManagerTest {
 
     @BeforeAll
     public static void initConnection() {
-        try (InputStream in = DbManager.class.getClassLoader().getResourceAsStream("db/test.properties")) {
+        try (InputStream in = DbTaskManager.class.getClassLoader().getResourceAsStream("db/test.properties")) {
             Properties config = new Properties();
             config.load(in);
             connection = DriverManager.getConnection(
@@ -62,7 +62,7 @@ class DbManagerTest {
     @BeforeEach
     void setUp() {
         historyManager = new DbHistoryManager(connection);
-        manager = new DbManager(connection, historyManager);
+        manager = new DbTaskManager(connection, historyManager);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);

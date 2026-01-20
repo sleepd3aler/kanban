@@ -304,17 +304,4 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         super.addSubtask(subtask);
     }
 
-    public static void main(String[] args) throws IOException {
-        File taskPath = File.createTempFile("test", ".csv");
-        File historyPath = File.createTempFile("history_test", ".csv");
-        HistoryManager history = Managers.getDefaultFileBackedHistoryManager(historyPath.toString());
-        FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(taskPath.toString(), history);
-        Task task1 = new Task("task1", "desc", NEW);
-        Epic epic1 = new Epic("epic1", "desc", NEW);
-        Subtask subtask1 = new Subtask("subtask1", "desc", NEW, epic1);
-        fileBackedTaskManager.addTask(task1);
-        fileBackedTaskManager.addEpic(epic1);
-        fileBackedTaskManager.addSubtask(subtask1);
-        fileBackedTaskManager.getSubtasks().forEach(System.out::println);
-    }
 }

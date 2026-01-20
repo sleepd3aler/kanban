@@ -18,7 +18,7 @@ import static ru.kanban.model.Status.NEW;
 class DbHistoryManagerTest {
     private static Connection connection;
 
-    private DbManager manager;
+    private DbTaskManager manager;
     private HistoryManager historyManager;
 
     private Task task1;
@@ -64,7 +64,7 @@ class DbHistoryManagerTest {
     @BeforeEach
     void setUp() {
         historyManager = new DbHistoryManager(connection);
-        manager = new DbManager(connection, historyManager);
+        manager = new DbTaskManager(connection, historyManager);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);

@@ -10,7 +10,7 @@ import ru.kanban.model.Task;
 
 import static ru.kanban.utils.Constants.*;
 
-public class DbHistoryManager implements HistoryManager {
+public class DbHistoryManager implements HistoryManager, AutoCloseable {
     private Connection connection;
 
     public DbHistoryManager(Connection connection) {
@@ -138,5 +138,10 @@ public class DbHistoryManager implements HistoryManager {
                       and (select count(task_id) from history) > 10;
                     """);
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        connection.close();
     }
 }
