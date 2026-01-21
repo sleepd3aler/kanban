@@ -249,18 +249,26 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     public List<Subtask> getSubtasks() {
         List<Subtask> result = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement(
-                "select * from tasks where type = ?")) {
-            statement.setObject(1, SUBTASK_TYPE);
+                """
+                        select s.id, s.name, s.description, s.status, s.epic_id,
+                               e.name e_name, e.description e_desc, e.status e_status
+                        from tasks s
+                        join tasks e  on e.id = s.epic_id;
+                        """)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                Epic epic = getEpic(resultSet.getInt("epic_id")).get();
+                Epic epic = new Epic(
+                        resultSet.getString("e_name"),
+                        resultSet.getString("e_desc"),
+                        Status.valueOf(resultSet.getString("e_status"))
+                );
+                epic.setId(resultSet.getInt("epic_id"));
                 Subtask subtask = new Subtask(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
                         Status.valueOf(resultSet.getString("status")),
                         epic);
                 subtask.setId(resultSet.getInt("id"));
-                subtask.setViewed(true);
                 historyManager.setToViewed(subtask);
                 historyManager.addToHistory(subtask);
                 result.add(subtask);
@@ -444,7 +452,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     }
 
     private Optional<Epic> findEpicById(int id) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("" +
+        try (PreparedStatement statement = connection.prepareStatement(
                 "select * from tasks where id = ?")) {
             statement.setInt(1, id);
             ResultSet resultSet = statement.executeQuery();
@@ -460,13 +468,13 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         }
     }
 
-    private static void setId(ResultSet resultSet, Task task) throws SQLException {
+    private void setId(ResultSet resultSet, Task task) throws SQLException {
         while (resultSet.next()) {
             task.setId(resultSet.getInt(1));
         }
     }
 
-    private static ResultSet setStatement(PreparedStatement statement, Task task) throws SQLException {
+    private  ResultSet setStatement(PreparedStatement statement, Task task) throws SQLException {
         statement.setString(1, task.getName());
         statement.setString(2, task.getDescription());
         statement.setBoolean(3, task.isViewed());

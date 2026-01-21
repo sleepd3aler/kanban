@@ -7,6 +7,7 @@ public final class Constants {
     public static final String TASK_TYPE = "TASK";
     public static final String EPIC_TYPE = "EPIC";
     public static final String SUBTASK_TYPE = "SUBTASK";
+    public static final int MAX_SIZE = 10;
 
     private Constants() {
 
