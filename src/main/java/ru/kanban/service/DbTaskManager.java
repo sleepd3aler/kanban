@@ -202,7 +202,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        setAutoCommit(connection, false);
         try (PreparedStatement deleteStmt = connection.prepareStatement(
                 "delete from tasks where id = ? and type = ?");
              PreparedStatement selectStmt = connection.prepareStatement(
@@ -212,13 +211,9 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
             deleteStmt.setString(2, EPIC_TYPE);
             deleteStmt.executeUpdate();
             printMsg(deleted, id);
-            commit(connection);
             return deleted;
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -342,8 +337,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
             deleteStmt.setObject(2, SUBTASK_TYPE);
             Optional<Subtask> deleted = getTaskByIdAndType(selectStmt, id, SUBTASK_TYPE);
             if (deleted.isPresent()) {
-                updateEpicStatus(deleted.get().getEpic().getId());
                 deleteStmt.execute();
+                updateEpicStatus(deleted.get().getEpic().getId());
                 printMsg(deleted, id);
             }
             commit(connection);
@@ -382,7 +377,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
             if (!subtask.isViewed()) {
                 historyManager.remove(subtask.getId());
             }
-            updateBy(subtask, SUBTASK_TYPE);
             updateEpicStatus(subtask.getEpic().getId());
             commit(connection);
             return result;
@@ -392,7 +386,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         } finally {
             setAutoCommit(connection, true);
         }
-
     }
 
     private void updateEpicStatus(int epicId) throws SQLException {
