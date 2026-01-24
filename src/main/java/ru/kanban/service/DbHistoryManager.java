@@ -22,9 +22,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
 
     @Override
     public void setToViewed(Task task) {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE tasks set viewed = ? where id = ?"
-        )) {
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE tasks set viewed = ? where id = ?")) {
             statement.setBoolean(1, true);
             statement.setInt(2, task.getId());
             task.setViewed(true);
@@ -36,11 +34,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
 
     @Override
     public void addToHistory(Task task) {
-        try (PreparedStatement updateStmt = connection.prepareStatement(
-                "update history set viewed_at = current_timestamp where task_id = ?"
-        ); PreparedStatement InsertStmt = connection.prepareStatement(
-                "INSERT INTO history (task_id, type) values (?, ?);"
-        )) {
+        try (PreparedStatement updateStmt = connection.prepareStatement("update history set viewed_at = current_timestamp where task_id = ?"); PreparedStatement InsertStmt = connection.prepareStatement("INSERT INTO history (task_id, type) values (?, ?);")) {
             updateStmt.setInt(1, task.getId());
             if ((updateStmt.executeUpdate() == 0)) {
                 counter++;
@@ -48,7 +42,6 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
                 InsertStmt.setString(2, task.getType().name());
                 InsertStmt.execute();
                 removeLastIfLimitReached();
-
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -57,9 +50,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
 
     @Override
     public void remove(int id) {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE  from history where task_id = ?"
-        )) {
+        try (PreparedStatement statement = connection.prepareStatement("DELETE  from history where task_id = ?")) {
             statement.setInt(1, id);
             statement.execute();
             counter--;
@@ -96,38 +87,21 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
         String actual = resultSet.getString("type");
         switch (actual) {
             case TASK_TYPE -> {
-                Task current = new Task(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status"))
-                );
+                Task current = new Task(resultSet.getString("name"), resultSet.getString("description"), Status.valueOf(resultSet.getString("status")));
                 current.setId(resultSet.getInt("id"));
                 current.setViewed(true);
                 return current;
             }
             case EPIC_TYPE -> {
-                Epic current = new Epic(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status"))
-                );
+                Epic current = new Epic(resultSet.getString("name"), resultSet.getString("description"), Status.valueOf(resultSet.getString("status")));
                 current.setId(resultSet.getInt("id"));
                 current.setViewed(true);
                 return current;
             }
             case SUBTASK_TYPE -> {
-                Epic epicOfSubtask = new Epic(
-                        resultSet.getString("epic_name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("epic_status"))
-                );
+                Epic epicOfSubtask = new Epic(resultSet.getString("epic_name"), resultSet.getString("description"), Status.valueOf(resultSet.getString("epic_status")));
                 epicOfSubtask.setId(resultSet.getInt("epic_id"));
-                Subtask current = new Subtask(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")),
-                        epicOfSubtask
-                );
+                Subtask current = new Subtask(resultSet.getString("name"), resultSet.getString("description"), Status.valueOf(resultSet.getString("status")), epicOfSubtask);
                 current.setId(resultSet.getInt("id"));
                 current.setViewed(true);
                 return current;
