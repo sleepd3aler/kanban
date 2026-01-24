@@ -13,11 +13,8 @@ import static ru.kanban.utils.Constants.*;
 public class DbHistoryManager implements HistoryManager, AutoCloseable {
     private Connection connection;
 
-    private int counter = 0;
-
     public DbHistoryManager(Connection connection) {
         this.connection = connection;
-        initCounter();
     }
 
     @Override
@@ -39,15 +36,24 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
         try (PreparedStatement updateStmt = connection.prepareStatement(
                 "update history set viewed_at = current_timestamp where task_id = ?");
              PreparedStatement InsertStmt = connection.prepareStatement(
-                     "INSERT INTO history (task_id, type) values (?, ?);")
+                     "INSERT INTO history (task_id, type) values (?, ?);");
+             PreparedStatement deleteStmt = connection.prepareStatement(
+                     """
+                             DELETE FROM history
+                             WHERE task_id
+                             NOT IN
+                                   (SELECT task_id
+                                    FROM history
+                                    ORDER BY viewed_at
+                                    DESC  LIMIT  10)"""
+             )
         ) {
             updateStmt.setInt(1, task.getId());
             if ((updateStmt.executeUpdate() == 0)) {
-                counter++;
                 InsertStmt.setInt(1, task.getId());
                 InsertStmt.setString(2, task.getType().name());
                 InsertStmt.execute();
-                removeLastIfLimitReached();
+                deleteStmt.execute();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -61,7 +67,6 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
         ) {
             statement.setInt(1, id);
             statement.execute();
-            counter--;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -132,31 +137,6 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
             }
         }
         return null;
-    }
-
-    private void removeLastIfLimitReached() throws SQLException {
-        if (counter > MAX_SIZE) {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("""
-                        delete
-                        from history
-                        where viewed_at = (select min(viewed_at) from history)
-                        """);
-            }
-            counter--;
-        }
-    }
-
-    private void initCounter() {
-        this.counter = 0;
-        try (Statement statement = connection.createStatement()) {
-            ResultSet resultSet = statement.executeQuery("select count(task_id) from  history");
-            if (resultSet.next()) {
-                counter = resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override
