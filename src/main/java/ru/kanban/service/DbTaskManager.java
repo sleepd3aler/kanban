@@ -43,9 +43,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public Optional<Task> getTask(int id) {
         setAutoCommit(connection, false);
-        try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT * FROM TASKS WHERE id = ? and type = ?")) {
-            Optional<Task> task = getTaskByIdAndType(statement, id, TASK_TYPE);
+        try {
+            Optional<Task> task = getTaskByIdAndType(id, TASK_TYPE);
             task.ifPresent(value -> {
                 historyManager.setToViewed(value);
                 historyManager.addToHistory(value);
@@ -79,7 +78,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                 Task task = new Task(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")));
+                        Status.valueOf(resultSet.getString("status"))
+                );
                 task.setId(resultSet.getInt(1));
                 task.setViewed(true);
                 result.add(task);
@@ -96,15 +96,15 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public Optional<Task> deleteTask(int id) {
         try (PreparedStatement deleteSmt = connection.prepareStatement(
-                "delete from tasks where id = ? and type = ?");
-             PreparedStatement selectStatement = connection.prepareStatement(
-                     "select * from tasks where id = ? and type = ?")) {
-
-            Optional<Task> deleted = getTaskByIdAndType(selectStatement, id, TASK_TYPE);
-            deleteSmt.setInt(1, id);
-            deleteSmt.setString(2, TASK_TYPE);
-            deleteSmt.executeUpdate();
-            printMsg(deleted, id);
+                "delete from tasks where id = ? and type = ?")
+        ) {
+            Optional<Task> deleted = getTaskByIdAndType(id, TASK_TYPE);
+            if (deleted.isPresent()) {
+                deleteSmt.setInt(1, id);
+                deleteSmt.setString(2, TASK_TYPE);
+                deleteSmt.executeUpdate();
+                printMsg(deleted, id);
+            }
             return deleted;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -133,7 +133,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public void deleteAllTasks() {
         try {
-            deleteAllBy(TASK_TYPE);
+            deleteAllByType(TASK_TYPE);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -143,7 +143,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     public void addEpic(Epic epic) {
         try (PreparedStatement statement = connection.prepareStatement(
                 "insert into  tasks(name, description, viewed, status, type) values (?, ?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS)) {
+                Statement.RETURN_GENERATED_KEYS)
+        ) {
             ResultSet resultSet = setStatement(statement, epic);
             setId(resultSet, epic);
         } catch (SQLException e) {
@@ -154,9 +155,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public Optional<Epic> getEpic(int id) {
         setAutoCommit(connection, false);
-        try (PreparedStatement statement = connection.prepareStatement(
-                "select * from tasks where id = ? and type = ?")) {
-            Optional<Epic> result = getTaskByIdAndType(statement, id, EPIC_TYPE);
+        try {
+            Optional<Epic> result = getTaskByIdAndType(id, EPIC_TYPE);
             result.ifPresent(value -> {
                 historyManager.setToViewed(value);
                 historyManager.addToHistory(value);
@@ -177,7 +177,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         List<Epic> result = new ArrayList<>();
         setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
-                "select * from tasks where type = ?")) {
+                "select * from tasks where type = ?")
+        ) {
             statement.setObject(1, EPIC_TYPE);
             ResultSet resultSet = statement.executeQuery();
             addAllToHistory(connection, EPIC_TYPE);
@@ -186,7 +187,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                 Epic epic = new Epic(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")));
+                        Status.valueOf(resultSet.getString("status"))
+                );
                 epic.setId(resultSet.getInt("id"));
                 epic.setViewed(true);
                 result.add(epic);
@@ -203,14 +205,15 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public Optional<Epic> deleteEpic(int id) {
         try (PreparedStatement deleteStmt = connection.prepareStatement(
-                "delete from tasks where id = ? and type = ?");
-             PreparedStatement selectStmt = connection.prepareStatement(
-                     "select * from tasks where id = ? and type = ?")) {
-            Optional<Epic> deleted = getTaskByIdAndType(selectStmt, id, EPIC_TYPE);
-            deleteStmt.setInt(1, id);
-            deleteStmt.setString(2, EPIC_TYPE);
-            deleteStmt.executeUpdate();
-            printMsg(deleted, id);
+                "delete from tasks where id = ? and type = ?")
+        ) {
+            Optional<Epic> deleted = getTaskByIdAndType(id, EPIC_TYPE);
+            if (deleted.isPresent()) {
+                deleteStmt.setInt(1, id);
+                deleteStmt.setString(2, EPIC_TYPE);
+                deleteStmt.executeUpdate();
+                printMsg(deleted, id);
+            }
             return deleted;
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -220,7 +223,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public void deleteAllEpics() {
         try {
-            deleteAllBy(EPIC_TYPE);
+            deleteAllByType(EPIC_TYPE);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -249,7 +252,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO tasks (name, description, viewed, status, type, epic_id) values (?, ?, ?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS)) {
+                Statement.RETURN_GENERATED_KEYS)
+        ) {
             statement.setString(1, subtask.getName());
             statement.setString(2, subtask.getDescription());
             statement.setBoolean(3, subtask.isViewed());
@@ -272,18 +276,14 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     @Override
     public Optional<Subtask> getSubtask(int id) {
         setAutoCommit(connection, false);
-        try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT * from tasks where id = ? and type = ?")) {
-            Optional<Subtask> res = getTaskByIdAndType(statement, id, SUBTASK_TYPE);
+        try {
+            Optional<Subtask> res = getTaskByIdAndType(id, SUBTASK_TYPE);
             res.ifPresent(value -> {
                 historyManager.setToViewed(value);
                 historyManager.addToHistory(value);
             });
             commit(connection);
             return res;
-        } catch (SQLException e) {
-            rollback(connection);
-            throw new RuntimeException(e);
         } finally {
             setAutoCommit(connection, true);
         }
@@ -299,7 +299,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                                e.name e_name, e.description e_desc, e.status e_status
                         from tasks s
                         join tasks e  on e.id = s.epic_id;
-                        """)) {
+                        """)
+        ) {
             ResultSet resultSet = selectStmt.executeQuery();
             addAllToHistory(connection, SUBTASK_TYPE);
             commit(connection);
@@ -312,8 +313,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                 Subtask subtask = new Subtask(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")),
-                        epic);
+                        Status.valueOf(resultSet.getString("status")), epic);
                 subtask.setId(resultSet.getInt("id"));
                 result.add(subtask);
             }
@@ -330,12 +330,11 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     public Optional<Subtask> deleteSubtask(int id) {
         setAutoCommit(connection, false);
         try (PreparedStatement deleteStmt = connection.prepareStatement(
-                "DELETE  from tasks where id = ? and type = ?");
-             PreparedStatement selectStmt = connection.prepareStatement(
-                     "select * from tasks where id = ? and type = ?")) {
+                "DELETE  from tasks where id = ? and type = ?")
+        ) {
             deleteStmt.setInt(1, id);
             deleteStmt.setObject(2, SUBTASK_TYPE);
-            Optional<Subtask> deleted = getTaskByIdAndType(selectStmt, id, SUBTASK_TYPE);
+            Optional<Subtask> deleted = getTaskByIdAndType(id, SUBTASK_TYPE);
             if (deleted.isPresent()) {
                 deleteStmt.execute();
                 updateEpicStatus(deleted.get().getEpic().getId());
@@ -355,8 +354,9 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     public void deleteAllSubtasks() {
         setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE tasks set status = ? where type = ?")) {
-            deleteAllBy(SUBTASK_TYPE);
+                "UPDATE tasks set status = ? where type = ?")
+        ) {
+            deleteAllByType(SUBTASK_TYPE);
             statement.setObject(1, NEW.name());
             statement.setObject(2, EPIC_TYPE);
             statement.execute();
@@ -388,11 +388,29 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         }
     }
 
+    private static void addAllToHistory(Connection connection, String type) {
+        try (PreparedStatement deleteStmt = connection.prepareStatement("delete from history where type = ?"
+
+        ); PreparedStatement insertStmt = connection.prepareStatement("""
+                insert into history (task_id, type)
+                SELECT t.id, t.type from tasks t
+                where type = ? order by id desc limit 10
+                """)) {
+            deleteStmt.setString(1, type);
+            insertStmt.setString(1, type);
+            deleteStmt.execute();
+            insertStmt.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void updateEpicStatus(int epicId) throws SQLException {
         try (PreparedStatement selectStatement = connection.prepareStatement(
                 "select status from tasks where epic_id = ?");
              PreparedStatement updateStatement = connection.prepareStatement(
-                     "UPDATE tasks set status = ? where id = ?")) {
+                     "UPDATE tasks set status = ? where id = ?")
+        ) {
             selectStatement.setInt(1, epicId);
             updateStatement.setInt(2, epicId);
             ResultSet statuses = selectStatement.executeQuery();
@@ -436,57 +454,69 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         return IN_PROGRESS;
     }
 
-    private <T extends Task> Optional<T> getTaskByIdAndType(PreparedStatement statement, int id, String type)
-            throws SQLException {
-        statement.setInt(1, id);
-        statement.setString(2, type);
-        ResultSet resultSet = statement.executeQuery();
-        Task res = null;
-        switch (type) {
-            case TASK_TYPE -> {
-                if (resultSet != null && resultSet.next()) {
-                    res = new Task(
-                            resultSet.getString("name"),
-                            resultSet.getString("description"),
-                            Status.valueOf(resultSet.getString("status")));
-                    res.setId(id);
-                    res.setViewed(true);
-                }
-                return Optional.ofNullable((T) res);
-            }
-            case EPIC_TYPE -> {
-                if (resultSet.next()) {
-                    res = new Epic(
-                            resultSet.getString("name"),
-                            resultSet.getString("description"),
-                            Status.valueOf(resultSet.getString("status")));
-                    res.setId(id);
-                    res.setViewed(true);
-                }
-                return Optional.ofNullable((T) res);
-            }
-            case SUBTASK_TYPE -> {
-                if (resultSet.next()) {
-                    Optional<Epic> epic = findEpicById(resultSet.getInt("epic_id"));
-                    if (epic.isPresent()) {
-                        res = new Subtask(
+    private <T extends Task> Optional<T> getTaskByIdAndType(int id, String type) {
+
+        try (PreparedStatement selectStmt = connection.prepareStatement("""
+                select t.type as type,
+                       t.id as id,
+                       t.name as name,
+                       t.description as description,
+                       t.status as status,
+                       e.id as e_id,
+                       e.name as e_name,
+                       e.description as e_desc,
+                       e.status as e_status
+                from tasks t
+                         left join tasks e on t.epic_id = e.id
+                where t.id = ? and t.type = ?
+                """)) {
+            selectStmt.setInt(1, id);
+            selectStmt.setString(2, type);
+            ResultSet resultSet = selectStmt.executeQuery();
+            if (resultSet.next()) {
+                switch (type) {
+                    case TASK_TYPE -> {
+                        Task task = new Task(
                                 resultSet.getString("name"),
                                 resultSet.getString("description"),
-                                Status.valueOf(resultSet.getString("status")),
-                                epic.get());
-                        res.setId(id);
-                        res.setViewed(true);
+                                Status.valueOf(resultSet.getString("status")));
+                        task.setId(id);
+                        return Optional.ofNullable((T) task);
                     }
-                    return Optional.ofNullable((T) res);
+                    case EPIC_TYPE -> {
+                        Epic epic = new Epic(
+                                resultSet.getString("name"),
+                                resultSet.getString("description"),
+                                Status.valueOf(resultSet.getString("status")));
+                        epic.setId(id);
+                        return Optional.ofNullable((T) epic);
+                    }
+
+                    case SUBTASK_TYPE -> {
+                        Epic epic = new Epic(
+                                resultSet.getString("e_name"),
+                                resultSet.getString("e_desc"),
+                                Status.valueOf(resultSet.getString("e_status")));
+                        epic.setId(resultSet.getInt("e_id"));
+                        Subtask subtask = new Subtask(
+                                resultSet.getString("name"),
+                                resultSet.getString("description"),
+                                Status.valueOf(resultSet.getString("status")), epic);
+                        subtask.setId(id);
+                        return Optional.ofNullable((T) subtask);
+                    }
                 }
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
         return Optional.empty();
     }
 
-    private void deleteAllBy(String type) throws SQLException {
+    private void deleteAllByType(String type) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "delete from tasks where type = ?")) {
+                "delete from tasks where type = ?")
+        ) {
             statement.setString(1, type);
             statement.execute();
         }
@@ -500,7 +530,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     private int updateBy(Task task, String type) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE tasks set name = ?, description = ?, status = ?, viewed = ? where id = ? and type = ?")) {
+                "UPDATE tasks set name = ?, description = ?, status = ?, viewed = ? where id = ? and type = ?")
+        ) {
             statement.setString(1, task.getName());
             statement.setString(2, task.getDescription());
             statement.setObject(3, task.getStatus().name());
@@ -508,23 +539,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
             statement.setInt(5, task.getId());
             statement.setString(6, type);
             return statement.executeUpdate();
-        }
-    }
-
-    private Optional<Epic> findEpicById(int id) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "select * from tasks where id = ?")) {
-            statement.setInt(1, id);
-            ResultSet resultSet = statement.executeQuery();
-            Epic result = null;
-            if (resultSet.next()) {
-                result = new Epic(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")));
-                result.setId(id);
-            }
-            return Optional.ofNullable(result);
         }
     }
 
