@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -13,19 +13,11 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.utils.Constants.*;
 import static ru.kanban.utils.DbUtils.*;
 
-public class DbTaskManager implements TaskManager, AutoCloseable {
+public class DbTaskDao implements TaskDao, AutoCloseable {
     private Connection connection;
 
-    private HistoryManager historyManager;
-
-    public DbTaskManager(Connection connection, HistoryManager historyManager) {
+    public DbTaskDao(Connection connection) {
         this.connection = connection;
-        this.historyManager = historyManager;
-    }
-
-    @Override
-    public List<Task> getHistory() {
-        return historyManager.getViewedTasks();
     }
 
     @Override
@@ -42,21 +34,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Task> getTask(int id) {
-        setAutoCommit(connection, false);
-        try {
-            Optional<Task> task = getTaskByIdAndType(id, TASK_TYPE);
-            task.ifPresent(value -> {
-                historyManager.setToViewed(value);
-                historyManager.addToHistory(value);
-            });
-            connection.commit();
-            return task;
-        } catch (SQLException e) {
-            rollback(connection);
-            throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
-        }
+        return getTaskByIdAndType(id, TASK_TYPE);
     }
 
     @Override
@@ -71,7 +49,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
             selectStmt.setString(1, TASK_TYPE);
             updateStmt.setString(1, TASK_TYPE);
             updateStmt.execute();
-            addAllToHistory(connection, TASK_TYPE);
             ResultSet resultSet = selectStmt.executeQuery();
             commit(connection);
             while (resultSet.next()) {
@@ -113,19 +90,10 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        setAutoCommit(connection, false);
         try {
-            Optional<Task> result = updateBy(task, TASK_TYPE) != 0 ? Optional.of(task) : Optional.empty();
-            if (!task.isViewed()) {
-                historyManager.remove(task.getId());
-            }
-            connection.commit();
-            return result;
+            return updateBy(task, TASK_TYPE) != 0 ? Optional.of(task) : Optional.empty();
         } catch (Exception e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
 
     }
@@ -154,22 +122,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        setAutoCommit(connection, false);
-        try {
-            Optional<Epic> result = getTaskByIdAndType(id, EPIC_TYPE);
-            result.ifPresent(value -> {
-                historyManager.setToViewed(value);
-                historyManager.addToHistory(value);
-            });
-            connection.commit();
-            return result;
-        } catch (SQLException e) {
-            rollback(connection);
-            throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
-        }
-
+        return getTaskByIdAndType(id, EPIC_TYPE);
     }
 
     @Override
@@ -181,7 +134,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
         ) {
             statement.setObject(1, EPIC_TYPE);
             ResultSet resultSet = statement.executeQuery();
-            addAllToHistory(connection, EPIC_TYPE);
             commit(connection);
             while (resultSet.next()) {
                 Epic epic = new Epic(
@@ -231,19 +183,11 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        setAutoCommit(connection, false);
         try {
-            Optional<Epic> result = updateBy(epic, EPIC_TYPE) != 0 ? Optional.of(epic) : Optional.empty();
-            if (!epic.isViewed()) {
-                historyManager.remove(epic.getId());
-            }
-            commit(connection);
-            return result;
+            return updateBy(epic, EPIC_TYPE) != 0 ?
+                    Optional.of(epic) : Optional.empty();
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -275,18 +219,7 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        setAutoCommit(connection, false);
-        try {
-            Optional<Subtask> res = getTaskByIdAndType(id, SUBTASK_TYPE);
-            res.ifPresent(value -> {
-                historyManager.setToViewed(value);
-                historyManager.addToHistory(value);
-            });
-            commit(connection);
-            return res;
-        } finally {
-            setAutoCommit(connection, true);
-        }
+        return getTaskByIdAndType(id, SUBTASK_TYPE);
     }
 
     @Override
@@ -302,7 +235,6 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                         """)
         ) {
             ResultSet resultSet = selectStmt.executeQuery();
-            addAllToHistory(connection, SUBTASK_TYPE);
             commit(connection);
             while (resultSet.next()) {
                 Epic epic = new Epic(
@@ -327,26 +259,15 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
     }
 
     @Override
-    public Optional<Subtask> deleteSubtask(int id) {
-        setAutoCommit(connection, false);
+    public boolean deleteSubtask(int id) {
         try (PreparedStatement deleteStmt = connection.prepareStatement(
                 "DELETE  from tasks where id = ? and type = ?")
         ) {
             deleteStmt.setInt(1, id);
             deleteStmt.setObject(2, SUBTASK_TYPE);
-            Optional<Subtask> deleted = getTaskByIdAndType(id, SUBTASK_TYPE);
-            if (deleted.isPresent()) {
-                deleteStmt.execute();
-                updateEpicStatus(deleted.get().getEpic().getId());
-                printMsg(deleted, id);
-            }
-            commit(connection);
-            return deleted;
+            return deleteStmt.executeUpdate() > 0;
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -371,41 +292,15 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        setAutoCommit(connection, false);
         try {
-            Optional<Subtask> result = updateBy(subtask, SUBTASK_TYPE) != 0 ? Optional.of(subtask) : Optional.empty();
-            if (!subtask.isViewed()) {
-                historyManager.remove(subtask.getId());
-            }
-            updateEpicStatus(subtask.getEpic().getId());
-            commit(connection);
-            return result;
-        } catch (SQLException e) {
-            rollback(connection);
-            throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
-        }
-    }
-
-    private static void addAllToHistory(Connection connection, String type) {
-        try (PreparedStatement deleteStmt = connection.prepareStatement("delete from history where type = ?"
-
-        ); PreparedStatement insertStmt = connection.prepareStatement("""
-                insert into history (task_id, type)
-                SELECT t.id, t.type from tasks t
-                where type = ? order by id desc limit 10
-                """)) {
-            deleteStmt.setString(1, type);
-            insertStmt.setString(1, type);
-            deleteStmt.execute();
-            insertStmt.execute();
+            return updateBy(subtask, SUBTASK_TYPE) != 0 ? Optional.of(subtask) : Optional.empty();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void updateEpicStatus(int epicId) throws SQLException {
+    @Override
+    public void updateEpicStatus(int epicId) {
         try (PreparedStatement selectStatement = connection.prepareStatement(
                 "select status from tasks where epic_id = ?");
              PreparedStatement updateStatement = connection.prepareStatement(
@@ -428,6 +323,8 @@ public class DbTaskManager implements TaskManager, AutoCloseable {
                 updateStatement.setObject(1, IN_PROGRESS.name());
                 updateStatement.execute();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 

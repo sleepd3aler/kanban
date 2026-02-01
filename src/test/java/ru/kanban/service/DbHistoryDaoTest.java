@@ -7,6 +7,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
+import ru.kanban.dao.DbHistoryDao;
+import ru.kanban.dao.DbTaskDao;
+import ru.kanban.dao.HistoryDao;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
@@ -15,11 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static ru.kanban.model.Status.IN_PROGRESS;
 import static ru.kanban.model.Status.NEW;
 
-class DbHistoryManagerTest {
+class DbHistoryDaoTest {
     private static Connection connection;
 
-    private DbTaskManager manager;
-    private HistoryManager historyManager;
+    private DbTaskDao manager;
+    private HistoryDao historyManager;
 
     private Task task1;
     private Task task2;
@@ -32,7 +35,7 @@ class DbHistoryManagerTest {
 
     @BeforeAll
     static void initConnection() {
-        try (InputStream in = DbHistoryManager.class.getClassLoader().getResourceAsStream(
+        try (InputStream in = DbHistoryDao.class.getClassLoader().getResourceAsStream(
                 "db/test.properties")) {
             Properties config = new Properties();
             config.load(in);
@@ -45,11 +48,14 @@ class DbHistoryManagerTest {
         }
     }
 
-    @AfterEach
+    @BeforeEach
     void wipeTable() {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "delete from history")) {
-            statement.execute();
+        try (PreparedStatement deleteFromHistory = connection.prepareStatement(
+                "delete from history");
+                PreparedStatement deleteFromTasks = connection.prepareStatement(
+                        "delete from tasks")) {
+            deleteFromHistory.execute();
+            deleteFromTasks.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -63,8 +69,8 @@ class DbHistoryManagerTest {
 
     @BeforeEach
     void setUp() {
-        historyManager = new DbHistoryManager(connection);
-        manager = new DbTaskManager(connection, historyManager);
+        historyManager = new DbHistoryDao(connection);
+        manager = new DbTaskDao(connection);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);

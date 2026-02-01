@@ -3,13 +3,17 @@ package ru.kanban;
 import java.sql.Connection;
 import java.util.List;
 import ru.kanban.configutations.Config;
+import ru.kanban.dao.DbHistoryDao;
+import ru.kanban.dao.DbTaskDao;
+import ru.kanban.dao.Managers;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
-import ru.kanban.service.DbHistoryManager;
-import ru.kanban.service.DbTaskManager;
-import ru.kanban.service.Managers;
+import ru.kanban.service.DefaultHistoryService;
+import ru.kanban.service.DefaultTaskService;
+import ru.kanban.service.HistoryService;
+import ru.kanban.service.TaskService;
 import ru.kanban.utils.DbUtils;
 
 public class Main {
@@ -29,39 +33,40 @@ public class Main {
         config.load("/db/liquibase.properties");
 
         try (Connection connection = DbUtils.getConnection(config);
-             DbHistoryManager historyManager = Managers.getDbHistoryManager(connection);
-             DbTaskManager taskManager = Managers.getDbManager(connection, historyManager)
+             DbHistoryDao historyDao = Managers.getDbHistoryManager(connection);
+             DbTaskDao taskDao = Managers.getDbManager(connection);
         ) {
-
-            taskManager.addTask(task1);
-            taskManager.addTask(task2);
-            taskManager.addTask(task3);
-            taskManager.addTask(task4);
-            taskManager.addEpic(epic1);
-            taskManager.addEpic(epic2);
-            taskManager.addEpic(epic3);
-            taskManager.addSubtask(subtask1);
-            taskManager.addSubtask(subtask2);
-            taskManager.addSubtask(subtask3);
-            taskManager.getTask(task1.getId());
-            taskManager.getTask(task2.getId());
-            taskManager.getTask(task3.getId());
-            taskManager.getTask(task4.getId());
-            taskManager.getEpic(epic1.getId());
-            taskManager.getEpic(epic2.getId());
-            taskManager.getEpic(epic3.getId());
-            taskManager.getSubtask(subtask1.getId());
-            taskManager.getSubtask(subtask2.getId());
-            taskManager.getSubtask(subtask3.getId());
-            taskManager.addTask(task5);
-            taskManager.getTask(task5.getId());
-            List<Task> test = taskManager.getHistory();
+            HistoryService historyService = new DefaultHistoryService(historyDao);
+            TaskService taskService = new DefaultTaskService(taskDao, historyService);
+            taskService.addTask(task1);
+            taskService.addTask(task2);
+            taskService.addTask(task3);
+            taskService.addTask(task4);
+            taskService.addEpic(epic1);
+            taskService.addEpic(epic2);
+            taskService.addEpic(epic3);
+            taskService.addSubtask(subtask1);
+            taskService.addSubtask(subtask2);
+            taskService.addSubtask(subtask3);
+            taskService.getTask(task1.getId());
+            taskService.getTask(task2.getId());
+            taskService.getTask(task3.getId());
+            taskService.getTask(task4.getId());
+            taskService.getEpic(epic1.getId());
+            taskService.getEpic(epic2.getId());
+            taskService.getEpic(epic3.getId());
+            taskService.getSubtask(subtask1.getId());
+            taskService.getSubtask(subtask2.getId());
+            taskService.getSubtask(subtask3.getId());
+            taskService.addTask(task5);
+            taskService.getTask(task5.getId());
+            List<Task> test = taskService.getHistory();
             test.forEach(System.out::println);
             for (Task task : test) {
                 System.out.println(task.isViewed());
             }
 
-            taskManager.updateTask(task1);
+            taskDao.updateTask(task1);
         } catch (Exception e) {
             e.printStackTrace();
         }

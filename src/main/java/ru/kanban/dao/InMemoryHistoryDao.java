@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,7 +7,7 @@ import ru.kanban.model.Task;
 import ru.kanban.utils.CustomLinkedList;
 import ru.kanban.utils.Node;
 
-public class InMemoryHistoryManager implements HistoryManager {
+public class InMemoryHistoryDao implements HistoryDao {
     private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
     private final CustomLinkedList<Task> viewedTasks = new CustomLinkedList<>();
 
@@ -37,4 +37,19 @@ public class InMemoryHistoryManager implements HistoryManager {
         return viewedTasks.getTasks();
     }
 
+    @Override
+    public void addAll(List<? extends Task> tasks) {
+        for (Task task : tasks) {
+            task.setViewed(true);
+            addToHistory(task);
+        }
+    }
+
+    @Override
+    public void deleteAllByType(String type) {
+        List<Task> test = getViewedTasks();
+        test.stream().filter(value -> value.getType().name().equals(type))
+                .map(Task::getId)
+                .forEach(this::remove);
+    }
 }

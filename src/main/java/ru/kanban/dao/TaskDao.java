@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.util.List;
 import java.util.Optional;
@@ -6,8 +6,8 @@ import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
-public interface TaskManager {
-    List<Task> getHistory();
+public interface TaskDao {
+//    List<Task> getHistory();
 
     void addTask(Task task);
 
@@ -39,10 +39,12 @@ public interface TaskManager {
 
     List<Subtask> getSubtasks();
 
-    Optional<Subtask> deleteSubtask(int id);
+    boolean deleteSubtask(int id);
 
     void deleteAllSubtasks();
 
     Optional<Subtask> updateSubtask(Subtask subtask);
+
+    void updateEpicStatus(int id);
 
 }

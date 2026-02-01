@@ -4,6 +4,9 @@ import java.io.*;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.kanban.dao.FileBackedTaskDao;
+import ru.kanban.dao.HistoryDao;
+import ru.kanban.dao.Managers;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
@@ -13,8 +16,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ru.kanban.model.Status.IN_PROGRESS;
 import static ru.kanban.model.Status.NEW;
 
-class FileBackedTaskManagerTest {
-    private FileBackedTaskManager fileBackedTaskManager;
+class FileBackedTaskDaoTest {
+    private FileBackedTaskDao fileBackedTaskManager;
     private File tempFile;
     private File tempHistoryFile;
     private Task task1;
@@ -25,8 +28,8 @@ class FileBackedTaskManagerTest {
     void init() throws IOException {
         tempFile = File.createTempFile("temp", ".csv");
         tempHistoryFile = File.createTempFile("temp_history", ".csv");
-        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
-        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
+        HistoryDao historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
+        fileBackedTaskManager = new FileBackedTaskDao(tempFile.toString());
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
         subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
@@ -109,8 +112,8 @@ class FileBackedTaskManagerTest {
     void whenIncorrectPathThenExceptionThrown() throws IOException {
         tempFile = File.createTempFile("temp", "csv");
         File tempHistoryFile = File.createTempFile("temp_history", "csv");
-        HistoryManager historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
-        fileBackedTaskManager = new FileBackedTaskManager(tempFile.toString(), historyManager);
+        HistoryDao historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
+        fileBackedTaskManager = new FileBackedTaskDao(tempFile.toString());
         task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
         epic1 = new Epic("Epic 1", "Description 1", NEW);
         subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
@@ -119,7 +122,7 @@ class FileBackedTaskManagerTest {
         fileBackedTaskManager.addSubtask(subtask1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -129,7 +132,7 @@ class FileBackedTaskManagerTest {
         List<Task> tasksBeforeLoad = fileBackedTaskManager.getTasks();
         List<Epic> epicsBeforeLoad = fileBackedTaskManager.getEpics();
         List<Subtask> subtasksBeforeLoad = fileBackedTaskManager.getSubtasks();
-        FileBackedTaskManager newManager = FileBackedTaskManager.loadFromFile(args);
+        FileBackedTaskDao newManager = FileBackedTaskDao.loadFromFile(args);
         List<Task> tasksAfterLoad = newManager.getTasks();
         List<Epic> epicsAfterLoad = newManager.getEpics();
         List<Subtask> subtasksAfterLoad = newManager.getSubtasks();
@@ -142,7 +145,7 @@ class FileBackedTaskManagerTest {
     void whenNotEnoughArgumentsThenExceptionThrown() {
         String[] args = {tempFile.toString()};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(
                         "Not enough arguments, for execute. Enter paths: to TaskManager and History");
@@ -153,7 +156,7 @@ class FileBackedTaskManagerTest {
     void whenHistoryFileIsNotCsvThenExceptionThrownWithExpectedMessage() {
         String[] args = {tempFile.toString(), ""};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(
                         "Illegal file extension. Expected : .csv");
@@ -163,7 +166,7 @@ class FileBackedTaskManagerTest {
     void whenTaskFileIsNotCsvThenExceptionThrownWithExpectedMessage() {
         String[] args = {"", tempHistoryFile.toString()};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining(
                         "Illegal file extension. Expected : .csv");
@@ -173,7 +176,7 @@ class FileBackedTaskManagerTest {
     void whenTaskFileNotExistsThenExceptionThrownWithExpectedMessage() {
         String[] args = {"./example_root.csv", tempHistoryFile.toString()};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(FileNotFoundException.class)
                 .hasMessageContaining(
                         "File with tasks not found");
@@ -183,7 +186,7 @@ class FileBackedTaskManagerTest {
     void whenHistoryFileNotExistsThenExceptionThrownWithExpectedMessage() {
         String[] args = {tempFile.toString(), "./example_root.csv"};
         assertThatThrownBy(() ->
-                FileBackedTaskManager.loadFromFile(args))
+                FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(FileNotFoundException.class)
                 .hasMessageContaining(
                         "File with history not found");
@@ -201,7 +204,7 @@ class FileBackedTaskManagerTest {
                     """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Must be: id,type,name,status,description,epic id");
     }
@@ -218,7 +221,7 @@ class FileBackedTaskManagerTest {
                     """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Task ID is missing.");
     }
@@ -235,7 +238,7 @@ class FileBackedTaskManagerTest {
                     """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal task type.");
     }
@@ -252,7 +255,7 @@ class FileBackedTaskManagerTest {
                     """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Task name is missing");
     }
@@ -269,7 +272,7 @@ class FileBackedTaskManagerTest {
                     """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal status provided");
     }
@@ -286,7 +289,7 @@ class FileBackedTaskManagerTest {
                      """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Description is missing");
     }
@@ -303,7 +306,7 @@ class FileBackedTaskManagerTest {
                      """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Epic ID at subtask: Subtask is invalid");
     }
@@ -317,7 +320,7 @@ class FileBackedTaskManagerTest {
             writer.println("HelloWorld");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Must be: id,type,name,status,description,epic ");
     }
@@ -331,7 +334,7 @@ class FileBackedTaskManagerTest {
             writer.println("asd,Type,Name,NEW,Desc");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Task ID is missing.");
     }
@@ -345,7 +348,7 @@ class FileBackedTaskManagerTest {
             writer.println("1,Type,Name,New,Desc");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal task type.");
     }
@@ -359,7 +362,7 @@ class FileBackedTaskManagerTest {
             writer.println("1,TASK, ,NEW,Desc");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Task name is missing");
     }
@@ -373,7 +376,7 @@ class FileBackedTaskManagerTest {
             writer.println("1,TASK,Task,NEW, ,");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Description is missing");
     }
@@ -387,7 +390,7 @@ class FileBackedTaskManagerTest {
             writer.println("1,SUBTASK,Subtask,NEW,Desc, ");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Epic ID at subtask: Subtask is invalid");
     }
@@ -401,7 +404,7 @@ class FileBackedTaskManagerTest {
             writer.println("1,SUBTASK,Subtask,NEW,Desc,");
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        assertThatThrownBy(() -> FileBackedTaskManager.loadFromFile(args))
+        assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Epic ID at subtask: Subtask is missing");
     }

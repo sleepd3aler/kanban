@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -13,11 +13,11 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 import static ru.kanban.utils.Constants.HEADER;
 
-public class FileBackedTaskManager extends InMemoryTaskManager {
+public class FileBackedTaskDao extends InMemoryTaskDao {
     private final String filePath;
 
-    public FileBackedTaskManager(String path, HistoryManager historyManager) {
-        super(historyManager);
+    public FileBackedTaskDao(String path) {
+        super();
         this.filePath = path;
     }
 
@@ -97,14 +97,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    public static FileBackedTaskManager loadFromFile(String[] args) throws FileNotFoundException {
+    public static FileBackedTaskDao loadFromFile(String[] args) throws FileNotFoundException {
         validateArgs(args);
         String taskPath = args[0];
         String historyPath = args[1];
-        FileBackedHistoryManager historyManager = new FileBackedHistoryManager(historyPath);
-        FileBackedTaskManager fileBackedTaskManager = new FileBackedTaskManager(
-                taskPath,
-                historyManager
+        FileBackedHistoryDao historyManager = new FileBackedHistoryDao(historyPath);
+        FileBackedTaskDao fileBackedTaskManager = new FileBackedTaskDao(
+                taskPath
         );
         try (BufferedReader taskReader = new BufferedReader(
                 new InputStreamReader(
@@ -203,8 +202,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     @Override
-    public Optional<Subtask> deleteSubtask(int id) {
-        Optional<Subtask> res = super.deleteSubtask(id);
+    public boolean deleteSubtask(int id) {
+//        Optional<Subtask> res = super.deleteSubtask(id);
+        boolean res = super.deleteSubtask(id);
         save();
         return res;
     }

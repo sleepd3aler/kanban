@@ -3,7 +3,7 @@ package ru.kanban.service;
 import java.util.List;
 import ru.kanban.model.Task;
 
-public interface HistoryManager {
+public interface HistoryService {
     void setToViewed(Task task);
 
     void addToHistory(Task task);
@@ -12,4 +12,7 @@ public interface HistoryManager {
 
     List<Task> getViewedTasks();
 
+    void addAll(List<? extends  Task> tasks);
+
+    void deleteAllByType(String type);
 }

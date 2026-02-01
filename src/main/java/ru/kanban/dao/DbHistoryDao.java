@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,19 +9,19 @@ import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
 import static ru.kanban.utils.Constants.*;
+import static ru.kanban.utils.DbUtils.*;
 
-public class DbHistoryManager implements HistoryManager, AutoCloseable {
+public class DbHistoryDao implements HistoryDao, AutoCloseable {
     private Connection connection;
 
-    public DbHistoryManager(Connection connection) {
+    public DbHistoryDao(Connection connection) {
         this.connection = connection;
     }
 
     @Override
     public void setToViewed(Task task) {
         try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE tasks set viewed = ? where id = ?")
-        ) {
+                "UPDATE tasks set viewed = ? where id = ?")) {
             statement.setBoolean(1, true);
             statement.setInt(2, task.getId());
             task.setViewed(true);
@@ -35,19 +35,17 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
     public void addToHistory(Task task) {
         try (PreparedStatement updateStmt = connection.prepareStatement(
                 "update history set viewed_at = current_timestamp where task_id = ?");
-             PreparedStatement InsertStmt = connection.prepareStatement(
-                     "INSERT INTO history (task_id, type) values (?, ?);");
-             PreparedStatement deleteStmt = connection.prepareStatement(
-                     """
-                             DELETE FROM history
-                             WHERE task_id
-                             NOT IN
-                                   (SELECT task_id
-                                    FROM history
-                                    ORDER BY viewed_at
-                                    DESC  LIMIT  10)"""
-             )
-        ) {
+                PreparedStatement InsertStmt = connection.prepareStatement(
+                        "INSERT INTO history (task_id, type) values (?, ?);");
+                PreparedStatement deleteStmt = connection.prepareStatement(
+                        """
+                                DELETE FROM history
+                                WHERE task_id
+                                NOT IN
+                                      (SELECT task_id
+                                       FROM history
+                                       ORDER BY viewed_at
+                                       DESC  LIMIT  10)""")) {
             updateStmt.setInt(1, task.getId());
             if ((updateStmt.executeUpdate() == 0)) {
                 InsertStmt.setInt(1, task.getId());
@@ -63,8 +61,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
     @Override
     public void remove(int id) {
         try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE  from history where task_id = ?")
-        ) {
+                "DELETE  from history where task_id = ?")) {
             statement.setInt(1, id);
             statement.execute();
         } catch (SQLException e) {
@@ -103,8 +100,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
                 Task current = new Task(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status"))
-                );
+                        Status.valueOf(resultSet.getString("status")));
                 current.setId(resultSet.getInt("id"));
                 current.setViewed(true);
                 return current;
@@ -113,8 +109,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
                 Epic current = new Epic(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status"))
-                );
+                        Status.valueOf(resultSet.getString("status")));
                 current.setId(resultSet.getInt("id"));
                 current.setViewed(true);
                 return current;
@@ -123,8 +118,7 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
                 Epic epicOfSubtask = new Epic(
                         resultSet.getString("epic_name"),
                         resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("epic_status"))
-                );
+                        Status.valueOf(resultSet.getString("epic_status")));
                 epicOfSubtask.setId(resultSet.getInt("epic_id"));
                 Subtask current = new Subtask(
                         resultSet.getString("name"),
@@ -137,6 +131,51 @@ public class DbHistoryManager implements HistoryManager, AutoCloseable {
             }
         }
         return null;
+    }
+
+    @Override
+    public void addAll(List<? extends Task> tasks) {
+        if (tasks.isEmpty()) {
+            return;
+        }
+        setAutoCommit(connection, false);
+        try (PreparedStatement deleteStmt = connection.prepareStatement(
+                "delete from history where type = ?"
+
+        );
+                PreparedStatement updateStmt = connection.prepareStatement(
+                        "update tasks set viewed = TRUE where type = ?");
+                PreparedStatement insertStmt = connection.prepareStatement("""
+                        insert into history (task_id, type)
+                        SELECT t.id, t.type from tasks t
+                        where type = ? order by id desc limit 10
+                        """)) {
+            String type = tasks.get(0).getType().name();
+            deleteStmt.setString(1, type);
+            updateStmt.setString(1, type);
+            insertStmt.setString(1, type);
+            deleteStmt.execute();
+            updateStmt.execute();
+            insertStmt.execute();
+            tasks.forEach(task -> task.setViewed(true));
+            commit(connection);
+        } catch (SQLException e) {
+            rollback(connection);
+            throw new RuntimeException(e);
+        } finally {
+            setAutoCommit(connection, true);
+        }
+    }
+
+    @Override
+    public void deleteAllByType(String type) {
+        try (PreparedStatement deleteStmt = connection.prepareStatement(
+                "delete from history where type = ?")) {
+            deleteStmt.setString(1, type);
+            deleteStmt.execute();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

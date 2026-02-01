@@ -1,27 +1,18 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.util.*;
-import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
-public class InMemoryTaskManager implements TaskManager {
+public class InMemoryTaskDao implements TaskDao {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
     private Map<Integer, Subtask> subtasks = new HashMap<>();
     private int ids = 1;
-    private HistoryManager historyManager;
-
-    public InMemoryTaskManager(HistoryManager historyManager) {
-        this.historyManager = historyManager;
-    }
 
     @Override
     public void addTask(Task task) {
-        if (task == null) {
-            return;
-        }
         task.setId(ids++);
         tasks.put(task.getId(), task);
     }
@@ -29,43 +20,27 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Optional<Task> getTask(int id) {
         Task task = tasks.get(id);
-        if (task != null) {
-            historyManager.addToHistory(task);
-        }
         return Optional.ofNullable(task);
     }
 
     @Override
     public List<Task> getTasks() {
-        List<Task> result = new ArrayList<>(tasks.values());
-        result.forEach(Task -> {
-            Task.setViewed(true);
-            historyManager.addToHistory(Task);
-        });
-        return result;
+        return new ArrayList<>(tasks.values());
     }
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        if (!tasks.containsKey(id)) {
-            throw new TaskNotFoundException("Task with id: " + id + " not found");
-        }
-        historyManager.remove(id);
         return Optional.of(tasks.remove(id));
     }
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        if (!tasks.containsKey(task.getId())) {
-            throw new TaskNotFoundException("Task with id: " + task.getId() + " not found");
-        }
         tasks.put(task.getId(), task);
         return Optional.of(task);
     }
 
     @Override
     public void deleteAllTasks() {
-        tasks.keySet().forEach(Id -> historyManager.remove(Id));
         this.tasks.clear();
     }
 
@@ -78,9 +53,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Optional<Epic> getEpic(int id) {
         Epic epic = epics.get(id);
-        if (epic != null) {
-            historyManager.addToHistory(epic);
-        }
+
         return Optional.ofNullable(epic);
     }
 
@@ -89,7 +62,6 @@ public class InMemoryTaskManager implements TaskManager {
         List<Epic> result = new ArrayList<>(epics.values());
         result.forEach(Epic -> {
             Epic.setViewed(true);
-            historyManager.addToHistory(Epic);
         });
         return result;
     }
@@ -100,29 +72,18 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        if (!epics.containsKey(id)) {
-            throw new TaskNotFoundException("Epic with id: " + id + " not found");
-        }
         epics.get(id).getSubtasks().forEach(subtask -> subtasks.remove(subtask.getId()));
-        historyManager.remove(id);
         return Optional.of(epics.remove(id));
     }
 
     @Override
     public void deleteAllEpics() {
-        epics.keySet().forEach(Id -> historyManager.remove(Id));
-        subtasks.keySet().forEach(Id -> historyManager.remove(Id));
         this.epics.clear();
         this.subtasks.clear();
     }
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        if (!epics.containsKey(epic.getId())) {
-            throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
-        }
-
-        epic.updateStatus();
         epics.put(epic.getId(), epic);
         return Optional.of(epic);
     }
@@ -130,9 +91,6 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void addSubtask(Subtask subtask) {
         Epic epic = subtask.getEpic();
-        if (epic == null || !epics.containsKey(epic.getId())) {
-            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
-        }
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
@@ -141,39 +99,24 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Optional<Subtask> getSubtask(int id) {
         Subtask subtask = subtasks.get(id);
-        if (subtask != null) {
-            historyManager.addToHistory(subtask);
-        }
         return Optional.ofNullable(subtask);
     }
 
     @Override
     public List<Subtask> getSubtasks() {
-        List<Subtask> result = new ArrayList<>(subtasks.values());
-        result.forEach(Subtask -> {
-            Subtask.setViewed(true);
-            historyManager.addToHistory(Subtask);
-        });
-        return result;
+        return new ArrayList<>(subtasks.values());
     }
 
     @Override
-    public Optional<Subtask> deleteSubtask(int id) {
-        if (!subtasks.containsKey(id)) {
-            throw new TaskNotFoundException("Subtask with id: " + id + " not found");
-        }
+    public boolean deleteSubtask(int id) {
         Epic epicOfSubtask = subtasks.get(id).getEpic();
         Subtask subtask = subtasks.remove(id);
         epicOfSubtask.getSubtasks().remove(subtask);
-        epicOfSubtask.updateStatus();
-        historyManager.remove(id);
-        return Optional.of(subtask);
+        return subtask != null;
     }
 
     @Override
     public void deleteAllSubtasks() {
-        subtasks.keySet()
-                .forEach(Id -> historyManager.remove(Id));
         subtasks.clear();
         epics.values()
                 .forEach(Epic -> Epic.getSubtasks().clear());
@@ -181,12 +124,6 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        if (!subtasks.containsKey(subtask.getId())) {
-            throw new TaskNotFoundException("Subtask with id " + subtask.getId() + " not found");
-        }
-        if (!epics.containsKey(subtask.getEpic().getId())) {
-            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
-        }
         subtasks.put(subtask.getId(), subtask);
         Epic epicOfSubtask = epics.get(subtask.getEpic().getId());
         for (int i = 0; i < epicOfSubtask.getSubtasks().size(); i++) {
@@ -200,8 +137,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public List<Task> getHistory() {
-        return new ArrayList<>(historyManager.getViewedTasks());
+    public void updateEpicStatus(int id) {
+        epics.get(id).updateStatus();
     }
 
     public List<Task> getTasksWithoutAddingToHistory() {

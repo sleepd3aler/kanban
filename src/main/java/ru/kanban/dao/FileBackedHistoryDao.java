@@ -1,4 +1,4 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.io.*;
 import ru.kanban.exceptions.ManagerSaveException;
@@ -8,10 +8,10 @@ import ru.kanban.model.TaskType;
 
 import static ru.kanban.model.TaskType.SUBTASK;
 
-public class FileBackedHistoryManager extends InMemoryHistoryManager {
+public class FileBackedHistoryDao extends InMemoryHistoryDao {
     private final String historyFile;
 
-    public FileBackedHistoryManager(String path) {
+    public FileBackedHistoryDao(String path) {
         this.historyFile = path;
     }
 
