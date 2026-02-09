@@ -5,7 +5,7 @@ import java.util.List;
 import ru.kanban.configutations.Config;
 import ru.kanban.dao.DbHistoryDao;
 import ru.kanban.dao.DbTaskDao;
-import ru.kanban.dao.Managers;
+import ru.kanban.utils.Managers;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
@@ -34,7 +34,7 @@ public class Main {
 
         try (Connection connection = DbUtils.getConnection(config);
              DbHistoryDao historyDao = Managers.getDbHistoryManager(connection);
-             DbTaskDao taskDao = Managers.getDbManager(connection);
+             DbTaskDao taskDao = Managers.getDbManager(connection)
         ) {
             HistoryService historyService = new DefaultHistoryService(historyDao);
             TaskService taskService = new DefaultTaskService(taskDao, historyService);

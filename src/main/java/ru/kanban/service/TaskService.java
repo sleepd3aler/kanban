@@ -9,7 +9,7 @@ import ru.kanban.model.Task;
 public interface TaskService {
     List<Task> getHistory();
 
-    void addTask(Task task);
+    Task addTask(Task task);
 
     Optional<Task> getTask(int id);
 
@@ -21,7 +21,7 @@ public interface TaskService {
 
     void deleteAllTasks();
 
-    void addEpic(Epic epic);
+    Epic addEpic(Epic epic);
 
     Optional<Epic> getEpic(int id);
 
@@ -33,7 +33,7 @@ public interface TaskService {
 
     Optional<Epic> updateEpic(Epic epic);
 
-    void addSubtask(Subtask subtask);
+    Subtask addSubtask(Subtask subtask);
 
     Optional<Subtask> getSubtask(int id);
 

@@ -1,6 +1,7 @@
-package ru.kanban.dao;
+package ru.kanban.utils;
 
 import java.sql.Connection;
+import ru.kanban.dao.*;
 
 public class Managers {
     private Managers() {

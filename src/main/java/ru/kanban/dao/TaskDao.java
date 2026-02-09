@@ -7,9 +7,7 @@ import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
 public interface TaskDao {
-//    List<Task> getHistory();
-
-    void addTask(Task task);
+    Task addTask(Task task);
 
     Optional<Task> getTask(int id);
 
@@ -21,7 +19,7 @@ public interface TaskDao {
 
     void deleteAllTasks();
 
-    void addEpic(Epic epic);
+    Epic addEpic(Epic epic);
 
     Optional<Epic> getEpic(int id);
 
@@ -33,7 +31,7 @@ public interface TaskDao {
 
     Optional<Epic> updateEpic(Epic epic);
 
-    void addSubtask(Subtask subtask);
+    Subtask addSubtask(Subtask subtask);
 
     Optional<Subtask> getSubtask(int id);
 

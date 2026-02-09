@@ -151,9 +151,10 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
     }
 
     @Override
-    public void addTask(Task task) {
+    public Task addTask(Task task) {
         super.addTask(task);
         writeToFile(task);
+        return task;
     }
 
     @Override
@@ -170,9 +171,10 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
     }
 
     @Override
-    public void addEpic(Epic epic) {
+    public Epic addEpic(Epic epic) {
         super.addEpic(epic);
         writeToFile(epic);
+        return epic;
     }
 
     @Override
@@ -196,14 +198,14 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
     }
 
     @Override
-    public void addSubtask(Subtask subtask) {
+    public Subtask addSubtask(Subtask subtask) {
         super.addSubtask(subtask);
         writeToFile(subtask);
+        return subtask;
     }
 
     @Override
     public boolean deleteSubtask(int id) {
-//        Optional<Subtask> res = super.deleteSubtask(id);
         boolean res = super.deleteSubtask(id);
         save();
         return res;

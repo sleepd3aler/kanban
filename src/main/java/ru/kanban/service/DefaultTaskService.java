@@ -24,11 +24,12 @@ public class DefaultTaskService implements TaskService {
     }
 
     @Override
-    public void addTask(Task task) {
+    public Task addTask(Task task) {
         if (task == null) {
             throw new IllegalArgumentException("Task not null required");
         }
         taskDao.addTask(task);
+        return task;
     }
 
     @Override
@@ -81,11 +82,12 @@ public class DefaultTaskService implements TaskService {
     }
 
     @Override
-    public void addEpic(Epic epic) {
+    public Epic addEpic(Epic epic) {
         if (epic == null) {
             throw new IllegalArgumentException("Epic not null required");
         }
         taskDao.addEpic(epic);
+        return epic;
     }
 
     @Override
@@ -141,7 +143,7 @@ public class DefaultTaskService implements TaskService {
     }
 
     @Override
-    public void addSubtask(Subtask subtask) {
+    public Subtask addSubtask(Subtask subtask) {
         if (subtask == null) {
             throw new IllegalArgumentException("Subtask not null required");
         }
@@ -150,6 +152,7 @@ public class DefaultTaskService implements TaskService {
             throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
         }
         taskDao.addSubtask(subtask);
+        return subtask;
     }
 
     @Override

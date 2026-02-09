@@ -21,15 +21,18 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     }
 
     @Override
-    public void addTask(Task task) {
+    public Task addTask(Task task) {
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO  tasks (name, description, viewed,status, type) VALUES (?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
             ResultSet resultSet = setStatement(statement, task);
-            setId(resultSet, task);
+            if (resultSet.next()) {
+                task.setId(resultSet.getInt(1));
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return task;
     }
 
     @Override
@@ -108,16 +111,19 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     }
 
     @Override
-    public void addEpic(Epic epic) {
+    public Epic addEpic(Epic epic) {
         try (PreparedStatement statement = connection.prepareStatement(
                 "insert into  tasks(name, description, viewed, status, type) values (?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)
         ) {
             ResultSet resultSet = setStatement(statement, epic);
-            setId(resultSet, epic);
+            if (resultSet.next()) {
+                epic.setId(resultSet.getInt(1));
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return epic;
     }
 
     @Override
@@ -192,7 +198,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     }
 
     @Override
-    public void addSubtask(Subtask subtask) {
+    public Subtask addSubtask(Subtask subtask) {
         setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO tasks (name, description, viewed, status, type, epic_id) values (?, ?, ?, ?, ?, ?)",
@@ -206,7 +212,9 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
             statement.setInt(6, subtask.getEpic().getId());
             statement.execute();
             ResultSet resultSet = statement.getGeneratedKeys();
-            setId(resultSet, subtask);
+            if (resultSet.next()) {
+                subtask.setId(resultSet.getInt(1));
+            }
             updateEpicStatus(subtask.getEpic().getId());
             commit(connection);
         } catch (SQLException e) {
@@ -215,6 +223,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         } finally {
             setAutoCommit(connection, true);
         }
+        return subtask;
     }
 
     @Override
@@ -436,12 +445,6 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
             statement.setInt(5, task.getId());
             statement.setString(6, type);
             return statement.executeUpdate();
-        }
-    }
-
-    private void setId(ResultSet resultSet, Task task) throws SQLException {
-        while (resultSet.next()) {
-            task.setId(resultSet.getInt(1));
         }
     }
 

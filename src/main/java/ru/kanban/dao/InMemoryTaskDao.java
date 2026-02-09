@@ -12,9 +12,10 @@ public class InMemoryTaskDao implements TaskDao {
     private int ids = 1;
 
     @Override
-    public void addTask(Task task) {
+    public Task addTask(Task task) {
         task.setId(ids++);
         tasks.put(task.getId(), task);
+        return task;
     }
 
     @Override
@@ -45,9 +46,10 @@ public class InMemoryTaskDao implements TaskDao {
     }
 
     @Override
-    public void addEpic(Epic epic) {
+    public Epic addEpic(Epic epic) {
         epic.setId(ids++);
         epics.put(epic.getId(), epic);
+        return epic;
     }
 
     @Override
@@ -60,9 +62,7 @@ public class InMemoryTaskDao implements TaskDao {
     @Override
     public List<Epic> getEpics() {
         List<Epic> result = new ArrayList<>(epics.values());
-        result.forEach(Epic -> {
-            Epic.setViewed(true);
-        });
+        result.forEach(Epic -> Epic.setViewed(true));
         return result;
     }
 
@@ -89,11 +89,12 @@ public class InMemoryTaskDao implements TaskDao {
     }
 
     @Override
-    public void addSubtask(Subtask subtask) {
+    public Subtask addSubtask(Subtask subtask) {
         Epic epic = subtask.getEpic();
         subtask.setId(ids++);
         subtasks.put(subtask.getId(), subtask);
         epic.addSubtask(subtask);
+        return subtask;
     }
 
     @Override
