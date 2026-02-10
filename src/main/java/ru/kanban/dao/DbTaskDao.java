@@ -11,7 +11,6 @@ import ru.kanban.model.Task;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.utils.Constants.*;
-import static ru.kanban.utils.DbUtils.*;
 
 public class DbTaskDao implements TaskDao, AutoCloseable {
     private Connection connection;
@@ -43,17 +42,12 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     @Override
     public List<Task> getTasks() {
         List<Task> result = new ArrayList<>();
-        setAutoCommit(connection, false);
-        try (PreparedStatement selectStmt = connection.prepareStatement(
-                "SELECT * from tasks where type = ?");
-             PreparedStatement updateStmt = connection.prepareStatement(
-                     "UPDATE tasks SET viewed = TRUE WHERE type = ?")
+        try (
+                PreparedStatement selectStmt = connection.prepareStatement(
+                        "SELECT * from tasks where type = ?")
         ) {
             selectStmt.setString(1, TASK_TYPE);
-            updateStmt.setString(1, TASK_TYPE);
-            updateStmt.execute();
             ResultSet resultSet = selectStmt.executeQuery();
-            commit(connection);
             while (resultSet.next()) {
                 Task task = new Task(
                         resultSet.getString("name"),
@@ -61,14 +55,10 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                         Status.valueOf(resultSet.getString("status"))
                 );
                 task.setId(resultSet.getInt(1));
-                task.setViewed(true);
                 result.add(task);
             }
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
         return result;
     }
@@ -134,13 +124,11 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     @Override
     public List<Epic> getEpics() {
         List<Epic> result = new ArrayList<>();
-        setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
                 "select * from tasks where type = ?")
         ) {
             statement.setObject(1, EPIC_TYPE);
             ResultSet resultSet = statement.executeQuery();
-            commit(connection);
             while (resultSet.next()) {
                 Epic epic = new Epic(
                         resultSet.getString("name"),
@@ -148,15 +136,11 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                         Status.valueOf(resultSet.getString("status"))
                 );
                 epic.setId(resultSet.getInt("id"));
-                epic.setViewed(true);
                 result.add(epic);
             }
             return result;
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -199,7 +183,6 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        setAutoCommit(connection, false);
         try (PreparedStatement statement = connection.prepareStatement(
                 "INSERT INTO tasks (name, description, viewed, status, type, epic_id) values (?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)
@@ -215,13 +198,9 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
             if (resultSet.next()) {
                 subtask.setId(resultSet.getInt(1));
             }
-            updateEpicStatus(subtask.getEpic().getId());
-            commit(connection);
+
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
         return subtask;
     }
@@ -234,7 +213,6 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     @Override
     public List<Subtask> getSubtasks() {
         List<Subtask> result = new ArrayList<>();
-        setAutoCommit(connection, false);
         try (PreparedStatement selectStmt = connection.prepareStatement(
                 """
                         select s.id, s.name, s.description, s.status, s.epic_id,
@@ -244,7 +222,6 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                         """)
         ) {
             ResultSet resultSet = selectStmt.executeQuery();
-            commit(connection);
             while (resultSet.next()) {
                 Epic epic = new Epic(
                         resultSet.getString("e_name"),
@@ -260,10 +237,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
             }
             return result;
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -282,20 +256,10 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
 
     @Override
     public void deleteAllSubtasks() {
-        setAutoCommit(connection, false);
-        try (PreparedStatement statement = connection.prepareStatement(
-                "UPDATE tasks set status = ? where type = ?")
-        ) {
+        try {
             deleteAllByType(SUBTASK_TYPE);
-            statement.setObject(1, NEW.name());
-            statement.setObject(2, EPIC_TYPE);
-            statement.execute();
-            commit(connection);
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 
@@ -332,6 +296,19 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                 updateStatement.setObject(1, IN_PROGRESS.name());
                 updateStatement.execute();
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void renewAllEpicStatuses() {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "UPDATE tasks set status = ? where type = ?")
+        ) {
+            statement.setObject(1, NEW.name());
+            statement.setObject(2, EPIC_TYPE);
+            statement.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

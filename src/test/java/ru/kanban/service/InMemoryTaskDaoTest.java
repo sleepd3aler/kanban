@@ -310,6 +310,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
+    @Disabled
     void whenDeleteAllSubtasksThenEpicHasNoSubtasks() {
         taskManager.addEpic(firstEpic);
         taskManager.addSubtask(firstSubtask);

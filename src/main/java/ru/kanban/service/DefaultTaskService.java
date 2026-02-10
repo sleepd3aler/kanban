@@ -152,6 +152,7 @@ public class DefaultTaskService implements TaskService {
             throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
         }
         taskDao.addSubtask(subtask);
+        taskDao.updateEpicStatus(epic.get().getId());
         return subtask;
     }
 
@@ -187,6 +188,7 @@ public class DefaultTaskService implements TaskService {
     @Override
     public void deleteAllSubtasks() {
         taskDao.deleteAllSubtasks();
+        taskDao.renewAllEpicStatuses();
         historyService.deleteAllByType(SUBTASK_TYPE);
     }
 

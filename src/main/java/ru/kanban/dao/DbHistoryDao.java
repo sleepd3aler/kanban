@@ -35,17 +35,17 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
     public void addToHistory(Task task) {
         try (PreparedStatement updateStmt = connection.prepareStatement(
                 "update history set viewed_at = current_timestamp where task_id = ?");
-                PreparedStatement InsertStmt = connection.prepareStatement(
-                        "INSERT INTO history (task_id, type) values (?, ?);");
-                PreparedStatement deleteStmt = connection.prepareStatement(
-                        """
-                                DELETE FROM history
-                                WHERE task_id
-                                NOT IN
-                                      (SELECT task_id
-                                       FROM history
-                                       ORDER BY viewed_at
-                                       DESC  LIMIT  10)""")) {
+             PreparedStatement InsertStmt = connection.prepareStatement(
+                     "INSERT INTO history (task_id, type) values (?, ?);");
+             PreparedStatement deleteStmt = connection.prepareStatement(
+                     """
+                             DELETE FROM history
+                             WHERE task_id
+                             NOT IN
+                                   (SELECT task_id
+                                    FROM history
+                                    ORDER BY viewed_at
+                                    DESC  LIMIT  10)""")) {
             updateStmt.setInt(1, task.getId());
             if ((updateStmt.executeUpdate() == 0)) {
                 InsertStmt.setInt(1, task.getId());
@@ -139,21 +139,23 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
             return;
         }
         setAutoCommit(connection, false);
-        try (PreparedStatement deleteStmt = connection.prepareStatement(
+        try (
+                PreparedStatement deleteStmt = connection.prepareStatement(
                 "delete from history where type = ?"
 
         );
-                PreparedStatement updateStmt = connection.prepareStatement(
-                        "update tasks set viewed = TRUE where type = ?");
-                PreparedStatement insertStmt = connection.prepareStatement("""
-                        insert into history (task_id, type)
-                        SELECT t.id, t.type from tasks t
-                        where type = ? order by id desc limit 10
-                        """)) {
+             PreparedStatement insertStmt = connection.prepareStatement("""
+                     insert into history (task_id, type)
+                     SELECT t.id, t.type from tasks t
+                     where type = ? order by id desc limit 10
+                     """);
+             PreparedStatement updateStmt = connection.prepareStatement(
+                     "update tasks set viewed = TRUE where type = ?");) {
+
             String type = tasks.get(0).getType().name();
             deleteStmt.setString(1, type);
-            updateStmt.setString(1, type);
             insertStmt.setString(1, type);
+            updateStmt.setString(1, type);
             deleteStmt.execute();
             updateStmt.execute();
             insertStmt.execute();

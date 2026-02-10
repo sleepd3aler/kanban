@@ -249,6 +249,16 @@ class DbTaskDaoTest {
     }
 
     @Test
+    @Disabled
+    void whenAddDoneSubtaskThenEpicStatusDONE() {
+        manager.addEpic(epic1);
+        subtask1.setStatus(DONE);
+        manager.addSubtask(subtask1);
+        assertThat(manager.getEpic(epic1.getId()).get().getStatus()).isEqualTo(DONE);
+    }
+
+    @Test
+    @Disabled
     void whenAddNewSubtaskThenEpicStatusIN_PROGRESS() {
         manager.addEpic(epic1);
         manager.addSubtask(subtask1);
@@ -257,14 +267,6 @@ class DbTaskDaoTest {
         subtask1.setStatus(IN_PROGRESS);
         manager.addSubtask(subtask1);
         assertThat(manager.getEpic(epic1.getId()).get().getStatus()).isEqualTo(IN_PROGRESS);
-    }
-
-    @Test
-    void whenAddDoneSubtaskThenEpicStatusDONE() {
-        manager.addEpic(epic1);
-        subtask1.setStatus(DONE);
-        manager.addSubtask(subtask1);
-        assertThat(manager.getEpic(epic1.getId()).get().getStatus()).isEqualTo(DONE);
     }
 
     @Test

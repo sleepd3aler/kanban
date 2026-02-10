@@ -45,4 +45,6 @@ public interface TaskDao {
 
     void updateEpicStatus(int id);
 
+    void renewAllEpicStatuses();
+
 }

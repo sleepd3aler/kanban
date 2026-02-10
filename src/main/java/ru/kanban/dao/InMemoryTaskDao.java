@@ -2,6 +2,7 @@ package ru.kanban.dao;
 
 import java.util.*;
 import ru.kanban.model.Epic;
+import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
@@ -55,7 +56,6 @@ public class InMemoryTaskDao implements TaskDao {
     @Override
     public Optional<Epic> getEpic(int id) {
         Epic epic = epics.get(id);
-
         return Optional.ofNullable(epic);
     }
 
@@ -66,14 +66,15 @@ public class InMemoryTaskDao implements TaskDao {
         return result;
     }
 
-    public Epic getEpicById(int id) {
-        return epics.get(id);
-    }
-
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        epics.get(id).getSubtasks().forEach(subtask -> subtasks.remove(subtask.getId()));
+        epics.get(id).getSubtasks()
+                .forEach(subtask -> subtasks.remove(subtask.getId()));
         return Optional.of(epics.remove(id));
+    }
+
+    public Epic getEpicById(int id) {
+        return epics.get(id);
     }
 
     @Override
@@ -119,8 +120,6 @@ public class InMemoryTaskDao implements TaskDao {
     @Override
     public void deleteAllSubtasks() {
         subtasks.clear();
-        epics.values()
-                .forEach(Epic -> Epic.getSubtasks().clear());
     }
 
     @Override
@@ -140,6 +139,15 @@ public class InMemoryTaskDao implements TaskDao {
     @Override
     public void updateEpicStatus(int id) {
         epics.get(id).updateStatus();
+    }
+
+    @Override
+    public void renewAllEpicStatuses() {
+        epics.values()
+                .forEach(epic -> {
+                    epic.getSubtasks().clear();
+                    epic.setStatus(Status.NEW);
+                });
     }
 
     public List<Task> getTasksWithoutAddingToHistory() {
