@@ -3,6 +3,7 @@ package ru.kanban.dao;
 import java.util.List;
 import java.util.Optional;
 import ru.kanban.model.Epic;
+import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
@@ -43,8 +44,22 @@ public interface TaskDao {
 
     Optional<Subtask> updateSubtask(Subtask subtask);
 
-    void updateEpicStatus(int id);
+    void updateEpicStatus(int id, Status status);
 
     void renewAllEpicStatuses();
+
+    List<Status> getEpicSubtasksStatuses(int epicId);
+
+    default void begin() {
+
+    }
+
+    default void rollback() {
+
+    }
+
+    default void commit() {
+
+    }
 
 }

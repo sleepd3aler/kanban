@@ -132,13 +132,12 @@ public class InMemoryTaskDao implements TaskDao {
                 break;
             }
         }
-        epicOfSubtask.updateStatus();
         return Optional.of(subtask);
     }
 
     @Override
-    public void updateEpicStatus(int id) {
-        epics.get(id).updateStatus();
+    public void updateEpicStatus(int id, Status status) {
+        epics.get(id).setStatus(status);
     }
 
     @Override
@@ -148,6 +147,15 @@ public class InMemoryTaskDao implements TaskDao {
                     epic.getSubtasks().clear();
                     epic.setStatus(Status.NEW);
                 });
+    }
+
+    @Override
+    public List<Status> getEpicSubtasksStatuses(int epicId) {
+        return epics.get(epicId)
+                .getSubtasks()
+                .stream()
+                .map(Task::getStatus)
+                .toList();
     }
 
     public List<Task> getTasksWithoutAddingToHistory() {
@@ -161,6 +169,7 @@ public class InMemoryTaskDao implements TaskDao {
     public List<Subtask> getSubtasksWithoutAddingToHistory() {
         return new ArrayList<>(subtasks.values());
     }
+
 }
 
 

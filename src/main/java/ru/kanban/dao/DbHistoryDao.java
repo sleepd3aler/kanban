@@ -9,7 +9,6 @@ import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
 import static ru.kanban.utils.Constants.*;
-import static ru.kanban.utils.DbUtils.*;
 
 public class DbHistoryDao implements HistoryDao, AutoCloseable {
     private Connection connection;
@@ -138,7 +137,6 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
         if (tasks.isEmpty()) {
             return;
         }
-        setAutoCommit(connection, false);
         try (
                 PreparedStatement deleteStmt = connection.prepareStatement(
                 "delete from history where type = ?"
@@ -150,7 +148,7 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
                      where type = ? order by id desc limit 10
                      """);
              PreparedStatement updateStmt = connection.prepareStatement(
-                     "update tasks set viewed = TRUE where type = ?");) {
+                     "update tasks set viewed = TRUE where type = ?")) {
 
             String type = tasks.get(0).getType().name();
             deleteStmt.setString(1, type);
@@ -160,12 +158,8 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
             updateStmt.execute();
             insertStmt.execute();
             tasks.forEach(task -> task.setViewed(true));
-            commit(connection);
         } catch (SQLException e) {
-            rollback(connection);
             throw new RuntimeException(e);
-        } finally {
-            setAutoCommit(connection, true);
         }
     }
 

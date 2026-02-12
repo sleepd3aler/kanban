@@ -5,8 +5,11 @@ import java.util.Optional;
 import ru.kanban.dao.TaskDao;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
+import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
+
+import static ru.kanban.model.Status.*;
 import static ru.kanban.utils.Constants.*;
 
 public class DefaultTaskService implements TaskService {
@@ -34,29 +37,51 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Task> getTask(int id) {
-        Optional<Task> task = taskDao.getTask(id);
-        task.ifPresent(value -> {
-            historyService.setToViewed(value);
-            historyService.addToHistory(value);
-        });
-        return task;
+        try {
+            taskDao.begin();
+            Optional<Task> task = taskDao.getTask(id);
+            task.ifPresent(value -> {
+                historyService.setToViewed(value);
+                historyService.addToHistory(value);
+            });
+            taskDao.commit();
+            return task;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
     public List<Task> getTasks() {
-        List<Task> result = taskDao.getTasks();
-        historyService.addAll(result);
-        return result;
+        try {
+            taskDao.begin();
+            List<Task> result = taskDao.getTasks();
+            historyService.addAll(result);
+            taskDao.commit();
+            return result;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        Optional<Task> task = taskDao.deleteTask(id);
-        if (task.isEmpty()) {
-            throw new TaskNotFoundException("Task with id: " + id + " not found");
+        try {
+            taskDao.begin();
+            Optional<Task> task = taskDao.deleteTask(id);
+            if (task.isEmpty()) {
+                throw new TaskNotFoundException("Task with id: " + id + " not found");
+            }
+            historyService.remove(id);
+            taskDao.commit();
+            return task;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        historyService.remove(id);
-        return task;
     }
 
     @Override
@@ -64,21 +89,35 @@ public class DefaultTaskService implements TaskService {
         if (task == null) {
             throw new IllegalArgumentException("Task not null required");
         }
-        Optional<Task> res = taskDao.getTask(task.getId());
-        if (res.isEmpty()) {
-            throw new TaskNotFoundException("Task with id: " + task.getId() + " not found");
+        try {
+            taskDao.begin();
+            Optional<Task> res = taskDao.getTask(task.getId());
+            if (res.isEmpty()) {
+                throw new TaskNotFoundException("Task with id: " + task.getId() + " not found");
+            }
+            if (!task.isViewed()) {
+                historyService.remove(task.getId());
+            }
+            taskDao.updateTask(task);
+            taskDao.commit();
+            return Optional.of(task);
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        if (!task.isViewed()) {
-            historyService.remove(task.getId());
-        }
-        taskDao.updateTask(task);
-        return Optional.of(task);
     }
 
     @Override
     public void deleteAllTasks() {
-        taskDao.deleteAllTasks();
-        historyService.deleteAllByType(TASK_TYPE);
+        try {
+            taskDao.begin();
+            taskDao.deleteAllTasks();
+            historyService.deleteAllByType(TASK_TYPE);
+            taskDao.commit();
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -92,36 +131,64 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        Optional<Epic> res = taskDao.getEpic(id);
-        res.ifPresent(value -> {
-            historyService.setToViewed(res.get());
-            historyService.addToHistory(res.get());
-        });
-        return res;
+        try {
+            taskDao.begin();
+            Optional<Epic> res = taskDao.getEpic(id);
+            res.ifPresent(value -> {
+                historyService.setToViewed(res.get());
+                historyService.addToHistory(res.get());
+            });
+            taskDao.commit();
+            return res;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public List<Epic> getEpics() {
-        List<Epic> result = taskDao.getEpics();
-        historyService.addAll(result);
-        return result;
+        try {
+            taskDao.begin();
+            List<Epic> result = taskDao.getEpics();
+            historyService.addAll(result);
+            taskDao.commit();
+            return result;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        Optional<Epic> res = taskDao.deleteEpic(id);
-        if (res.isEmpty()) {
-            throw new TaskNotFoundException("Epic with id: " + id + " not found");
+        try {
+            taskDao.begin();
+            Optional<Epic> res = taskDao.deleteEpic(id);
+            if (res.isEmpty()) {
+                throw new TaskNotFoundException("Epic with id: " + id + " not found");
+            }
+            historyService.remove(id);
+            taskDao.commit();
+            return res;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        historyService.remove(id);
-        return res;
     }
 
     @Override
     public void deleteAllEpics() {
-        taskDao.deleteAllEpics();
-        historyService.deleteAllByType(EPIC_TYPE);
-        historyService.deleteAllByType(SUBTASK_TYPE);
+        try {
+            taskDao.begin();
+            taskDao.deleteAllEpics();
+            historyService.deleteAllByType(EPIC_TYPE);
+            historyService.deleteAllByType(SUBTASK_TYPE);
+            taskDao.commit();
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -129,17 +196,22 @@ public class DefaultTaskService implements TaskService {
         if (epic == null) {
             throw new IllegalArgumentException("Epic not null required");
         }
-        Optional<Epic> res = taskDao.getEpic(epic.getId());
-        if (res.isEmpty()) {
-            throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
+        try {
+            taskDao.begin();
+            Optional<Epic> res = taskDao.getEpic(epic.getId());
+            if (res.isEmpty()) {
+                throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
+            }
+            if (!epic.isViewed()) {
+                historyService.remove(epic.getId());
+            }
+            updateEpicStatus(epic);
+            taskDao.commit();
+            return taskDao.getEpic(epic.getId());
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        if (!epic.isViewed()) {
-            historyService.remove(epic.getId());
-        }
-
-        taskDao.updateEpic(epic);
-        taskDao.updateEpicStatus(epic.getId());
-        return taskDao.getEpic(epic.getId());
     }
 
     @Override
@@ -147,49 +219,85 @@ public class DefaultTaskService implements TaskService {
         if (subtask == null) {
             throw new IllegalArgumentException("Subtask not null required");
         }
-        Optional<Epic> epic = taskDao.getEpic(subtask.getEpic().getId());
-        if (epic.isEmpty()) {
-            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+        try {
+            taskDao.begin();
+            Optional<Epic> epic = taskDao.getEpic(subtask.getEpic().getId());
+            if (epic.isEmpty()) {
+                throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+            }
+            taskDao.addSubtask(subtask);
+            updateEpicStatus(epic.get());
+            taskDao.commit();
+            return subtask;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        taskDao.addSubtask(subtask);
-        taskDao.updateEpicStatus(epic.get().getId());
-        return subtask;
     }
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        Optional<Subtask> subtask = taskDao.getSubtask(id);
-        subtask.ifPresent(value -> {
-            historyService.setToViewed(value);
-            historyService.addToHistory(value);
-        });
-        return subtask;
+        try {
+            taskDao.begin();
+            Optional<Subtask> subtask = taskDao.getSubtask(id);
+            subtask.ifPresent(value -> {
+                historyService.setToViewed(value);
+                historyService.addToHistory(value);
+            });
+            taskDao.commit();
+            return subtask;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public List<Subtask> getSubtasks() {
-        List<Subtask> result = taskDao.getSubtasks();
-        historyService.addAll(result);
-        return result;
+        try {
+            taskDao.begin();
+            List<Subtask> result = taskDao.getSubtasks();
+            historyService.addAll(result);
+            taskDao.commit();
+            return result;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        Optional<Subtask> subtask = taskDao.getSubtask(id);
-        if (subtask.isEmpty()) {
-            throw new TaskNotFoundException("Subtask with id: " + id + " not found");
+        try {
+            taskDao.begin();
+            Optional<Subtask> subtask = taskDao.getSubtask(id);
+            if (subtask.isEmpty()) {
+                throw new TaskNotFoundException("Subtask with id: " + id + " not found");
+            }
+            Epic current = subtask.get().getEpic();
+            taskDao.deleteSubtask(id);
+            updateEpicStatus(current);
+            historyService.remove(id);
+            taskDao.commit();
+            return subtask;
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        taskDao.updateEpicStatus(subtask.get().getEpic().getId());
-        taskDao.deleteSubtask(id);
-        historyService.remove(id);
-        return subtask;
     }
 
     @Override
     public void deleteAllSubtasks() {
-        taskDao.deleteAllSubtasks();
-        taskDao.renewAllEpicStatuses();
-        historyService.deleteAllByType(SUBTASK_TYPE);
+        try {
+            taskDao.begin();
+            taskDao.deleteAllSubtasks();
+            taskDao.renewAllEpicStatuses();
+            historyService.deleteAllByType(SUBTASK_TYPE);
+            taskDao.commit();
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -197,19 +305,59 @@ public class DefaultTaskService implements TaskService {
         if (subtask == null) {
             throw new IllegalArgumentException("Subtask not null required");
         }
-        Optional<Subtask> res = taskDao.getSubtask(subtask.getId());
-        Optional<Epic> epicOfSubtask = taskDao.getEpic(subtask.getEpic().getId());
-        if (res.isEmpty()) {
-            throw new TaskNotFoundException("Subtask with id: " + subtask.getId() + " not found");
+        try {
+            taskDao.begin();
+            Optional<Subtask> res = taskDao.getSubtask(subtask.getId());
+            Optional<Epic> epicOfSubtask = taskDao.getEpic(subtask.getEpic().getId());
+            if (res.isEmpty()) {
+                throw new TaskNotFoundException("Subtask with id: " + subtask.getId() + " not found");
+            }
+            if (epicOfSubtask.isEmpty()) {
+                throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+            }
+            if (!subtask.isViewed()) {
+                historyService.remove(subtask.getId());
+            }
+            taskDao.updateSubtask(subtask);
+            updateEpicStatus(epicOfSubtask.get());
+            taskDao.commit();
+            return Optional.of(subtask);
+        } catch (Exception e) {
+            taskDao.rollback();
+            throw new RuntimeException(e);
         }
-        if (epicOfSubtask.isEmpty()) {
-            throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
+    }
+
+    public Status checkSubtaskStatus(List<Status> statuses) {
+        if (statuses.isEmpty()) {
+            return NEW;
         }
-        if (!subtask.isViewed()) {
-            historyService.remove(subtask.getId());
+        boolean allNew = true;
+        boolean allDone = true;
+        for (Status actual : statuses) {
+            if (!actual.equals(NEW)) {
+                allNew = false;
+            }
+
+            if (!actual.equals(DONE)) {
+                allDone = false;
+            }
+
         }
-        taskDao.updateEpicStatus(epicOfSubtask.get().getId());
-        taskDao.updateSubtask(subtask);
-        return Optional.of(subtask);
+        if (allNew) {
+            return NEW;
+        }
+
+        if (allDone) {
+            return DONE;
+        }
+        return IN_PROGRESS;
+    }
+
+    private void updateEpicStatus(Epic epic) {
+        var actualSubStatuses = taskDao.getEpicSubtasksStatuses(epic.getId());
+        Status updatedStatus = checkSubtaskStatus(actualSubStatuses);
+        epic.setStatus(updatedStatus);
+        taskDao.updateEpicStatus(epic.getId(), updatedStatus);
     }
 }

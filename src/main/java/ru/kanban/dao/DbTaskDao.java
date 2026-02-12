@@ -8,8 +8,9 @@ import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
+import ru.kanban.utils.DbUtils;
 
-import static ru.kanban.model.Status.*;
+import static ru.kanban.model.Status.NEW;
 import static ru.kanban.utils.Constants.*;
 
 public class DbTaskDao implements TaskDao, AutoCloseable {
@@ -273,32 +274,35 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     }
 
     @Override
-    public void updateEpicStatus(int epicId) {
-        try (PreparedStatement selectStatement = connection.prepareStatement(
-                "select status from tasks where epic_id = ?");
-             PreparedStatement updateStatement = connection.prepareStatement(
-                     "UPDATE tasks set status = ? where id = ?")
+    public void updateEpicStatus(int epicId, Status status) {
+        try (
+                PreparedStatement updateStatement = connection.prepareStatement(
+                        "UPDATE tasks set status = ? where id = ?")
         ) {
-            selectStatement.setInt(1, epicId);
+            updateStatement.setString(1, status.name());
             updateStatement.setInt(2, epicId);
-            ResultSet statuses = selectStatement.executeQuery();
-            Status actual = checkSubtaskStatus(statuses);
-            if (actual == NEW) {
-                updateStatement.setObject(1, NEW.name());
-                updateStatement.execute();
-            }
-            if (actual == DONE) {
-                updateStatement.setObject(1, DONE.name());
-                updateStatement.execute();
-            }
+            updateStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-            if (actual == IN_PROGRESS) {
-                updateStatement.setObject(1, IN_PROGRESS.name());
-                updateStatement.execute();
+    @Override
+    public List<Status> getEpicSubtasksStatuses(int epicId) {
+        List<Status> result = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(
+                "select status from tasks where type = ? and epic_id = ?"
+        )) {
+            statement.setString(1, SUBTASK_TYPE);
+            statement.setInt(2, epicId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                result.add(Status.valueOf(resultSet.getString(1)));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        return result;
     }
 
     @Override
@@ -312,29 +316,6 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Status checkSubtaskStatus(ResultSet resultSet) throws SQLException {
-        boolean allNew = true;
-        boolean allDone = true;
-        Status status = null;
-        while (resultSet.next()) {
-            status = Status.valueOf(resultSet.getString("status"));
-
-            if (!status.equals(NEW)) {
-                allNew = false;
-            }
-            if (!status.equals(DONE)) {
-                allDone = false;
-            }
-        }
-        if (status == null || allNew) {
-            return NEW;
-        }
-        if (allDone) {
-            return DONE;
-        }
-        return IN_PROGRESS;
     }
 
     private <T extends Task> Optional<T> getTaskByIdAndType(int id, String type) {
@@ -440,4 +421,20 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         connection.close();
     }
 
+    @Override
+    public void begin() {
+        DbUtils.setAutoCommit(connection, false);
+    }
+
+    @Override
+    public void rollback() {
+        DbUtils.rollback(connection);
+        DbUtils.setAutoCommit(connection, true);
+    }
+
+    @Override
+    public void commit() {
+    DbUtils.commit(connection);
+    DbUtils.setAutoCommit(connection, true);
+    }
 }

@@ -3,6 +3,7 @@ package ru.kanban.service;
 import java.util.List;
 import java.util.Optional;
 import ru.kanban.model.Epic;
+import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
@@ -44,5 +45,7 @@ public interface TaskService {
     void deleteAllSubtasks();
 
     Optional<Subtask> updateSubtask(Subtask subtask);
+
+    public Status checkSubtaskStatus(List<Status> statuses);
 
 }
