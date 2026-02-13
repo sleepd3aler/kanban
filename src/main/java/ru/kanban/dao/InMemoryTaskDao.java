@@ -6,6 +6,9 @@ import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
+import static ru.kanban.model.Status.NEW;
+import static ru.kanban.utils.Constants.*;
+
 public class InMemoryTaskDao implements TaskDao {
     private Map<Integer, Task> tasks = new HashMap<>();
     private Map<Integer, Epic> epics = new HashMap<>();
@@ -140,13 +143,25 @@ public class InMemoryTaskDao implements TaskDao {
         epics.get(id).setStatus(status);
     }
 
+    // Можно подумать о более функциональном методе - обновляем все задачи
+    // определенным статусом по типу
+
     @Override
-    public void renewAllEpicStatuses() {
-        epics.values()
-                .forEach(epic -> {
-                    epic.getSubtasks().clear();
-                    epic.setStatus(Status.NEW);
-                });
+    public void renewAllStatuses(String type, String status) {
+        switch (type) {
+            case TASK_TYPE -> tasks.values()
+                    .forEach(task -> task.setStatus(Status.valueOf(status)));
+            case EPIC_TYPE -> epics.values()
+                    .forEach(epic -> {
+                        epic.setStatus(Status.valueOf(status));
+                        if (status.equals(NEW.name())) {
+                            epic.getSubtasks().clear();
+                        }
+                    });
+
+            case SUBTASK_TYPE -> subtasks.values()
+                    .forEach(subtask -> subtask.setStatus(Status.valueOf(status)));
+        }
     }
 
     @Override
@@ -171,5 +186,3 @@ public class InMemoryTaskDao implements TaskDao {
     }
 
 }
-
-

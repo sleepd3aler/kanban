@@ -69,12 +69,12 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Task> deleteTask(int id) {
+        if (taskDao.getTask(id).isEmpty()) {
+            throw new TaskNotFoundException("Task with id: " + id + " not found");
+        }
         try {
             taskDao.begin();
             Optional<Task> task = taskDao.deleteTask(id);
-            if (task.isEmpty()) {
-                throw new TaskNotFoundException("Task with id: " + id + " not found");
-            }
             historyService.remove(id);
             taskDao.commit();
             return task;
@@ -162,12 +162,12 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
+        if (taskDao.getEpic(id).isEmpty()) {
+            throw new TaskNotFoundException("Epic with id: " + id + " not found");
+        }
         try {
             taskDao.begin();
             Optional<Epic> res = taskDao.deleteEpic(id);
-            if (res.isEmpty()) {
-                throw new TaskNotFoundException("Epic with id: " + id + " not found");
-            }
             historyService.remove(id);
             taskDao.commit();
             return res;
@@ -205,7 +205,7 @@ public class DefaultTaskService implements TaskService {
             if (!epic.isViewed()) {
                 historyService.remove(epic.getId());
             }
-            updateEpicStatus(epic);
+            updateEpicStatus(epic.getId());
             taskDao.commit();
             return taskDao.getEpic(epic.getId());
         } catch (Exception e) {
@@ -226,7 +226,7 @@ public class DefaultTaskService implements TaskService {
                 throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
             }
             taskDao.addSubtask(subtask);
-            updateEpicStatus(epic.get());
+            updateEpicStatus(epic.get().getId());
             taskDao.commit();
             return subtask;
         } catch (Exception e) {
@@ -268,15 +268,15 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
+        if (taskDao.getSubtask(id).isEmpty()) {
+            throw new TaskNotFoundException("Subtask with id: " + id + " not found");
+        }
         try {
             taskDao.begin();
             Optional<Subtask> subtask = taskDao.getSubtask(id);
-            if (subtask.isEmpty()) {
-                throw new TaskNotFoundException("Subtask with id: " + id + " not found");
-            }
             Epic current = subtask.get().getEpic();
             taskDao.deleteSubtask(id);
-            updateEpicStatus(current);
+            updateEpicStatus(current.getId());
             historyService.remove(id);
             taskDao.commit();
             return subtask;
@@ -291,7 +291,7 @@ public class DefaultTaskService implements TaskService {
         try {
             taskDao.begin();
             taskDao.deleteAllSubtasks();
-            taskDao.renewAllEpicStatuses();
+            taskDao.renewAllStatuses(EPIC_TYPE, NEW.name());
             historyService.deleteAllByType(SUBTASK_TYPE);
             taskDao.commit();
         } catch (Exception e) {
@@ -319,7 +319,7 @@ public class DefaultTaskService implements TaskService {
                 historyService.remove(subtask.getId());
             }
             taskDao.updateSubtask(subtask);
-            updateEpicStatus(epicOfSubtask.get());
+            updateEpicStatus(epicOfSubtask.get().getId());
             taskDao.commit();
             return Optional.of(subtask);
         } catch (Exception e) {
@@ -354,10 +354,9 @@ public class DefaultTaskService implements TaskService {
         return IN_PROGRESS;
     }
 
-    private void updateEpicStatus(Epic epic) {
-        var actualSubStatuses = taskDao.getEpicSubtasksStatuses(epic.getId());
+    private void updateEpicStatus(int id) {
+        var actualSubStatuses = taskDao.getEpicSubtasksStatuses(id);
         Status updatedStatus = checkSubtaskStatus(actualSubStatuses);
-        epic.setStatus(updatedStatus);
-        taskDao.updateEpicStatus(epic.getId(), updatedStatus);
+        taskDao.updateEpicStatus(id, updatedStatus);
     }
 }

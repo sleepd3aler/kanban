@@ -46,7 +46,7 @@ public interface TaskDao {
 
     void updateEpicStatus(int id, Status status);
 
-    void renewAllEpicStatuses();
+    void renewAllStatuses(String type, String status);
 
     List<Status> getEpicSubtasksStatuses(int epicId);
 
