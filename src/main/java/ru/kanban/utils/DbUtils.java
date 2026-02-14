@@ -20,7 +20,9 @@ public class DbUtils {
     public static void setAutoCommit(Connection connection, boolean value) {
         if (connection != null) {
             try {
-                connection.setAutoCommit(value);
+                if (!connection.isClosed()) {
+                    connection.setAutoCommit(value);
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -30,7 +32,9 @@ public class DbUtils {
     public static void rollback(Connection connection) {
         if (connection != null) {
             try {
-                connection.rollback();
+                if (!connection.isClosed()) {
+                    connection.rollback();
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

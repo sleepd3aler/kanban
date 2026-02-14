@@ -6,10 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.kanban.dao.FileBackedTaskDao;
 import ru.kanban.dao.HistoryDao;
-import ru.kanban.utils.Managers;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
+import ru.kanban.utils.Managers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -96,7 +96,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenSaveThenFileContainsExpectedContent() throws IOException {
+    void whenSaveThenFileExistsByIdExpectedContent() throws IOException {
         File file = File.createTempFile("fileToCompare", "csv");
         try (PrintWriter writer = new PrintWriter((file.toString()))) {
             writer.println("id,type,name,status,description,epic");
@@ -210,7 +210,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileContainsWrongIdThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenTaskFileExistsByIdWrongIdThenExceptionThrownWithCorrectMessage() throws IOException {
         tempFile = File.createTempFile("test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempFile))
@@ -227,7 +227,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileContainsIllegalTypeThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenTaskFileExistsByIdIllegalTypeThenExceptionThrownWithCorrectMessage() throws IOException {
         tempFile = File.createTempFile("test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempFile))
@@ -244,7 +244,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileContainsIllegalNameThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenTaskFileExistsByIdIllegalNameThenExceptionThrownWithCorrectMessage() throws IOException {
         tempFile = File.createTempFile("test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempFile))
@@ -261,7 +261,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileContainsIllegalStatusThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenTaskFileExistsByIdIllegalStatusThenExceptionThrownWithCorrectMessage() throws IOException {
         tempFile = File.createTempFile("test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempFile))
@@ -284,9 +284,9 @@ class FileBackedTaskDaoTest {
                 new OutputStreamWriter(new FileOutputStream(tempFile))
         )) {
             writer.println("""
-                     id,type,name,status,description,epic
-                     1,TASK,Task,NEW, ,
-                     """);
+                    id,type,name,status,description,epic
+                    1,TASK,Task,NEW, ,
+                    """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
@@ -301,9 +301,9 @@ class FileBackedTaskDaoTest {
                 new OutputStreamWriter(new FileOutputStream(tempFile))
         )) {
             writer.println("""
-                     id,type,name,status,description,epic
-                     1,SUBTASK,Subtask,NEW,desc, ,
-                     """);
+                    id,type,name,status,description,epic
+                    1,SUBTASK,Subtask,NEW,desc, ,
+                    """);
         }
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
@@ -312,7 +312,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryCsvContainsAnotherContentThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryCsvExistsByIdAnotherContentThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -326,7 +326,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsIllegalIDThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdIllegalIDThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -340,7 +340,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsIllegalTypeThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdIllegalTypeThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -354,7 +354,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsIllegalNameThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdIllegalNameThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -368,7 +368,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsIllegalDescThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdIllegalDescThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -382,7 +382,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsSubtaskWithEmptyEpicIDThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdSubtaskWithEmptyEpicIDThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
@@ -396,7 +396,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenHistoryContainsSubtaskWithoutEpicThenExceptionThrownWithCorrectMessage() throws IOException {
+    void whenHistoryExistsByIdSubtaskWithoutEpicThenExceptionThrownWithCorrectMessage() throws IOException {
         tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))

@@ -5,16 +5,16 @@ import java.util.List;
 import ru.kanban.configutations.Config;
 import ru.kanban.dao.DbHistoryDao;
 import ru.kanban.dao.DbTaskDao;
-import ru.kanban.utils.Managers;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
-import ru.kanban.service.DefaultHistoryService;
-import ru.kanban.service.DefaultTaskService;
 import ru.kanban.service.HistoryService;
+import ru.kanban.service.HistoryServiceImpl;
 import ru.kanban.service.TaskService;
+import ru.kanban.service.TaskServiceImpl;
 import ru.kanban.utils.DbUtils;
+import ru.kanban.utils.Managers;
 
 public class Main {
     public static void main(String[] args) {
@@ -36,8 +36,8 @@ public class Main {
              DbHistoryDao historyDao = Managers.getDbHistoryManager(connection);
              DbTaskDao taskDao = Managers.getDbManager(connection)
         ) {
-            HistoryService historyService = new DefaultHistoryService(historyDao);
-            TaskService taskService = new DefaultTaskService(taskDao, historyService);
+            HistoryService historyService = new HistoryServiceImpl(historyDao);
+            TaskService taskService = new TaskServiceImpl(taskDao, historyService);
             taskService.addTask(task1);
             taskService.addTask(task2);
             taskService.addTask(task3);

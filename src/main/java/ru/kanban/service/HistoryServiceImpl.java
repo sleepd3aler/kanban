@@ -4,10 +4,10 @@ import java.util.List;
 import ru.kanban.dao.HistoryDao;
 import ru.kanban.model.Task;
 
-public class DefaultHistoryService implements HistoryService {
+public class HistoryServiceImpl implements HistoryService {
     private HistoryDao historyDao;
 
-    public DefaultHistoryService(HistoryDao historyDao) {
+    public HistoryServiceImpl(HistoryDao historyDao) {
         this.historyDao = historyDao;
     }
 

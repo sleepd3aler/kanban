@@ -3,6 +3,7 @@ package ru.kanban.service;
 import java.util.List;
 import java.util.Optional;
 import ru.kanban.dao.TaskDao;
+import ru.kanban.exceptions.DaoException;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Status;
@@ -10,13 +11,13 @@ import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 
 import static ru.kanban.model.Status.*;
-import static ru.kanban.utils.Constants.*;
+import static ru.kanban.model.TaskType.*;
 
-public class DefaultTaskService implements TaskService {
+public class TaskServiceImpl implements TaskService {
     private TaskDao taskDao;
     private HistoryService historyService;
 
-    public DefaultTaskService(TaskDao taskDao, HistoryService historyService) {
+    public TaskServiceImpl(TaskDao taskDao, HistoryService historyService) {
         this.taskDao = taskDao;
         this.historyService = historyService;
     }
@@ -48,7 +49,7 @@ public class DefaultTaskService implements TaskService {
             return task;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
 
     }
@@ -63,24 +64,27 @@ public class DefaultTaskService implements TaskService {
             return result;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        if (!taskDao.contains(id, TASK_TYPE)) {
-            throw new TaskNotFoundException("Task with id: " + id + " not found");
-        }
         try {
+            if (!taskDao.existsById(id, TASK.name())) {
+                throw new TaskNotFoundException("Task with id: " + id + " not found");
+            }
             taskDao.begin();
             Optional<Task> task = taskDao.deleteTask(id);
             historyService.remove(id);
             taskDao.commit();
             return task;
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -91,8 +95,7 @@ public class DefaultTaskService implements TaskService {
         }
         try {
             taskDao.begin();
-            Optional<Task> res = taskDao.getTask(task.getId());
-            if (res.isEmpty()) {
+            if (!taskDao.existsById(task.getId(), TASK.name())) {
                 throw new TaskNotFoundException("Task with id: " + task.getId() + " not found");
             }
             if (!task.isViewed()) {
@@ -101,9 +104,12 @@ public class DefaultTaskService implements TaskService {
             taskDao.updateTask(task);
             taskDao.commit();
             return Optional.of(task);
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -112,11 +118,11 @@ public class DefaultTaskService implements TaskService {
         try {
             taskDao.begin();
             taskDao.deleteAllTasks();
-            historyService.deleteAllByType(TASK_TYPE);
+            historyService.deleteAllByType(TASK.name());
             taskDao.commit();
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -142,7 +148,7 @@ public class DefaultTaskService implements TaskService {
             return res;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -156,24 +162,27 @@ public class DefaultTaskService implements TaskService {
             return result;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        if (!taskDao.contains(id, EPIC_TYPE)) {
-            throw new TaskNotFoundException("Epic with id: " + id + " not found");
-        }
         try {
             taskDao.begin();
+            if (!taskDao.existsById(id, EPIC.name())) {
+                throw new TaskNotFoundException("Epic with id: " + id + " not found");
+            }
             Optional<Epic> res = taskDao.deleteEpic(id);
             historyService.remove(id);
             taskDao.commit();
             return res;
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -182,12 +191,12 @@ public class DefaultTaskService implements TaskService {
         try {
             taskDao.begin();
             taskDao.deleteAllEpics();
-            historyService.deleteAllByType(EPIC_TYPE);
-            historyService.deleteAllByType(SUBTASK_TYPE);
+            historyService.deleteAllByType(EPIC.name());
+            historyService.deleteAllByType(SUBTASK.name());
             taskDao.commit();
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -198,8 +207,7 @@ public class DefaultTaskService implements TaskService {
         }
         try {
             taskDao.begin();
-            Optional<Epic> res = taskDao.getEpic(epic.getId());
-            if (res.isEmpty()) {
+            if (!taskDao.existsById(epic.getId(), EPIC.name())) {
                 throw new TaskNotFoundException("Epic with id: " + epic.getId() + " not found");
             }
             if (!epic.isViewed()) {
@@ -209,9 +217,12 @@ public class DefaultTaskService implements TaskService {
             updateEpicStatus(epic.getId());
             taskDao.commit();
             return taskDao.getEpic(epic.getId());
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -222,17 +233,19 @@ public class DefaultTaskService implements TaskService {
         }
         try {
             taskDao.begin();
-            Optional<Epic> epic = taskDao.getEpic(subtask.getEpic().getId());
-            if (epic.isEmpty()) {
+            if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
                 throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
             }
             taskDao.addSubtask(subtask);
-            updateEpicStatus(epic.get().getId());
+            updateEpicStatus(subtask.getEpic().getId());
             taskDao.commit();
             return subtask;
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -249,7 +262,7 @@ public class DefaultTaskService implements TaskService {
             return subtask;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -263,17 +276,17 @@ public class DefaultTaskService implements TaskService {
             return result;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        if (!taskDao.contains(id, SUBTASK_TYPE)) {
-            throw new TaskNotFoundException("Subtask with id: " + id + " not found");
-        }
         try {
             taskDao.begin();
+            if (!taskDao.existsById(id, SUBTASK.name())) {
+                throw new TaskNotFoundException("Subtask with id: " + id + " not found");
+            }
             Optional<Subtask> subtask = taskDao.getSubtask(id);
             Epic current = subtask.get().getEpic();
             taskDao.deleteSubtask(id);
@@ -281,9 +294,12 @@ public class DefaultTaskService implements TaskService {
             historyService.remove(id);
             taskDao.commit();
             return subtask;
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -292,12 +308,12 @@ public class DefaultTaskService implements TaskService {
         try {
             taskDao.begin();
             taskDao.deleteAllSubtasks();
-            taskDao.renewAllStatuses(EPIC_TYPE, NEW.name());
-            historyService.deleteAllByType(SUBTASK_TYPE);
+            taskDao.renewAllStatuses(EPIC.name(), NEW.name());
+            historyService.deleteAllByType(SUBTASK.name());
             taskDao.commit();
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 
@@ -308,24 +324,25 @@ public class DefaultTaskService implements TaskService {
         }
         try {
             taskDao.begin();
-            Optional<Subtask> res = taskDao.getSubtask(subtask.getId());
-            Optional<Epic> epicOfSubtask = taskDao.getEpic(subtask.getEpic().getId());
-            if (res.isEmpty()) {
+            if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {
                 throw new TaskNotFoundException("Subtask with id: " + subtask.getId() + " not found");
             }
-            if (epicOfSubtask.isEmpty()) {
+            if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
                 throw new TaskNotFoundException("Epic with id: " + subtask.getEpic().getId() + " not found");
             }
             if (!subtask.isViewed()) {
                 historyService.remove(subtask.getId());
             }
             taskDao.updateSubtask(subtask);
-            updateEpicStatus(epicOfSubtask.get().getId());
+            updateEpicStatus(subtask.getEpic().getId());
             taskDao.commit();
             return Optional.of(subtask);
+        } catch (TaskNotFoundException e) {
+            taskDao.rollback();
+            throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            throw new RuntimeException(e);
+            throw new DaoException("Database connection failure: ", e);
         }
     }
 

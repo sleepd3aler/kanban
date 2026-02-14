@@ -38,7 +38,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenAddTaskThenManagerTasksContainsTask() {
+    void whenAddTaskThenManagerTasksExistsByIdTask() {
         taskManager.addTask(firstTask);
         assertTrue(taskManager.getTasks().contains(firstTask));
     }
@@ -59,7 +59,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenGetTasksThenResultContainsAllTasks() {
+    void whenGetTasksThenResultExistsByIdAllTasks() {
         taskManager.addTask(firstTask);
         taskManager.addTask(secondTask);
         List<Task> result = taskManager.getTasks();
@@ -87,7 +87,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenUpdateTaskThenManagerDoesntContainsPreviousTask() {
+    void whenUpdateTaskThenManagerDoesntExistsByIdPreviousTask() {
         taskManager.addTask(firstTask);
         taskManager.addTask(secondTask);
         secondTask.setId(firstTask.getId());
@@ -117,7 +117,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenAddEpicThenManagerContainsEpic() {
+    void whenAddEpicThenManagerExistsByIdEpic() {
         taskManager.addEpic(firstEpic);
         taskManager.addEpic(secondEpic);
         assertThat(taskManager.getEpics()).contains(firstEpic, secondEpic);
@@ -140,7 +140,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenGetEpicsThenManagersEpicListContainsEpics() {
+    void whenGetEpicsThenManagersEpicListExistsByIdEpics() {
         taskManager.addEpic(firstEpic);
         taskManager.addEpic(secondEpic);
         List<Epic> result = taskManager.getEpics();
@@ -212,7 +212,7 @@ class InMemoryTaskDaoTest {
     }
 
     @Test
-    void whenAddSubtaskThenManagerContainsSubtask() {
+    void whenAddSubtaskThenManagerExistsByIdSubtask() {
         taskManager.addEpic(firstEpic);
         taskManager.addEpic(secondEpic);
         taskManager.addSubtask(firstSubtask);

@@ -1,13 +1,9 @@
 package ru.kanban.dao;
 
 import java.util.*;
-import ru.kanban.model.Epic;
-import ru.kanban.model.Status;
-import ru.kanban.model.Subtask;
-import ru.kanban.model.Task;
+import ru.kanban.model.*;
 
 import static ru.kanban.model.Status.NEW;
-import static ru.kanban.utils.Constants.*;
 
 public class InMemoryTaskDao implements TaskDao {
     private Map<Integer, Task> tasks = new HashMap<>();
@@ -145,10 +141,11 @@ public class InMemoryTaskDao implements TaskDao {
 
     @Override
     public void renewAllStatuses(String type, String status) {
-        switch (type) {
-            case TASK_TYPE -> tasks.values()
+        TaskType taskType = TaskType.valueOf(type);
+        switch (taskType) {
+            case TASK -> tasks.values()
                     .forEach(task -> task.setStatus(Status.valueOf(status)));
-            case EPIC_TYPE -> epics.values()
+            case EPIC -> epics.values()
                     .forEach(epic -> {
                         epic.setStatus(Status.valueOf(status));
                         if (status.equals(NEW.name())) {
@@ -156,18 +153,19 @@ public class InMemoryTaskDao implements TaskDao {
                         }
                     });
 
-            case SUBTASK_TYPE -> subtasks.values()
+            case SUBTASK -> subtasks.values()
                     .forEach(subtask -> subtask.setStatus(Status.valueOf(status)));
         }
     }
 
     @Override
-    public boolean contains(int id, String type) {
-        switch (type) {
-            case EPIC_TYPE -> {
+    public boolean existsById(int id, String type) {
+        TaskType taskType = TaskType.valueOf(type);
+        switch (taskType) {
+            case EPIC -> {
                 return epics.containsKey(id);
             }
-            case SUBTASK_TYPE -> {
+            case SUBTASK -> {
                 return subtasks.containsKey(id);
             }
             default -> {

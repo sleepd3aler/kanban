@@ -5,6 +5,6 @@ public class ManagerSaveException extends RuntimeException {
         super(message);
     }
 
-  public ManagerSaveException() {
-  }
+    public ManagerSaveException() {
+    }
 }

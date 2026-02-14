@@ -11,15 +11,17 @@ import java.util.List;
 import java.util.Properties;
 import org.junit.jupiter.api.*;
 import ru.kanban.dao.*;
+import ru.kanban.exceptions.DaoException;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 import ru.kanban.utils.Managers;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ru.kanban.model.Status.*;
 
-class DefaultTaskServiceTest {
+class TaskServiceImplTest {
     private static Connection connection;
     private HistoryService historyService;
     private TaskService taskService;
@@ -72,8 +74,8 @@ class DefaultTaskServiceTest {
         tempFile = File.createTempFile("test", ".csv");
         historyDao = new DbHistoryDao(connection);
         taskDao = new DbTaskDao(connection);
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);
@@ -106,8 +108,8 @@ class DefaultTaskServiceTest {
     void whenWithInMemDaoAddAnyTasksThenServiceContainsTask() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -124,8 +126,8 @@ class DefaultTaskServiceTest {
     void whenWithFileBackedDaoAddAnyTasksThenServiceContainsTask() throws IOException {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = new FileBackedTaskDao(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -174,7 +176,7 @@ class DefaultTaskServiceTest {
     void whenGetAnyTypeTaskWithInMemDaoThenExpectedResult() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
+        historyService = new HistoryServiceImpl(historyDao);
 
         taskService.addTask(task1);
         taskService.addEpic(epic1);
@@ -194,7 +196,7 @@ class DefaultTaskServiceTest {
     void whenGetAnyTypeTaskWithFileBackedDaoThenExpectedResult() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = new FileBackedTaskDao(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
+        historyService = new HistoryServiceImpl(historyDao);
 
         taskService.addTask(task1);
         taskService.addEpic(epic1);
@@ -233,8 +235,8 @@ class DefaultTaskServiceTest {
     void whenGetTasksWIthInMemDaoThenHistoryContainsTasksAndTasksIsViewed() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -256,8 +258,8 @@ class DefaultTaskServiceTest {
     void whenGetTasksWIthFileBackedDaoThenHistoryContainsTasksAndTasksIsViewed() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -299,8 +301,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAnyTaskWithInMemDaoThenServiceDoesntContainsTask() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -323,8 +325,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAnyTaskWithFileBackedDaoThenServiceDoesntContainsTask() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -372,8 +374,8 @@ class DefaultTaskServiceTest {
     void whenUpdateTaskWithInMemDaoThenTaskUpdated() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -385,8 +387,8 @@ class DefaultTaskServiceTest {
     void whenUpdateTaskWithFileBackedDaoThenTaskUpdated() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -438,8 +440,8 @@ class DefaultTaskServiceTest {
     void whenUpdateWithInMemDaoNonViewedTaskThenHistoryDoesntContainsTask() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -452,8 +454,8 @@ class DefaultTaskServiceTest {
     void whenUpdateWithFileBackedDaoNonViewedTaskThenHistoryDoesntContainsTask() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -486,8 +488,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllTasksWithInMemDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -510,8 +512,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllTasksWithFileBackedDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -553,8 +555,8 @@ class DefaultTaskServiceTest {
     void whenGetEpicsWIthInMemDaoThenHistoryContainsEpicsAndIsViewed() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -576,8 +578,8 @@ class DefaultTaskServiceTest {
     void whenGetEpicsWIthFileBackedDaoThenHistoryContainsEpicsAndIsViewed() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -618,8 +620,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllEpicsWithInMemDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -641,8 +643,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllEpicsWithFileBackedDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -675,8 +677,8 @@ class DefaultTaskServiceTest {
     void whenUpdateEpicWithInMemDaoThenTaskUpdated() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
@@ -690,8 +692,8 @@ class DefaultTaskServiceTest {
     void whenUpdateEpicWithFileBackedDaoThenTaskUpdated() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
@@ -714,8 +716,8 @@ class DefaultTaskServiceTest {
     void whenAddSubtaskWithInMemDaoThenEpicStatusRenewed() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         Epic newEpic = new Epic("new Epic", "new desc", NEW);
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
@@ -727,8 +729,8 @@ class DefaultTaskServiceTest {
     void whenAddSubtaskWithFileBackedDaoThenEpicStatusRenewed() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         Epic newEpic = new Epic("new Epic", "new desc", NEW);
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
@@ -746,7 +748,7 @@ class DefaultTaskServiceTest {
         taskService.addSubtask(subtask1);
         taskService.addSubtask(subtask2);
 
-        List<Subtask> test =  taskService.getSubtasks();
+        List<Subtask> test = taskService.getSubtasks();
 
         for (Subtask subtask : test) {
             assertThat(subtask.isViewed()).isTrue();
@@ -761,8 +763,8 @@ class DefaultTaskServiceTest {
     void whenGetSubtasksWIthInMemDaoThenHistoryContainsSubtasksAndSubtaskIsViewed() {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -771,7 +773,7 @@ class DefaultTaskServiceTest {
         taskService.addSubtask(subtask1);
         taskService.addSubtask(subtask2);
 
-        List<Subtask> test =  taskService.getSubtasks();
+        List<Subtask> test = taskService.getSubtasks();
         for (Subtask subtask : test) {
             assertThat(subtask.isViewed()).isTrue();
         }
@@ -784,8 +786,8 @@ class DefaultTaskServiceTest {
     void whenGetSubtasksWIthFileBackedDaoThenHistoryContainsSubtasksAndSubtaskIsViewed() {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -793,7 +795,7 @@ class DefaultTaskServiceTest {
         taskService.addEpic(epic2);
         taskService.addSubtask(subtask1);
         taskService.addSubtask(subtask2);
-        List<Subtask> test =  taskService.getSubtasks();
+        List<Subtask> test = taskService.getSubtasks();
         for (Subtask subtask : test) {
             assertThat(subtask.isViewed()).isTrue();
         }
@@ -825,8 +827,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllSubtasksWithInMemDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -848,8 +850,8 @@ class DefaultTaskServiceTest {
     void whenDeleteAllSubtasksWithFileBackedDaoThenTaskServiceAndHistoryDoesntContainsTasks() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -900,8 +902,8 @@ class DefaultTaskServiceTest {
     void whenUpdateWithInMemDaoNonViewedSubtaskThenHistoryDoesntContainsTask() {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
 
@@ -921,8 +923,8 @@ class DefaultTaskServiceTest {
     void whenUpdateWithFileBackedDaoNonViewedSubtaskThenHistoryDoesntContainsTask() {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
-        historyService = new DefaultHistoryService(historyDao);
-        taskService = new DefaultTaskService(taskDao, historyService);
+        historyService = new HistoryServiceImpl(historyDao);
+        taskService = new TaskServiceImpl(taskDao, historyService);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
 
@@ -936,5 +938,79 @@ class DefaultTaskServiceTest {
         taskService.getSubtask(subtask2.getId());
         taskService.updateSubtask(updated);
         assertThat(taskService.getHistory()).isEmpty();
+    }
+
+    @Test
+    void whenConnectionClosedThenDaoExceptionThrown() throws SQLException, IOException {
+        taskService.addTask(task1);
+        connection.close();
+
+        assertThatThrownBy(() -> taskService.getTask(task1.getId()))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.getTasks())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteTask(1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.updateTask(task1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteAllTasks())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.getEpic(1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.getEpics())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteEpic(1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.updateEpic(epic1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteEpic(1))
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteAllEpics())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.getSubtask(1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.getSubtasks())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteSubtask(1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.updateSubtask(subtask1))
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteSubtask(1))
+                .hasMessageContaining("Database connection failure: ");
+
+        assertThatThrownBy(() -> taskService.deleteAllSubtasks())
+                .isInstanceOf(DaoException.class)
+                .hasMessageContaining("Database connection failure: ");
+
+        initConnection();
     }
 }

@@ -109,7 +109,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteTaskThenDbDoesntContains() throws SQLException {
+    void whenDeleteTaskThenDbDoesntExistsById() throws SQLException {
         manager.addTask(task1);
         manager.addTask(task2);
         manager.addTask(task3);
@@ -163,7 +163,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteAllTasksThenTableDoesntContainsAnyTasks() {
+    void whenDeleteAllTasksThenTableDoesntExistsByIdAnyTasks() {
         manager.addTask(task1);
         manager.addTask(task2);
         manager.addTask(task3);
@@ -199,7 +199,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteEpicThenManagerDoesntContainsIt() {
+    void whenDeleteEpicThenManagerDoesntExistsByIdIt() {
         manager.addEpic(epic1);
         manager.addEpic(epic2);
         manager.deleteEpic(epic1.getId());
@@ -217,7 +217,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteAllEpicsThenManagerDoesntContainsEpics() {
+    void whenDeleteAllEpicsThenManagerDoesntExistsByIdEpics() {
         manager.addTask(task1);
         manager.addTask(task2);
         manager.addEpic(epic1);
@@ -367,7 +367,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetTaskThenHistoryContainsTask() {
+    void whenGetTaskThenHistoryExistsByIdTask() {
         manager.addTask(task2);
         manager.getTask(task2.getId());
         assertThat(historyManager.getViewedTasks()).contains(task2);
@@ -375,7 +375,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetAllTasksThenHistoryContainsOnlyLast10Viewed() {
+    void whenGetAllTasksThenHistoryExistsByIdOnlyLast10Viewed() {
         manager.addTask(task1);
         manager.addTask(task2);
         manager.addTask(task3);
@@ -387,7 +387,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteFromTasksThenHistoryDoesntContainsSame() {
+    void whenDeleteFromTasksThenHistoryDoesntExistsByIdSame() {
         manager.addTask(task1);
         manager.getTask(task1.getId());
         manager.deleteTask(task1.getId());
@@ -395,7 +395,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenUpdateTaskAndSetNotViewedThenHistoryDoesntContainsTask() {
+    void whenUpdateTaskAndSetNotViewedThenHistoryDoesntExistsByIdTask() {
         manager.addTask(task1);
         manager.getTask(task1.getId());
         task2.setId(task1.getId());
@@ -422,7 +422,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetEpicThenHistoryContainsEpic() {
+    void whenGetEpicThenHistoryExistsByIdEpic() {
         manager.addEpic(epic1);
         manager.getEpic(epic1.getId());
         assertThat(historyManager.getViewedTasks()).contains(epic1);
@@ -430,7 +430,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetAllEpicsThenHistoryContainsOnlyLast10Viewed() {
+    void whenGetAllEpicsThenHistoryExistsByIdOnlyLast10Viewed() {
         manager.addEpic(epic1);
         manager.addEpic(epic2);
         for (int i = 3; i <= 11; i++) {
@@ -441,7 +441,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteFromEpicsThenHistoryDoesntContainsEpicsAndSubtasks() {
+    void whenDeleteFromEpicsThenHistoryDoesntExistsByIdEpicsAndSubtasks() {
         manager.addEpic(epic1);
         manager.addSubtask(subtask1);
         manager.getEpic(epic1.getId());
@@ -453,7 +453,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenUpdateEpicAndSetNotViewedThenHistoryDoesntContainsTask() {
+    void whenUpdateEpicAndSetNotViewedThenHistoryDoesntExistsByIdTask() {
         manager.addEpic(epic1);
         manager.getEpic(epic1.getId());
         epic2.setId(epic1.getId());
@@ -480,7 +480,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetSubtaskThenHistoryContainsSame() {
+    void whenGetSubtaskThenHistoryExistsByIdSame() {
         manager.addEpic(epic1);
         manager.addSubtask(subtask1);
         manager.getSubtask(subtask1.getId());
@@ -489,7 +489,7 @@ class DbTaskDaoTest {
 
     @Test
     @Disabled
-    void whenGetAllSubtasksThenHistoryContainsOnlyLast10Viewed() {
+    void whenGetAllSubtasksThenHistoryExistsByIdOnlyLast10Viewed() {
         manager.addEpic(epic1);
         manager.addEpic(epic2);
         manager.addSubtask(subtask1);
@@ -505,7 +505,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenDeleteFromSubtasksThenHistoryDoesntContainsSubtasks() {
+    void whenDeleteFromSubtasksThenHistoryDoesntExistsByIdSubtasks() {
         manager.addEpic(epic1);
         manager.addSubtask(subtask1);
         manager.getEpic(epic1.getId());
@@ -517,7 +517,7 @@ class DbTaskDaoTest {
     }
 
     @Test
-    void whenUpdateSubtaskAndSetNotViewedThenHistoryDoesntContainsPrevious() {
+    void whenUpdateSubtaskAndSetNotViewedThenHistoryDoesntExistsByIdPrevious() {
         manager.addEpic(epic1);
         manager.addEpic(epic2);
         manager.addSubtask(subtask1);
@@ -542,6 +542,5 @@ class DbTaskDaoTest {
         manager.getEpic(epic1.getId());
         manager.getEpic(epic2.getId());
         manager.deleteAllSubtasks();
-//        assertThat(manager.getHistory()).doesNotContain(subtask1, subtask2);
     }
 }

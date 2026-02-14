@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ru.kanban.model.Status.IN_PROGRESS;
 import static ru.kanban.model.Status.NEW;
 
-class DefaultHistoryServiceTest {
+class HistoryServiceImplTest {
     private static Connection connection;
 
     private HistoryService historyService;
@@ -74,7 +74,7 @@ class DefaultHistoryServiceTest {
     @BeforeEach
     void setUp() {
         historyManager = new DbHistoryDao(connection);
-        historyService = new DefaultHistoryService(historyManager);
+        historyService = new HistoryServiceImpl(historyManager);
         taskDao = new DbTaskDao(connection);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
@@ -93,7 +93,7 @@ class DefaultHistoryServiceTest {
     @Test
     void whenAddTaskWithInMemoryHistoryDaoThenGetViewedTaskContainsTask() {
         historyManager = new InMemoryHistoryDao();
-        historyService = new DefaultHistoryService(historyManager);
+        historyService = new HistoryServiceImpl(historyManager);
         historyService.addToHistory(task1);
         assertThat(historyService.getViewedTasks()).contains(task1);
     }
@@ -102,7 +102,7 @@ class DefaultHistoryServiceTest {
     void whenAddTaskWithFileBackedHistoryDaoThenGetViewedTaskContainsTask() throws IOException {
         File tempFile = File.createTempFile("temp", ".csv");
         historyManager = new FileBackedHistoryDao(tempFile.toString());
-        historyService = new DefaultHistoryService(historyManager);
+        historyService = new HistoryServiceImpl(historyManager);
         historyService.addToHistory(task1);
         assertThat(historyService.getViewedTasks()).contains(task1);
     }
@@ -142,7 +142,7 @@ class DefaultHistoryServiceTest {
     @Test
     void whenRemoveWithInMemoryHistoryDaoThenHistoryDoesntContainsTask() {
         historyManager = new InMemoryHistoryDao();
-        historyService = new DefaultHistoryService(historyManager);
+        historyService = new HistoryServiceImpl(historyManager);
         historyService.addToHistory(task1);
         historyService.addToHistory(task2);
         historyService.addToHistory(task3);
@@ -154,7 +154,7 @@ class DefaultHistoryServiceTest {
     void whenRemoveWithFileBackedHistoryDaoThenHistoryDoesntContainsTask() throws IOException {
         File tempFile = File.createTempFile("temp", ".csv");
         historyManager = new FileBackedHistoryDao(tempFile.toString());
-        historyService = new DefaultHistoryService(historyManager);
+        historyService = new HistoryServiceImpl(historyManager);
         historyService.addToHistory(task1);
         historyService.addToHistory(task2);
         historyService.addToHistory(task3);

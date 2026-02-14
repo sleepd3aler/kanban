@@ -3,12 +3,7 @@ package ru.kanban.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import ru.kanban.model.Epic;
-import ru.kanban.model.Status;
-import ru.kanban.model.Subtask;
-import ru.kanban.model.Task;
-
-import static ru.kanban.utils.Constants.*;
+import ru.kanban.model.*;
 
 public class DbHistoryDao implements HistoryDao, AutoCloseable {
     private Connection connection;
@@ -93,9 +88,9 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
     }
 
     private Task generateByType(ResultSet resultSet) throws SQLException {
-        String actual = resultSet.getString("type");
+        TaskType actual = TaskType.valueOf(resultSet.getString("type"));
         switch (actual) {
-            case TASK_TYPE -> {
+            case TASK -> {
                 Task current = new Task(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
@@ -104,7 +99,7 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
                 current.setViewed(true);
                 return current;
             }
-            case EPIC_TYPE -> {
+            case EPIC -> {
                 Epic current = new Epic(
                         resultSet.getString("name"),
                         resultSet.getString("description"),
@@ -113,7 +108,7 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
                 current.setViewed(true);
                 return current;
             }
-            case SUBTASK_TYPE -> {
+            case SUBTASK -> {
                 Epic epicOfSubtask = new Epic(
                         resultSet.getString("epic_name"),
                         resultSet.getString("description"),
@@ -139,16 +134,16 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
         }
         try (
                 PreparedStatement deleteStmt = connection.prepareStatement(
-                "delete from history where type = ?"
+                        "delete from history where type = ?"
 
-        );
-             PreparedStatement insertStmt = connection.prepareStatement("""
-                     insert into history (task_id, type)
-                     SELECT t.id, t.type from tasks t
-                     where type = ? order by id desc limit 10
-                     """);
-             PreparedStatement updateStmt = connection.prepareStatement(
-                     "update tasks set viewed = TRUE where type = ?")) {
+                );
+                PreparedStatement insertStmt = connection.prepareStatement("""
+                        insert into history (task_id, type)
+                        SELECT t.id, t.type from tasks t
+                        where type = ? order by id desc limit 10
+                        """);
+                PreparedStatement updateStmt = connection.prepareStatement(
+                        "update tasks set viewed = TRUE where type = ?")) {
 
             String type = tasks.get(0).getType().name();
             deleteStmt.setString(1, type);
