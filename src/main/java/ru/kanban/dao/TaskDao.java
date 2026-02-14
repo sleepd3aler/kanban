@@ -50,6 +50,8 @@ public interface TaskDao {
 
     List<Status> getEpicSubtasksStatuses(int epicId);
 
+    boolean contains(int id, String type);
+
     default void begin() {
 
     }

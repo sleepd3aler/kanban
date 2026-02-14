@@ -143,9 +143,6 @@ public class InMemoryTaskDao implements TaskDao {
         epics.get(id).setStatus(status);
     }
 
-    // Можно подумать о более функциональном методе - обновляем все задачи
-    // определенным статусом по типу
-
     @Override
     public void renewAllStatuses(String type, String status) {
         switch (type) {
@@ -161,6 +158,21 @@ public class InMemoryTaskDao implements TaskDao {
 
             case SUBTASK_TYPE -> subtasks.values()
                     .forEach(subtask -> subtask.setStatus(Status.valueOf(status)));
+        }
+    }
+
+    @Override
+    public boolean contains(int id, String type) {
+        switch (type) {
+            case EPIC_TYPE -> {
+                return epics.containsKey(id);
+            }
+            case SUBTASK_TYPE -> {
+                return subtasks.containsKey(id);
+            }
+            default -> {
+                return tasks.containsKey(id);
+            }
         }
     }
 

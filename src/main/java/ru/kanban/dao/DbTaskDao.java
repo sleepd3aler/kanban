@@ -400,6 +400,18 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
     }
 
     @Override
+    public boolean contains(int id, String type) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "select id from tasks where id = ? and type = ?")) {
+            statement.setInt(1, id);
+            statement.setString(2, type);
+            return statement.executeQuery().next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     public void close() throws Exception {
         connection.close();
     }

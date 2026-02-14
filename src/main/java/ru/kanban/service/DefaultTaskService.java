@@ -69,7 +69,7 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        if (taskDao.getTask(id).isEmpty()) {
+        if (!taskDao.contains(id, TASK_TYPE)) {
             throw new TaskNotFoundException("Task with id: " + id + " not found");
         }
         try {
@@ -162,7 +162,7 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        if (taskDao.getEpic(id).isEmpty()) {
+        if (!taskDao.contains(id, EPIC_TYPE)) {
             throw new TaskNotFoundException("Epic with id: " + id + " not found");
         }
         try {
@@ -205,6 +205,7 @@ public class DefaultTaskService implements TaskService {
             if (!epic.isViewed()) {
                 historyService.remove(epic.getId());
             }
+            taskDao.updateEpic(epic);
             updateEpicStatus(epic.getId());
             taskDao.commit();
             return taskDao.getEpic(epic.getId());
@@ -268,7 +269,7 @@ public class DefaultTaskService implements TaskService {
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        if (taskDao.getSubtask(id).isEmpty()) {
+        if (!taskDao.contains(id, SUBTASK_TYPE)) {
             throw new TaskNotFoundException("Subtask with id: " + id + " not found");
         }
         try {
