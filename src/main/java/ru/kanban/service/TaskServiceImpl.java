@@ -5,10 +5,8 @@ import java.util.Optional;
 import ru.kanban.dao.TaskDao;
 import ru.kanban.exceptions.DaoException;
 import ru.kanban.exceptions.TaskNotFoundException;
-import ru.kanban.model.Epic;
-import ru.kanban.model.Status;
-import ru.kanban.model.Subtask;
-import ru.kanban.model.Task;
+import ru.kanban.model.*;
+import ru.kanban.utils.ServiceValidator;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
@@ -29,21 +27,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task addTask(Task task) {
-        if (task == null) {
-            throw new IllegalArgumentException("Task not null required");
-        }
-        if (task.getName().isEmpty()) {
-            throw new IllegalArgumentException("Task must contain name");
-        }
+        ServiceValidator.validateTask(task, TASK.name());
         taskDao.addTask(task);
         return task;
     }
 
     @Override
     public Optional<Task> getTask(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Task> task = taskDao.getTask(id);
@@ -76,9 +67,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             if (!taskDao.existsById(id, TASK.name())) {
                 throw new TaskNotFoundException("Task with id: " + id + " not found");
@@ -99,12 +88,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        if (task == null) {
-            throw new IllegalArgumentException("Task not null required");
-        }
-        if (task.getName().isEmpty()) {
-            throw new IllegalArgumentException("Task must contain name");
-        }
+        ServiceValidator.validateTask(task, TASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(task.getId(), TASK.name())) {
@@ -140,21 +124,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Epic addEpic(Epic epic) {
-        if (epic == null) {
-            throw new IllegalArgumentException("Epic not null required");
-        }
-        if (epic.getName().isEmpty()) {
-            throw new IllegalArgumentException("Epic must contain name");
-        }
+        ServiceValidator.validateTask(epic, EPIC.name());
         taskDao.addEpic(epic);
         return epic;
     }
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Epic> res = taskDao.getEpic(id);
@@ -186,9 +163,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, EPIC.name())) {
@@ -223,12 +198,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        if (epic == null) {
-            throw new IllegalArgumentException("Epic not null required");
-        }
-        if (epic.getName().isEmpty()) {
-            throw new IllegalArgumentException("Epic must contain name");
-        }
+        ServiceValidator.validateTask(epic, EPIC.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(epic.getId(), EPIC.name())) {
@@ -252,12 +222,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        if (subtask == null) {
-            throw new IllegalArgumentException("Subtask not null required");
-        }
-        if (subtask.getName().isEmpty()) {
-            throw new IllegalArgumentException("Subtask must contain name");
-        }
+        ServiceValidator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
@@ -278,9 +243,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Subtask> subtask = taskDao.getSubtask(id);
@@ -312,9 +275,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        if (id <= 0) {
-            throw new IllegalArgumentException("ID value: cant be zero");
-        }
+        ServiceValidator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, SUBTASK.name())) {
@@ -352,12 +313,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        if (subtask == null) {
-            throw new IllegalArgumentException("Subtask not null required");
-        }
-        if (subtask.getName().isEmpty()) {
-            throw new IllegalArgumentException("Subtask must contain name");
-        }
+        ServiceValidator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {

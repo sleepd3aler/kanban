@@ -143,11 +143,11 @@ class TaskServiceImplTest {
     @Test
     void whenTryAddNullTasksThenIllegalArgumentExceptionThrown() {
         assertThatThrownBy(() -> taskService.addTask(null)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Task not null required");
+                .hasMessageContaining("TASK not null required");
         assertThatThrownBy(() -> taskService.addEpic(null)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Epic not null required");
+                .hasMessageContaining("EPIC not null required");
         assertThatThrownBy(() -> taskService.addSubtask(null)).isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Subtask not null required");
+                .hasMessageContaining("SUBTASK not null required");
     }
 
     @Test
@@ -400,15 +400,15 @@ class TaskServiceImplTest {
     void whenUpdateAnyTaskWithNullThenIllegalExceptionThrown() {
         assertThatThrownBy(() -> taskService.updateTask(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Task not null required");
+                .hasMessageContaining("TASK not null required");
 
         assertThatThrownBy(() -> taskService.updateEpic(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Epic not null required");
+                .hasMessageContaining("EPIC not null required");
 
         assertThatThrownBy(() -> taskService.updateSubtask(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Subtask not null required");
+                .hasMessageContaining("SUBTASK not null required");
     }
 
     @Test
