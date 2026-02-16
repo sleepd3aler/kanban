@@ -43,10 +43,7 @@ public class TaskServiceImpl implements TaskService {
         try {
             taskDao.begin();
             Optional<Task> task = taskDao.getTask(id);
-            task.ifPresent(value -> {
-                historyService.setToViewed(value);
-                historyService.addToHistory(value);
-            });
+            addToHistory(task);
             taskDao.commit();
             return task;
         } catch (Exception e) {
@@ -140,10 +137,7 @@ public class TaskServiceImpl implements TaskService {
         try {
             taskDao.begin();
             Optional<Epic> res = taskDao.getEpic(id);
-            res.ifPresent(value -> {
-                historyService.setToViewed(res.get());
-                historyService.addToHistory(res.get());
-            });
+            addToHistory(res);
             taskDao.commit();
             return res;
         } catch (Exception e) {
@@ -252,10 +246,7 @@ public class TaskServiceImpl implements TaskService {
         try {
             taskDao.begin();
             Optional<Subtask> subtask = taskDao.getSubtask(id);
-            subtask.ifPresent(value -> {
-                historyService.setToViewed(value);
-                historyService.addToHistory(value);
-            });
+            addToHistory(subtask);
             taskDao.commit();
             return subtask;
         } catch (Exception e) {
@@ -373,5 +364,12 @@ public class TaskServiceImpl implements TaskService {
         var actualSubStatuses = taskDao.getEpicSubtasksStatuses(id);
         Status updatedStatus = checkSubtaskStatus(actualSubStatuses);
         taskDao.updateEpicStatus(id, updatedStatus);
+    }
+
+    private void addToHistory(Optional<? extends Task> task) {
+        task.ifPresent(value -> {
+            historyService.setToViewed(task.get());
+            historyService.addToHistory(task.get());
+        });
     }
 }
