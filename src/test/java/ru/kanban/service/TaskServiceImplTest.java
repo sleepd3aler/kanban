@@ -16,6 +16,7 @@ import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 import ru.kanban.utils.Managers;
+import ru.kanban.validator.TaskValidator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,6 +31,7 @@ class TaskServiceImplTest {
 
     private HistoryDao historyDao;
     private TaskDao taskDao;
+    private TaskValidator validator;
 
     private Task task1;
     private Task task2;
@@ -72,10 +74,11 @@ class TaskServiceImplTest {
     @BeforeEach
     void setUp() throws IOException {
         tempFile = File.createTempFile("Test", ".csv");
+        validator = new TaskValidator();
         historyDao = new DbHistoryDao(connection);
         taskDao = new DbTaskDao(connection);
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         task1 = new Task("task1", "desc", NEW);
         task2 = new Task("task2", "desc", IN_PROGRESS);
         task3 = new Task("task3", "desc", NEW);
@@ -109,7 +112,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -127,7 +130,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = new FileBackedTaskDao(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -236,7 +239,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -259,7 +262,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -302,7 +305,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -326,7 +329,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -375,7 +378,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -388,7 +391,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -441,7 +444,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -455,7 +458,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
@@ -489,7 +492,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -513,7 +516,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -556,7 +559,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -579,7 +582,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -621,7 +624,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -644,7 +647,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -678,7 +681,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
@@ -693,7 +696,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
@@ -717,7 +720,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         Epic newEpic = new Epic("new Epic", "new desc", NEW);
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
@@ -730,7 +733,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         Epic newEpic = new Epic("new Epic", "new desc", NEW);
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
@@ -764,7 +767,7 @@ class TaskServiceImplTest {
         historyDao = new InMemoryHistoryDao();
         taskDao = new InMemoryTaskDao();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -787,7 +790,7 @@ class TaskServiceImplTest {
         historyDao = new FileBackedHistoryDao(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -828,7 +831,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -851,7 +854,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addTask(task1);
         taskService.addTask(task2);
         taskService.addTask(task3);
@@ -903,7 +906,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultHistoryManager();
         taskDao = Managers.getDefaultTaskManager();
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
 
@@ -924,7 +927,7 @@ class TaskServiceImplTest {
         historyDao = Managers.getDefaultFileBackedHistoryManager(tempFile.toString());
         taskDao = Managers.getDefaultFileBackedManager(tempFile.toString());
         historyService = new HistoryServiceImpl(historyDao);
-        taskService = new TaskServiceImpl(taskDao, historyService);
+        taskService = new TaskServiceImpl(taskDao, historyService, validator);
         taskService.addEpic(epic1);
         taskService.addEpic(epic2);
 

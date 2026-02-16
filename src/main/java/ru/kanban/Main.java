@@ -15,6 +15,7 @@ import ru.kanban.service.TaskService;
 import ru.kanban.service.TaskServiceImpl;
 import ru.kanban.utils.DbUtils;
 import ru.kanban.utils.Managers;
+import ru.kanban.validator.TaskValidator;
 
 public class Main {
     public static void main(String[] args) {
@@ -36,8 +37,9 @@ public class Main {
              DbHistoryDao historyDao = Managers.getDbHistoryManager(connection);
              DbTaskDao taskDao = Managers.getDbManager(connection)
         ) {
+            TaskValidator validator = new TaskValidator();
             HistoryService historyService = new HistoryServiceImpl(historyDao);
-            TaskService taskService = new TaskServiceImpl(taskDao, historyService);
+            TaskService taskService = new TaskServiceImpl(taskDao, historyService, validator);
             taskService.addTask(task1);
             taskService.addTask(task2);
             taskService.addTask(task3);
@@ -66,6 +68,7 @@ public class Main {
                 System.out.println(task.isViewed());
             }
             taskDao.updateTask(task1);
+
         } catch (Exception e) {
             e.printStackTrace();
         }

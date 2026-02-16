@@ -15,13 +15,14 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 
 public class TaskServiceImpl implements TaskService {
-    private TaskDao taskDao;
-    private HistoryService historyService;
-    private final TaskValidator validator = new TaskValidator();
+    private final TaskDao taskDao;
+    private final HistoryService historyService;
+    private final TaskValidator validator;
 
-    public TaskServiceImpl(TaskDao taskDao, HistoryService historyService) {
+    public TaskServiceImpl(TaskDao taskDao, HistoryService historyService, TaskValidator validator) {
         this.taskDao = taskDao;
         this.historyService = historyService;
+        this.validator = validator;
     }
 
     @Override
@@ -31,7 +32,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task addTask(Task task) {
-        validator.validateTask(task, TASK.name());
+        validator.validateTask(task, TASK);
         taskDao.addTask(task);
         return task;
     }
@@ -92,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        validator.validateTask(task, TASK.name());
+        validator.validateTask(task, TASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(task.getId(), TASK.name())) {
@@ -128,7 +129,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Epic addEpic(Epic epic) {
-        validator.validateTask(epic, EPIC.name());
+        validator.validateTask(epic, EPIC);
         taskDao.addEpic(epic);
         return epic;
     }
@@ -202,7 +203,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        validator.validateTask(epic, EPIC.name());
+        validator.validateTask(epic, EPIC);
         try {
             taskDao.begin();
             if (!taskDao.existsById(epic.getId(), EPIC.name())) {
@@ -226,7 +227,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        validator.validateTask(subtask, SUBTASK.name());
+        validator.validateTask(subtask, SUBTASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
@@ -317,7 +318,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        validator.validateTask(subtask, SUBTASK.name());
+        validator.validateTask(subtask, SUBTASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {
