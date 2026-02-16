@@ -5,7 +5,10 @@ import java.util.Optional;
 import ru.kanban.dao.TaskDao;
 import ru.kanban.exceptions.DaoException;
 import ru.kanban.exceptions.TaskNotFoundException;
-import ru.kanban.model.*;
+import ru.kanban.model.Epic;
+import ru.kanban.model.Status;
+import ru.kanban.model.Subtask;
+import ru.kanban.model.Task;
 import ru.kanban.validator.TaskValidator;
 
 import static ru.kanban.model.Status.*;
@@ -14,6 +17,7 @@ import static ru.kanban.model.TaskType.*;
 public class TaskServiceImpl implements TaskService {
     private TaskDao taskDao;
     private HistoryService historyService;
+    private final TaskValidator validator = new TaskValidator();
 
     public TaskServiceImpl(TaskDao taskDao, HistoryService historyService) {
         this.taskDao = taskDao;
@@ -27,14 +31,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task addTask(Task task) {
-        TaskValidator.validateTask(task, TASK.name());
+        validator.validateTask(task, TASK.name());
         taskDao.addTask(task);
         return task;
     }
 
     @Override
     public Optional<Task> getTask(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             taskDao.begin();
             Optional<Task> task = taskDao.getTask(id);
@@ -67,7 +71,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             if (!taskDao.existsById(id, TASK.name())) {
                 throw new TaskNotFoundException("Task with id: " + id + " not found");
@@ -88,7 +92,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        TaskValidator.validateTask(task, TASK.name());
+        validator.validateTask(task, TASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(task.getId(), TASK.name())) {
@@ -124,14 +128,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Epic addEpic(Epic epic) {
-        TaskValidator.validateTask(epic, EPIC.name());
+        validator.validateTask(epic, EPIC.name());
         taskDao.addEpic(epic);
         return epic;
     }
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             taskDao.begin();
             Optional<Epic> res = taskDao.getEpic(id);
@@ -163,7 +167,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, EPIC.name())) {
@@ -198,7 +202,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        TaskValidator.validateTask(epic, EPIC.name());
+        validator.validateTask(epic, EPIC.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(epic.getId(), EPIC.name())) {
@@ -222,7 +226,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        TaskValidator.validateTask(subtask, SUBTASK.name());
+        validator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
@@ -243,7 +247,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             taskDao.begin();
             Optional<Subtask> subtask = taskDao.getSubtask(id);
@@ -275,7 +279,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        TaskValidator.validateId(id);
+        validator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, SUBTASK.name())) {
@@ -313,7 +317,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        TaskValidator.validateTask(subtask, SUBTASK.name());
+        validator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {

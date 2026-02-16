@@ -65,7 +65,6 @@ public class Main {
             for (Task task : test) {
                 System.out.println(task.isViewed());
             }
-
             taskDao.updateTask(task1);
         } catch (Exception e) {
             e.printStackTrace();
