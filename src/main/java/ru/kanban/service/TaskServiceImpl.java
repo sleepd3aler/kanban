@@ -32,7 +32,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task addTask(Task task) {
-        validator.validateTask(task, TASK);
+        validator.validateTaskByType(task, TASK);
         taskDao.addTask(task);
         return task;
     }
@@ -93,7 +93,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        validator.validateTask(task, TASK);
+        validator.validateTaskByType(task, TASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(task.getId(), TASK.name())) {
@@ -129,7 +129,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Epic addEpic(Epic epic) {
-        validator.validateTask(epic, EPIC);
+        validator.validateTaskByType(epic, EPIC);
         taskDao.addEpic(epic);
         return epic;
     }
@@ -203,7 +203,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        validator.validateTask(epic, EPIC);
+        validator.validateTaskByType(epic, EPIC);
         try {
             taskDao.begin();
             if (!taskDao.existsById(epic.getId(), EPIC.name())) {
@@ -227,7 +227,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        validator.validateTask(subtask, SUBTASK);
+        validator.validateTaskByType(subtask, SUBTASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
@@ -318,7 +318,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        validator.validateTask(subtask, SUBTASK);
+        validator.validateTaskByType(subtask, SUBTASK);
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {
