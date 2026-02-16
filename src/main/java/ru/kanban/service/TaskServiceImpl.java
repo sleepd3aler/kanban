@@ -6,7 +6,7 @@ import ru.kanban.dao.TaskDao;
 import ru.kanban.exceptions.DaoException;
 import ru.kanban.exceptions.TaskNotFoundException;
 import ru.kanban.model.*;
-import ru.kanban.utils.ServiceValidator;
+import ru.kanban.validator.TaskValidator;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
@@ -27,14 +27,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task addTask(Task task) {
-        ServiceValidator.validateTask(task, TASK.name());
+        TaskValidator.validateTask(task, TASK.name());
         taskDao.addTask(task);
         return task;
     }
 
     @Override
     public Optional<Task> getTask(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Task> task = taskDao.getTask(id);
@@ -67,7 +67,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             if (!taskDao.existsById(id, TASK.name())) {
                 throw new TaskNotFoundException("Task with id: " + id + " not found");
@@ -88,7 +88,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        ServiceValidator.validateTask(task, TASK.name());
+        TaskValidator.validateTask(task, TASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(task.getId(), TASK.name())) {
@@ -124,14 +124,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Epic addEpic(Epic epic) {
-        ServiceValidator.validateTask(epic, EPIC.name());
+        TaskValidator.validateTask(epic, EPIC.name());
         taskDao.addEpic(epic);
         return epic;
     }
 
     @Override
     public Optional<Epic> getEpic(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Epic> res = taskDao.getEpic(id);
@@ -163,7 +163,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, EPIC.name())) {
@@ -198,7 +198,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Epic> updateEpic(Epic epic) {
-        ServiceValidator.validateTask(epic, EPIC.name());
+        TaskValidator.validateTask(epic, EPIC.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(epic.getId(), EPIC.name())) {
@@ -222,7 +222,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Subtask addSubtask(Subtask subtask) {
-        ServiceValidator.validateTask(subtask, SUBTASK.name());
+        TaskValidator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getEpic().getId(), EPIC.name())) {
@@ -243,7 +243,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> getSubtask(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             taskDao.begin();
             Optional<Subtask> subtask = taskDao.getSubtask(id);
@@ -275,7 +275,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> deleteSubtask(int id) {
-        ServiceValidator.validateId(id);
+        TaskValidator.validateId(id);
         try {
             taskDao.begin();
             if (!taskDao.existsById(id, SUBTASK.name())) {
@@ -313,7 +313,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Optional<Subtask> updateSubtask(Subtask subtask) {
-        ServiceValidator.validateTask(subtask, SUBTASK.name());
+        TaskValidator.validateTask(subtask, SUBTASK.name());
         try {
             taskDao.begin();
             if (!taskDao.existsById(subtask.getId(), SUBTASK.name())) {

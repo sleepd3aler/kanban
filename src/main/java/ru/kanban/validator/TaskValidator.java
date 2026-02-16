@@ -1,8 +1,8 @@
-package ru.kanban.utils;
+package ru.kanban.validator;
 
 import ru.kanban.model.Task;
 
-public class ServiceValidator {
+public class TaskValidator {
 
     public static void validateTask(Task task, String typeMsg) {
         if (task == null) {

@@ -71,7 +71,7 @@ class TaskServiceImplTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        tempFile = File.createTempFile("test", ".csv");
+        tempFile = File.createTempFile("Test", ".csv");
         historyDao = new DbHistoryDao(connection);
         taskDao = new DbTaskDao(connection);
         historyService = new HistoryServiceImpl(historyDao);
