@@ -39,8 +39,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> getTask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, TASK);
             Optional<Task> task = taskDao.getTask(id);
+            checkExists(id, task, TASK);
             addToHistory(task);
             return task;
         });
@@ -59,8 +59,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> deleteTask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, TASK);
             Optional<Task> result = taskDao.deleteTask(id);
+            checkExists(id, result, TASK);
             historyService.remove(id);
             return result;
         });
@@ -70,8 +70,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> updateTask(Task task) {
         validator.validateTaskByType(task, TASK);
         return wrapTransaction(() -> {
-            checkExists(task.getId(), TASK);
             Optional<Task> result = taskDao.updateTask(task);
+            checkExists(task.getId(), result, TASK);
             historyRemoveIfViewed(task.isViewed(), task.getId());
             return result;
         });
@@ -97,8 +97,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> getEpic(int id) {
         return wrapTransaction(() -> {
             validator.validateId(id);
-            checkExists(id, EPIC);
             Optional<Epic> res = taskDao.getEpic(id);
+            checkExists(id, res, EPIC);
             addToHistory(res);
             return res;
         });
@@ -117,8 +117,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> deleteEpic(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, EPIC);
             Optional<Epic> res = taskDao.deleteEpic(id);
+            checkExists(id, res, EPIC);
             historyService.remove(id);
             return res;
         });
@@ -138,9 +138,9 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> updateEpic(Epic epic) {
         validator.validateTaskByType(epic, EPIC);
         return wrapTransaction(() -> {
-            checkExists(epic.getId(), EPIC);
+            Optional<Epic> updated = taskDao.updateEpic(epic);
+            checkExists(epic.getId(), updated, EPIC);
             historyRemoveIfViewed(epic.isViewed(), epic.getId());
-            taskDao.updateEpic(epic);
             updateEpicStatus(epic.getId());
             return taskDao.getEpic(epic.getId());
         });
@@ -162,6 +162,7 @@ public class TaskServiceImpl implements TaskService {
         validator.validateId(id);
         return wrapTransaction(() -> {
             Optional<Subtask> result = taskDao.getSubtask(id);
+            checkExists(id, result, SUBTASK);
             addToHistory(result);
             return result;
         });
@@ -180,8 +181,8 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Subtask> deleteSubtask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, SUBTASK);
             Optional<Subtask> result = taskDao.getSubtask(id);
+            checkExists(id, result, SUBTASK);
             Epic current = result.get().getEpic();
             taskDao.deleteSubtask(id);
             updateEpicStatus(current.getId());
@@ -204,10 +205,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Subtask> updateSubtask(Subtask subtask) {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
-            checkExists(subtask.getId(), SUBTASK);
+            Optional<Subtask> updated = taskDao.updateSubtask(subtask);
+            checkExists(subtask.getId(), updated, SUBTASK);
             checkExists(subtask.getEpic().getId(), EPIC);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());
-            taskDao.updateSubtask(subtask);
             updateEpicStatus(subtask.getEpic().getId());
             return Optional.of(subtask);
         });
@@ -269,6 +270,12 @@ public class TaskServiceImpl implements TaskService {
 
     private void checkExists(int id, TaskType type) {
         if (!taskDao.existsById(id, type.name())) {
+            throw new TaskNotFoundException(type.name() + " with id: " + id + " not found");
+        }
+    }
+
+    private <T extends Task> void checkExists(int id, Optional<T> task, TaskType type) {
+        if (task.isEmpty()) {
             throw new TaskNotFoundException(type.name() + " with id: " + id + " not found");
         }
     }
