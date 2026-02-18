@@ -156,7 +156,7 @@ class TaskServiceImplTest {
     @Test
     void whenTryAddSubtaskAndServiceDoesntContainsEpicThenTaskNotFoundExceptionThrown() {
         assertThatThrownBy(() -> taskService.addSubtask(subtask1)).isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("EPIC with id: " + subtask1.getEpic().getId() + " not found");
+                .hasMessageContaining("Epic with id: " + subtask1.getEpic().getId() + " not found");
     }
 
     @Test
@@ -353,15 +353,15 @@ class TaskServiceImplTest {
         int id = 666;
         assertThatThrownBy(() -> taskService.deleteTask(id))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("TASK with id: " + id + " not found");
+                .hasMessageContaining("Task with id: " + id + " not found");
 
         assertThatThrownBy(() -> taskService.deleteEpic(id))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("EPIC with id: " + id + " not found");
+                .hasMessageContaining("Epic with id: " + id + " not found");
 
         assertThatThrownBy(() -> taskService.deleteSubtask(id))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("SUBTASK with id: " + id + " not found");
+                .hasMessageContaining("Subtask with id: " + id + " not found");
     }
 
     @Test
@@ -418,15 +418,15 @@ class TaskServiceImplTest {
     void whenUpdateAnyTaskWithIllegalIdThenTaskNotFoundThrown() {
         assertThatThrownBy(() -> taskService.updateTask(task1))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("TASK with id: " + task1.getId() + " not found");
+                .hasMessageContaining("Task with id: " + task1.getId() + " not found");
 
         assertThatThrownBy(() -> taskService.updateEpic(epic1))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("EPIC with id: " + epic1.getId() + " not found");
+                .hasMessageContaining("Epic with id: " + epic1.getId() + " not found");
 
         assertThatThrownBy(() -> taskService.updateSubtask(subtask1))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("SUBTASK with id: " + subtask1.getId() + " not found");
+                .hasMessageContaining("Subtask with id: " + subtask1.getId() + " not found");
     }
 
     @Test
@@ -881,7 +881,7 @@ class TaskServiceImplTest {
         updated.setId(subtask1.getId());
         assertThatThrownBy(() -> taskService.updateSubtask(updated))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("EPIC with id: " + updated.getEpic().getId() + " not found");
+                .hasMessageContaining("Epic with id: " + updated.getEpic().getId() + " not found");
     }
 
     @Test
