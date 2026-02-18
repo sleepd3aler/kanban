@@ -60,10 +60,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> deleteTask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, TASK);
-            Optional<Task> result = taskDao.deleteTask(id);
+            Task result = taskDao.deleteTask(id)
+                    .orElseThrow(() -> new TaskNotFoundException("TASK with id: " + id + " not found."));
             historyService.remove(id);
-            return result;
+            return Optional.of(result);
         });
     }
 
@@ -71,10 +71,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Task> updateTask(Task task) {
         validator.validateTaskByType(task, TASK);
         return wrapTransaction(() -> {
-            checkExists(task.getId(), TASK);
-            Optional<Task> result = taskDao.updateTask(task);
+            Task result = taskDao.updateTask(task)
+                    .orElseThrow(() -> new TaskNotFoundException("TASK with id: " + task.getId() + " not found."));
             historyRemoveIfViewed(task.isViewed(), task.getId());
-            return result;
+            return Optional.of(result);
         });
     }
 
@@ -98,10 +98,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> getEpic(int id) {
         return wrapTransaction(() -> {
             validator.validateId(id);
-            checkExists(id, EPIC);
-            Optional<Epic> res = taskDao.getEpic(id);
-            addToHistory(res.get());
-            return res;
+            Epic res = taskDao.getEpic(id)
+                    .orElseThrow(() -> new TaskNotFoundException("EPIC with id: " + id + " not found."));
+            addToHistory(res);
+            return Optional.of(res);
         });
     }
 
@@ -118,10 +118,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> deleteEpic(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, EPIC);
-            Optional<Epic> res = taskDao.deleteEpic(id);
+            Epic res = taskDao.deleteEpic(id)
+                    .orElseThrow(() -> new TaskNotFoundException("EPIC with id: " + id + " not found."));
             historyService.remove(id);
-            return res;
+            return Optional.of(res);
         });
     }
 
@@ -139,9 +139,9 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Epic> updateEpic(Epic epic) {
         validator.validateTaskByType(epic, EPIC);
         return wrapTransaction(() -> {
-            checkExists(epic.getId(), EPIC);
+            taskDao.updateEpic(epic)
+                    .orElseThrow(() -> new TaskNotFoundException("EPIC with id: " + epic.getId() + " not found."));
             historyRemoveIfViewed(epic.isViewed(), epic.getId());
-            taskDao.updateEpic(epic);
             updateEpicStatus(epic.getId());
             return taskDao.getEpic(epic.getId());
         });
@@ -162,9 +162,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Subtask> getSubtask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            Optional<Subtask> result = taskDao.getSubtask(id);
-            addToHistory(result.get());
-            return result;
+            Subtask result = taskDao.getSubtask(id)
+                    .orElseThrow(() -> new TaskNotFoundException("SUBTASK with id: " + id + " not found."));
+            addToHistory(result);
+            return Optional.of(result);
         });
     }
 
@@ -181,13 +182,13 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Subtask> deleteSubtask(int id) {
         validator.validateId(id);
         return wrapTransaction(() -> {
-            checkExists(id, SUBTASK);
-            Optional<Subtask> result = taskDao.getSubtask(id);
-            Epic current = result.get().getEpic();
+            Subtask result = taskDao.getSubtask(id)
+                    .orElseThrow(() -> new TaskNotFoundException("SUBTASK with id: " + id + " not found."));
+            Epic current = result.getEpic();
             taskDao.deleteSubtask(id);
             updateEpicStatus(current.getId());
             historyService.remove(id);
-            return result;
+            return Optional.of(result);
         });
     }
 
@@ -205,10 +206,10 @@ public class TaskServiceImpl implements TaskService {
     public Optional<Subtask> updateSubtask(Subtask subtask) {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
-            checkExists(subtask.getId(), SUBTASK);
+            taskDao.updateSubtask(subtask)
+                    .orElseThrow(() -> new TaskNotFoundException("SUBTASK with id: " + subtask.getId() + " not found."));
             checkExists(subtask.getEpic().getId(), EPIC);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());
-            taskDao.updateSubtask(subtask);
             updateEpicStatus(subtask.getEpic().getId());
             return Optional.of(subtask);
         });
