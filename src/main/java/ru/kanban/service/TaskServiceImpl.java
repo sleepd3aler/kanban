@@ -201,8 +201,8 @@ public class TaskServiceImpl implements TaskService {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
             checkExists(subtask.getId(), SUBTASK);
-            taskDao.updateSubtask(subtask);
             checkEpicExists(subtask.getEpic().getId(), EPIC);
+            taskDao.updateSubtask(subtask);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());
             updateEpicStatus(subtask.getEpic().getId());
             return subtask;
