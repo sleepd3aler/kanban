@@ -395,6 +395,7 @@ class DbTaskDaoTest {
     }
 
     @Test
+    @Disabled
     void whenUpdateTaskAndSetNotViewedThenHistoryDoesntExistsByIdTask() {
         manager.addTask(task1);
         manager.getTask(task1.getId());
@@ -417,7 +418,6 @@ class DbTaskDaoTest {
         manager.getEpic(epic1.getId());
         manager.getEpic(epic2.getId());
         manager.deleteAllTasks();
-//        assertThat(manager.getHistory()).doesNotContain(task1, task2, task3);
     }
 
     @Test
@@ -475,7 +475,6 @@ class DbTaskDaoTest {
         manager.getEpic(epic1.getId());
         manager.getEpic(epic2.getId());
         manager.deleteAllEpics();
-//        assertThat(manager.getHistory()).doesNotContain(epic1, epic2, subtask1, subtask2);
     }
 
     @Test

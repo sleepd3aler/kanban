@@ -167,12 +167,12 @@ class TaskServiceImplTest {
         Task expected = task1;
         Epic expectedEpic = epic1;
         Subtask expectedSubtask = subtask1;
-        assertThat(taskService.getTask(task1.getId()).get()).isEqualTo(expected);
-        assertThat(taskService.getEpic(epic1.getId()).get()).isEqualTo(expectedEpic);
-        assertThat(taskService.getSubtask(subtask1.getId()).get()).isEqualTo(expectedSubtask);
-        assertThat(taskService.getTask(task1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getEpic(epic1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getSubtask(subtask1.getId()).get().isViewed()).isTrue();
+        assertThat(taskService.getTask(task1.getId())).isEqualTo(expected);
+        assertThat(taskService.getEpic(epic1.getId())).isEqualTo(expectedEpic);
+        assertThat(taskService.getSubtask(subtask1.getId())).isEqualTo(expectedSubtask);
+        assertThat(taskService.getTask(task1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getEpic(epic1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getSubtask(subtask1.getId()).isViewed()).isTrue();
     }
 
     @Test
@@ -187,12 +187,12 @@ class TaskServiceImplTest {
         Task expected = task1;
         Epic expectedEpic = epic1;
         Subtask expectedSubtask = subtask1;
-        assertThat(taskService.getTask(task1.getId()).get()).isEqualTo(expected);
-        assertThat(taskService.getEpic(epic1.getId()).get()).isEqualTo(expectedEpic);
-        assertThat(taskService.getSubtask(subtask1.getId()).get()).isEqualTo(expectedSubtask);
-        assertThat(taskService.getTask(task1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getEpic(epic1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getSubtask(subtask1.getId()).get().isViewed()).isTrue();
+        assertThat(taskService.getTask(task1.getId())).isEqualTo(expected);
+        assertThat(taskService.getEpic(epic1.getId())).isEqualTo(expectedEpic);
+        assertThat(taskService.getSubtask(subtask1.getId())).isEqualTo(expectedSubtask);
+        assertThat(taskService.getTask(task1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getEpic(epic1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getSubtask(subtask1.getId()).isViewed()).isTrue();
     }
 
     @Test
@@ -207,12 +207,12 @@ class TaskServiceImplTest {
         Task expected = task1;
         Epic expectedEpic = epic1;
         Subtask expectedSubtask = subtask1;
-        assertThat(taskService.getTask(task1.getId()).get()).isEqualTo(expected);
-        assertThat(taskService.getEpic(epic1.getId()).get()).isEqualTo(expectedEpic);
-        assertThat(taskService.getSubtask(subtask1.getId()).get()).isEqualTo(expectedSubtask);
-        assertThat(taskService.getTask(task1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getEpic(epic1.getId()).get().isViewed()).isTrue();
-        assertThat(taskService.getSubtask(subtask1.getId()).get().isViewed()).isTrue();
+        assertThat(taskService.getTask(task1.getId())).isEqualTo(expected);
+        assertThat(taskService.getEpic(epic1.getId())).isEqualTo(expectedEpic);
+        assertThat(taskService.getSubtask(subtask1.getId())).isEqualTo(expectedSubtask);
+        assertThat(taskService.getTask(task1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getEpic(epic1.getId()).isViewed()).isTrue();
+        assertThat(taskService.getSubtask(subtask1.getId()).isViewed()).isTrue();
     }
 
     @Test
@@ -369,8 +369,8 @@ class TaskServiceImplTest {
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
-        Task updated = taskService.updateTask(task3).get();
-        assertThat(taskService.getTask(task2.getId()).get().getName()).isEqualTo(updated.getName());
+        Task updated = taskService.updateTask(task3);
+        assertThat(taskService.getTask(task2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -382,8 +382,8 @@ class TaskServiceImplTest {
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
-        Task updated = taskService.updateTask(task3).get();
-        assertThat(taskService.getTask(task2.getId()).get().getName()).isEqualTo(updated.getName());
+        Task updated = taskService.updateTask(task3);
+        assertThat(taskService.getTask(task2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -395,8 +395,8 @@ class TaskServiceImplTest {
         taskService.addTask(task1);
         taskService.addTask(task2);
         task3.setId(task2.getId());
-        Task updated = taskService.updateTask(task3).get();
-        assertThat(taskService.getTask(task2.getId()).get().getName()).isEqualTo(updated.getName());
+        Task updated = taskService.updateTask(task3);
+        assertThat(taskService.getTask(task2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -671,9 +671,9 @@ class TaskServiceImplTest {
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
         epic3.setId(epic2.getId());
-        Epic updated = taskService.updateEpic(epic3).get();
+        Epic updated = taskService.updateEpic(epic3);
         assertThat(updated.getStatus()).isEqualTo(NEW);
-        assertThat(taskService.getEpic(epic2.getId()).get().getName()).isEqualTo(updated.getName());
+        assertThat(taskService.getEpic(epic2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -686,9 +686,9 @@ class TaskServiceImplTest {
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
         epic3.setId(epic2.getId());
-        Epic updated = taskService.updateEpic(epic3).get();
+        Epic updated = taskService.updateEpic(epic3);
         assertThat(updated.getStatus()).isEqualTo(NEW);
-        assertThat(taskService.getEpic(epic2.getId()).get().getName()).isEqualTo(updated.getName());
+        assertThat(taskService.getEpic(epic2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -701,9 +701,9 @@ class TaskServiceImplTest {
         taskService.addEpic(epic2);
         Epic epic3 = new Epic("updated", "updated desc", DONE);
         epic3.setId(epic2.getId());
-        Epic updated = taskService.updateEpic(epic3).get();
+        Epic updated = taskService.updateEpic(epic3);
         assertThat(updated.getStatus()).isEqualTo(NEW);
-        assertThat(taskService.getEpic(epic2.getId()).get().getName()).isEqualTo(updated.getName());
+        assertThat(taskService.getEpic(epic2.getId()).getName()).isEqualTo(updated.getName());
     }
 
     @Test
@@ -712,7 +712,7 @@ class TaskServiceImplTest {
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
         taskService.addSubtask(newSub);
-        assertThat(taskService.getEpic(newEpic.getId()).get().getStatus()).isEqualTo(IN_PROGRESS);
+        assertThat(taskService.getEpic(newEpic.getId()).getStatus()).isEqualTo(IN_PROGRESS);
     }
 
     @Test
@@ -725,7 +725,7 @@ class TaskServiceImplTest {
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
         taskService.addSubtask(newSub);
-        assertThat(taskService.getEpic(newEpic.getId()).get().getStatus()).isEqualTo(IN_PROGRESS);
+        assertThat(taskService.getEpic(newEpic.getId()).getStatus()).isEqualTo(IN_PROGRESS);
     }
 
     @Test
@@ -738,7 +738,7 @@ class TaskServiceImplTest {
         Subtask newSub = new Subtask("new subtask", "any desc", IN_PROGRESS, newEpic);
         taskService.addEpic(newEpic);
         taskService.addSubtask(newSub);
-        assertThat(taskService.getEpic(newEpic.getId()).get().getStatus()).isEqualTo(IN_PROGRESS);
+        assertThat(taskService.getEpic(newEpic.getId()).getStatus()).isEqualTo(IN_PROGRESS);
     }
 
     @Test
