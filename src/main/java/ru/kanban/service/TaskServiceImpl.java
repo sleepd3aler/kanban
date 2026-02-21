@@ -147,6 +147,7 @@ public class TaskServiceImpl implements TaskService {
     public Subtask addSubtask(Subtask subtask) {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
+//            checkExists(subtask.getEpic().getId(), EPIC);
             checkEpicExists(subtask.getEpic().getId(), EPIC);
             taskDao.addSubtask(subtask);
             updateEpicStatus(subtask.getEpic().getId());
@@ -201,6 +202,7 @@ public class TaskServiceImpl implements TaskService {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
             checkExists(subtask.getId(), SUBTASK);
+//            checkExists(subtask.getEpic().getId(), EPIC);
             checkEpicExists(subtask.getEpic().getId(), EPIC);
             taskDao.updateSubtask(subtask);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());

@@ -50,6 +50,10 @@ public class CustomLinkedList<T> implements Iterable<T> {
         }
     }
 
+    public Node<T> getHead() {
+        return head;
+    }
+
     @Override
     public Iterator<T> iterator() {
         return new Iterator<>() {

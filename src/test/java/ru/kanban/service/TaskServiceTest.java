@@ -14,16 +14,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ru.kanban.model.Status.*;
 
 public abstract class TaskServiceTest {
-    TaskService taskService;
-    Task task1;
-    Task task2;
-    Task task3;
+    protected TaskService taskService;
+    protected Task task1;
+    protected Task task2;
+    protected Task task3;
 
-    Epic epic1;
-    Epic epic2;
+    protected Epic epic1;
+    protected Epic epic2;
 
-    Subtask subtask1;
-    Subtask subtask2;
+    protected Subtask subtask1;
+    protected Subtask subtask2;
 
     abstract TaskService createService() throws IOException;
 

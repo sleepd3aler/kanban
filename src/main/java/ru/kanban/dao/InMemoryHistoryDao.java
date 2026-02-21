@@ -21,8 +21,17 @@ public class InMemoryHistoryDao implements HistoryDao {
         if (historyMap.containsKey(task.getId())) {
             viewedTasks.removeNode(historyMap.get(task.getId()));
         }
+        if (historyMap.size() >= 10) {
+            historyMap.remove(removeFirstTask());
+        }
         Node<Task> lastViewed = viewedTasks.linkLast(task);
         historyMap.put(task.getId(), lastViewed);
+    }
+
+    private  int removeFirstTask() {
+        Task task = viewedTasks.getHead().item;
+        viewedTasks.removeNode(viewedTasks.getHead());
+        return task.getId();
     }
 
     @Override

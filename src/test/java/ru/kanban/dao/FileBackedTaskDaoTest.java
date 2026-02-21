@@ -1,96 +1,90 @@
-package ru.kanban.service;
+package ru.kanban.dao;
 
 import java.io.*;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.kanban.dao.FileBackedTaskDao;
-import ru.kanban.dao.HistoryDao;
 import ru.kanban.model.Epic;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
-import ru.kanban.utils.Managers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static ru.kanban.model.Status.IN_PROGRESS;
 import static ru.kanban.model.Status.NEW;
 
-class FileBackedTaskDaoTest {
-    private FileBackedTaskDao fileBackedTaskManager;
-    private File tempFile;
-    private File tempHistoryFile;
-    private Task task1;
-    private Epic epic1;
-    private Subtask subtask1;
+class FileBackedTaskDaoTest extends DaoTest {
+    File tempFile;
+    File tempHistoryFile;
 
-    @BeforeEach
-    void init() throws IOException {
-        tempFile = File.createTempFile("temp", ".csv");
+    @Override
+    TaskDao createDao() throws IOException {
         tempHistoryFile = File.createTempFile("temp_history", ".csv");
-        HistoryDao historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
-        fileBackedTaskManager = new FileBackedTaskDao(tempFile.toString());
-        task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
-        epic1 = new Epic("Epic 1", "Description 1", NEW);
-        subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
-        fileBackedTaskManager.addTask(task1);
-        fileBackedTaskManager.addEpic(epic1);
-        fileBackedTaskManager.addSubtask(subtask1);
+        tempFile = File.createTempFile("temp", ".csv");
+        return new FileBackedTaskDao(tempFile.toString());
     }
 
     @Test
-    void testTaskToString() {
-        String expected = "1,TASK,Task 1,IN_PROGRESS,Description 1,";
-        String result = fileBackedTaskManager.toString(task1);
+    void testTaskToString() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
+        String expected = "0,TASK,task1,NEW,desc,";
+        String result = fileDao.toString(task1);
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
-    void testEpicToString() {
-        String expected = "2,EPIC,Epic 1,NEW,Description 1,";
-        String result = fileBackedTaskManager.toString(epic1);
+    void testEpicToString() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
+        String expected = "0,EPIC,epic1,NEW,desc,";
+        String result = fileDao.toString(epic1);
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
-    void testSubtaskToString() {
-        String expected = "3,SUBTASK,Subtask 1,NEW,Description 1,2";
-        String result = fileBackedTaskManager.toString(subtask1);
+    void testSubtaskToString() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
+        String expected = "0,SUBTASK,subtask1,NEW,desc,0";
+        String result = fileDao.toString(subtask1);
         assertThat(result).isEqualTo(expected);
     }
 
     @Test
-    void testFromStringToTask() {
+    void testFromStringToTask() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
         String string = "1,TASK,Task 1,IN_PROGRESS,Description 1,";
         Task expected = new Task("Task 1", "Description 1", IN_PROGRESS);
         expected.setId(1);
-        Task res = fileBackedTaskManager.fromString(string);
+        Task res = fileDao.fromString(string);
         assertThat(res).isEqualTo(expected);
     }
 
     @Test
-    void testFromStringToEpic() {
+    void testFromStringToEpic() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
         String string = "1,EPIC,Epic 1,NEW,Description 1,";
         Epic expected = new Epic("Epic 1", "Description 1", NEW);
         expected.setId(1);
-        Epic res = (Epic) fileBackedTaskManager.fromString(string);
+        Epic res = (Epic) fileDao.fromString(string);
         assertThat(res).isEqualTo(expected);
     }
 
     @Test
-    void testFromStringToSubtask() {
-        String string = "1,SUBTASK,Subtask 1,NEW,Description 1,2";
+    void testFromStringToSubtask() throws IOException {
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
+        fileDao.addEpic(epic1);
+        String string = "1,SUBTASK,Subtask 1,NEW,Description 1,1";
         Subtask expected = new Subtask("Subtask 1", "Description 1", NEW, epic1);
         expected.setId(1);
-        Subtask res = (Subtask) fileBackedTaskManager.fromString(string);
+        Subtask res = (Subtask) fileDao.fromString(string);
         assertThat(res).isEqualTo(expected);
     }
 
     @Test
-    void whenFromStringWithIllegalTaskThenExceptionThrown() {
+    void whenFromStringWithIllegalTaskThenExceptionThrown() throws IOException {
+        File tempFile = File.createTempFile("temp", ".csv");
+        FileBackedTaskDao fileDao = new FileBackedTaskDao(tempFile.toString());
         String string = "1,SUBTASKk,Subtask 1,NEW,Description 1,3";
         assertThatThrownBy(() ->
-                fileBackedTaskManager.fromString(string)
+                fileDao.fromString(string)
         ).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Illegal task type.");
     }
@@ -100,26 +94,19 @@ class FileBackedTaskDaoTest {
         File file = File.createTempFile("fileToCompare", "csv");
         try (PrintWriter writer = new PrintWriter((file.toString()))) {
             writer.println("id,type,name,status,description,epic");
-            writer.println("1,TASK,Task 1,IN_PROGRESS,Description 1,");
-            writer.println("2,EPIC,Epic 1,NEW,Description 1,");
-            writer.println("3,SUBTASK,Subtask 1,NEW,Description 1,2");
+            writer.println("1,TASK,task1,NEW,desc,");
+            writer.println("2,EPIC,epic1,NEW,desc,");
+            writer.println("3,SUBTASK,subtask1,NEW,desc,2");
         }
-
+        taskDao.addTask(task1);
+        taskDao.addEpic(epic1);
+        taskDao.addSubtask(subtask1);
         assertThat(tempFile).hasSameTextualContentAs(file);
     }
 
     @Test
     void whenIncorrectPathThenExceptionThrown() throws IOException {
         tempFile = File.createTempFile("temp", "csv");
-        File tempHistoryFile = File.createTempFile("temp_history", "csv");
-        HistoryDao historyManager = Managers.getDefaultFileBackedHistoryManager(tempHistoryFile.toString());
-        fileBackedTaskManager = new FileBackedTaskDao(tempFile.toString());
-        task1 = new Task("Task 1", "Description 1", IN_PROGRESS);
-        epic1 = new Epic("Epic 1", "Description 1", NEW);
-        subtask1 = new Subtask("Subtask 1", "Description 1", NEW, epic1);
-        fileBackedTaskManager.addTask(task1);
-        fileBackedTaskManager.addEpic(epic1);
-        fileBackedTaskManager.addSubtask(subtask1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() ->
                 FileBackedTaskDao.loadFromFile(args))
@@ -127,11 +114,18 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenThenLoadFromFileThenManagerHasSameContent() throws FileNotFoundException {
+    void whenLoadFromFileThenManagerHasSameContent() throws IOException {
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
-        List<Task> tasksBeforeLoad = fileBackedTaskManager.getTasks();
-        List<Epic> epicsBeforeLoad = fileBackedTaskManager.getEpics();
-        List<Subtask> subtasksBeforeLoad = fileBackedTaskManager.getSubtasks();
+        taskDao.addTask(task1);
+        taskDao.addTask(task2);
+        taskDao.addTask(task3);
+        taskDao.addEpic(epic1);
+        taskDao.addEpic(epic2);
+        taskDao.addSubtask(subtask1);
+        taskDao.addSubtask(subtask2);
+        List<Task> tasksBeforeLoad = taskDao.getTasks();
+        List<Epic> epicsBeforeLoad = taskDao.getEpics();
+        List<Subtask> subtasksBeforeLoad = taskDao.getSubtasks();
         FileBackedTaskDao newManager = FileBackedTaskDao.loadFromFile(args);
         List<Task> tasksAfterLoad = newManager.getTasks();
         List<Epic> epicsAfterLoad = newManager.getEpics();
@@ -163,7 +157,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileIsNotCsvThenExceptionThrownWithExpectedMessage() {
+    void whenTaskFileIsNotCsvThenExceptionThrownWithExpectedMessage() throws IOException {
         String[] args = {"", tempHistoryFile.toString()};
         assertThatThrownBy(() ->
                 FileBackedTaskDao.loadFromFile(args))
@@ -173,7 +167,7 @@ class FileBackedTaskDaoTest {
     }
 
     @Test
-    void whenTaskFileNotExistsThenExceptionThrownWithExpectedMessage() {
+    void whenTaskFileNotExistsThenExceptionThrownWithExpectedMessage() throws IOException {
         String[] args = {"./example_root.csv", tempHistoryFile.toString()};
         assertThatThrownBy(() ->
                 FileBackedTaskDao.loadFromFile(args))
@@ -211,7 +205,6 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenTaskFileExistsByIdWrongIdThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempFile = File.createTempFile("test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempFile))
         )) {
@@ -313,12 +306,12 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryCsvExistsByIdAnotherContentThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
             writer.println("HelloWorld");
         }
+        taskDao.addTask(task1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -327,12 +320,12 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdIllegalIDThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
             writer.println("asd,Type,Name,NEW,Desc");
         }
+        taskDao.addTask(task1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -341,12 +334,12 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdIllegalTypeThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
             writer.println("1,Type,Name,New,Desc");
         }
+        taskDao.addTask(task1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -355,12 +348,12 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdIllegalNameThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
             writer.println("1,TASK, ,NEW,Desc");
         }
+        taskDao.addTask(task1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -369,12 +362,12 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdIllegalDescThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
             writer.println("1,TASK,Task,NEW, ,");
         }
+        taskDao.addTask(task1);
         String[] args = {tempFile.toString(), tempHistoryFile.toString()};
         assertThatThrownBy(() -> FileBackedTaskDao.loadFromFile(args))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -383,7 +376,7 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdSubtaskWithEmptyEpicIDThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
+        taskDao.addTask(task1);
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {
@@ -397,7 +390,7 @@ class FileBackedTaskDaoTest {
 
     @Test
     void whenHistoryExistsByIdSubtaskWithoutEpicThenExceptionThrownWithCorrectMessage() throws IOException {
-        tempHistoryFile = File.createTempFile("history_test", ".csv");
+        taskDao.addTask(task1);
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(tempHistoryFile))
         )) {

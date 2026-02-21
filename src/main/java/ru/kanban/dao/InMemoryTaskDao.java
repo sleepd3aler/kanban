@@ -31,12 +31,14 @@ public class InMemoryTaskDao implements TaskDao {
 
     @Override
     public Optional<Task> deleteTask(int id) {
-        return Optional.of(tasks.remove(id));
+        return Optional.ofNullable(tasks.remove(id));
     }
 
     @Override
     public Optional<Task> updateTask(Task task) {
-        tasks.put(task.getId(), task);
+        if (tasks.containsKey(task.getId())) {
+            tasks.put(task.getId(), task);
+        }
         return Optional.of(task);
     }
 
@@ -67,9 +69,12 @@ public class InMemoryTaskDao implements TaskDao {
 
     @Override
     public Optional<Epic> deleteEpic(int id) {
-        epics.get(id).getSubtasks()
-                .forEach(subtask -> subtasks.remove(subtask.getId()));
-        return Optional.of(epics.remove(id));
+        Epic deleted = epics.remove(id);
+        if (deleted != null) {
+            deleted.getSubtasks()
+                    .forEach(subtask -> subtasks.remove(subtask.getId()));
+        }
+        return Optional.ofNullable(deleted);
     }
 
     public Epic getEpicById(int id) {
@@ -110,9 +115,11 @@ public class InMemoryTaskDao implements TaskDao {
 
     @Override
     public boolean deleteSubtask(int id) {
-        Epic epicOfSubtask = subtasks.get(id).getEpic();
         Subtask subtask = subtasks.remove(id);
-        epicOfSubtask.getSubtasks().remove(subtask);
+        if (subtask != null) {
+            Epic epicOfSubtask = subtask.getEpic();
+            epicOfSubtask.getSubtasks().remove(subtask);
+        }
         return subtask != null;
     }
 
