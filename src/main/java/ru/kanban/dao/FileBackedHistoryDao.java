@@ -7,6 +7,7 @@ import ru.kanban.model.Task;
 import ru.kanban.model.TaskType;
 
 import static ru.kanban.model.TaskType.SUBTASK;
+import static ru.kanban.service.TaskServiceImpl.log;
 
 public class FileBackedHistoryDao extends InMemoryHistoryDao {
     private final String historyFile;
@@ -23,6 +24,7 @@ public class FileBackedHistoryDao extends InMemoryHistoryDao {
         )) {
             historyWriter.println(toString(task));
         } catch (IOException e) {
+            log.error("File is missing.");
             throw new ManagerSaveException("File writing exception");
         }
     }

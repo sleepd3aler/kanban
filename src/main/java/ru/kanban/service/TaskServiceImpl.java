@@ -14,7 +14,7 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 
 public class TaskServiceImpl implements TaskService {
-    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
+    public static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskDao taskDao;
     private final HistoryService historyService;
@@ -77,10 +77,11 @@ public class TaskServiceImpl implements TaskService {
             Task result = checkExists(task.getId(), TASK);
             taskDao.updateTask(task);
             historyRemoveIfViewed(task.isViewed(), task.getId());
-            log.info("Task with ID: {} was changed. Actual name: {}, description: {}.",
+            log.info("Task with ID: {} was changed. Actual name: {}, status: {}",
                     task.getId(),
                     task.getName(),
-                    task.getDescription());
+                    task.getStatus());
+
             return task;
         });
     }
@@ -153,10 +154,10 @@ public class TaskServiceImpl implements TaskService {
             taskDao.updateEpic(epic);
             historyRemoveIfViewed(epic.isViewed(), epic.getId());
             updateEpicStatus(epic.getId());
-            log.info("Epic with ID: {} was changed. Actual name: {}, description: {}.",
+            log.info("Epic with ID: {} was changed. Actual name: {}, status: {}",
                     epic.getId(),
                     epic.getName(),
-                    epic.getDescription());
+                    epic.getStatus());
             return taskDao.getEpic(epic.getId()).get();
 
         });
@@ -227,15 +228,15 @@ public class TaskServiceImpl implements TaskService {
             taskDao.updateSubtask(subtask);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());
             updateEpicStatus(subtask.getEpic().getId());
-            log.info("Subtask with ID: {} was changed. Actual name: {}, description: {}.",
+            log.info("Subtask with ID: {} was changed. Actual name: {}, status: {}",
                     subtask.getId(),
                     subtask.getName(),
-                    subtask.getDescription());
+                    subtask.getStatus());
             return subtask;
         });
     }
 
-    public Status checkSubtaskStatus(List<Status> statuses) {
+    public Status checkEpicStatus(List<Status> statuses) {
         if (statuses.isEmpty()) {
             return NEW;
         }
@@ -263,7 +264,7 @@ public class TaskServiceImpl implements TaskService {
 
     private void updateEpicStatus(int id) {
         var actualSubStatuses = taskDao.getEpicSubtasksStatuses(id);
-        Status updatedStatus = checkSubtaskStatus(actualSubStatuses);
+        Status updatedStatus = this.checkEpicStatus(actualSubStatuses);
         taskDao.updateEpicStatus(id, updatedStatus);
     }
 

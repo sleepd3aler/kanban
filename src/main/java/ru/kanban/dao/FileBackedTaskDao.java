@@ -11,6 +11,7 @@ import ru.kanban.model.*;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
+import static ru.kanban.service.TaskServiceImpl.log;
 import static ru.kanban.utils.Constants.HEADER;
 
 public class FileBackedTaskDao extends InMemoryTaskDao {
@@ -39,6 +40,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
                 writer.println(toString(subtask));
             }
         } catch (IOException e) {
+            log.error("File is missing.");
             throw new ManagerSaveException("File writing exception");
         }
     }
@@ -54,6 +56,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
             }
             writer.println(toString(task));
         } catch (IOException e) {
+            log.error("File is missing.");
             throw new ManagerSaveException("File writing exception");
         }
     }
@@ -72,6 +75,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
         try {
             type = TaskType.valueOf(parts[1]);
         } catch (IllegalArgumentException e) {
+            log.error("Illegal task type, provided: {}", value);
             throw new IllegalArgumentException("Illegal task type.");
         }
         String name = parts[2];
@@ -93,6 +97,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
                 subtask.setId(id);
                 return subtask;
             default:
+                log.error("Unsupported task type: {}", value);
                 throw new IllegalArgumentException("Unsupported task type.");
         }
     }
@@ -116,6 +121,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
             List<String> tasks = taskReader.lines().toList();
             List<String> history = historyReader.lines().toList();
             if (!tasks.get(0).equals(HEADER)) {
+                log.error("File contains incorrect HEADER.");
                 throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
             }
             tasks.stream()
@@ -145,6 +151,7 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
                             }
                     );
         } catch (IOException e) {
+            log.error("File is missing");
             throw new ManagerSaveException("File writing exception");
         }
         return fileBackedTaskManager;
@@ -233,18 +240,22 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
 
     private static void validateArgs(String[] args) throws FileNotFoundException {
         if (args.length < 2) {
+            log.error("Not enough arguments, for execute. Enter paths: to TaskManager and History");
             throw new IllegalArgumentException(
                     "Not enough arguments, for execute. Enter paths: to TaskManager and History"
             );
         }
         if (!args[0].endsWith(".csv") || !args[1].endsWith(".csv")) {
+            log.error("Illegal file extension. Expected : .csv");
             throw new IllegalArgumentException("Illegal file extension. Expected : .csv");
         }
         if (!Files.exists(Path.of(args[0]))) {
+            log.error("Illegal file extension. Expected : .csv");
             throw new FileNotFoundException("File with tasks not found");
         }
 
         if (!Files.exists(Path.of(args[1]))) {
+            log.error("File with history not found");
             throw new FileNotFoundException("File with history not found");
         }
     }
@@ -252,11 +263,13 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
     private static void validateFormat(String string) {
         String[] parts = string.split(",");
         if (parts.length < 5 || parts.length > 6) {
+            log.error("Must be: id,type,name,status,description,epic id");
             throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
         }
         try {
             Integer.parseInt(parts[0]);
         } catch (NumberFormatException e) {
+            log.error("Task ID is missing.");
             throw new IllegalArgumentException("Task ID is missing.");
         }
         boolean correctType = parts[1].equals(TASK.name())
@@ -269,16 +282,20 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
         boolean correctDescription = !parts[4].isBlank();
 
         if (!correctType) {
+            log.error("Illegal task type.");
             throw new IllegalArgumentException("Illegal task type.");
         }
         if (!correctName) {
+            log.error("Task name is missing");
             throw new IllegalArgumentException("Task name is missing");
         }
         if (!correctStatus) {
+            log.error("Illegal status provided");
             throw new IllegalArgumentException("Illegal status provided");
         }
 
         if (!correctDescription) {
+            log.error("Description is missing");
             throw new IllegalArgumentException("Description is missing");
         }
 
@@ -287,8 +304,10 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
                 String epicId = parts[5];
                 Integer.parseInt(epicId);
             } catch (ArrayIndexOutOfBoundsException e) {
+                log.error("Epic ID at subtask: {}, is missing", parts[2]);
                 throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + " is missing");
             } catch (NumberFormatException e) {
+                log.error("Epic ID at subtask: {}, is invalid", parts[2]);
                 throw new IllegalArgumentException("Epic ID at subtask: " + parts[2] + " is invalid");
             }
         }

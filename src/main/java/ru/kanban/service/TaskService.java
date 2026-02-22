@@ -45,6 +45,6 @@ public interface TaskService {
 
     Subtask updateSubtask(Subtask subtask);
 
-    Status checkSubtaskStatus(List<Status> statuses);
+    Status checkEpicStatus(List<Status> statuses);
 
 }
