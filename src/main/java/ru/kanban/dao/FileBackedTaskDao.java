@@ -6,15 +6,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.*;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
-import static ru.kanban.service.TaskServiceImpl.log;
+
 import static ru.kanban.utils.Constants.HEADER;
 
 public class FileBackedTaskDao extends InMemoryTaskDao {
+    private static final Logger log = LoggerFactory.getLogger(FileBackedTaskDao.class);
     private final String filePath;
 
     public FileBackedTaskDao(String path) {

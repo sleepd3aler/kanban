@@ -1,15 +1,17 @@
 package ru.kanban.dao;
 
 import java.io.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kanban.exceptions.ManagerSaveException;
 import ru.kanban.model.Subtask;
 import ru.kanban.model.Task;
 import ru.kanban.model.TaskType;
 
 import static ru.kanban.model.TaskType.SUBTASK;
-import static ru.kanban.service.TaskServiceImpl.log;
 
 public class FileBackedHistoryDao extends InMemoryHistoryDao {
+    private static final Logger log = LoggerFactory.getLogger(FileBackedHistoryDao.class);
     private final String historyFile;
 
     public FileBackedHistoryDao(String path) {

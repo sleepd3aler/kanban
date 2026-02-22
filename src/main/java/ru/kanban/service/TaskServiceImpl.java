@@ -14,7 +14,7 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 
 public class TaskServiceImpl implements TaskService {
-    public static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
 
     private final TaskDao taskDao;
     private final HistoryService historyService;
