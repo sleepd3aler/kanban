@@ -150,10 +150,12 @@ public abstract class TaskServiceTest {
     @Test
     @DisplayName("Тест на попытку обновления TASK ")
     void whenUpdateTaskThenTaskUpdated() {
+        // добавили 2 задачи
         taskService.addTask(task1);
         taskService.addTask(task2);
+        //таск 3 теперь с айди 2, имя  -- таск 3
         task3.setId(task2.getId());
-        Task updated = taskService.updateTask(task3);
+        Task updated = taskService.updateTask(task3); // -- имя таск 3
         assertThat(taskService.getTask(task2.getId()).getName()).isEqualTo(updated.getName());
     }
 

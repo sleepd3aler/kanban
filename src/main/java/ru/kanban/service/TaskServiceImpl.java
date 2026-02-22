@@ -2,6 +2,8 @@ package ru.kanban.service;
 
 import java.util.List;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kanban.dao.TaskDao;
 import ru.kanban.exceptions.DaoException;
 import ru.kanban.exceptions.TaskNotFoundException;
@@ -12,6 +14,8 @@ import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
 
 public class TaskServiceImpl implements TaskService {
+    private static final Logger log = LoggerFactory.getLogger(TaskServiceImpl.class);
+
     private final TaskDao taskDao;
     private final HistoryService historyService;
     private final TaskValidator validator;
@@ -31,6 +35,7 @@ public class TaskServiceImpl implements TaskService {
     public Task addTask(Task task) {
         validator.validateTaskByType(task, TASK);
         taskDao.addTask(task);
+        log.info("Task with ID: {}, added.", task.getId());
         return task;
     }
 
@@ -60,6 +65,7 @@ public class TaskServiceImpl implements TaskService {
             Task result = checkExists(id, TASK);
             taskDao.deleteTask(id);
             historyService.remove(id);
+            log.info("Task with ID : {} deleted.", id);
             return result;
         });
     }
@@ -69,9 +75,13 @@ public class TaskServiceImpl implements TaskService {
         validator.validateTaskByType(task, TASK);
         return wrapTransaction(() -> {
             Task result = checkExists(task.getId(), TASK);
-            taskDao.updateTask(result);
+            taskDao.updateTask(task);
             historyRemoveIfViewed(task.isViewed(), task.getId());
-            return result;
+            log.info("Task with ID: {} was changed. Actual name: {}, description: {}.",
+                    task.getId(),
+                    task.getName(),
+                    task.getDescription());
+            return task;
         });
     }
 
@@ -80,6 +90,7 @@ public class TaskServiceImpl implements TaskService {
         wrapTransaction(() -> {
             taskDao.deleteAllTasks();
             historyService.deleteAllByType(TASK.name());
+            log.info("All Tasks were deleted.");
             return null;
         });
     }
@@ -88,13 +99,14 @@ public class TaskServiceImpl implements TaskService {
     public Epic addEpic(Epic epic) {
         validator.validateTaskByType(epic, EPIC);
         taskDao.addEpic(epic);
+        log.info("Epic with ID: {}, added.", epic.getId());
         return epic;
     }
 
     @Override
     public Epic getEpic(int id) {
+        validator.validateId(id);
         return wrapTransaction(() -> {
-            validator.validateId(id);
             Epic res = (Epic) checkExists(id, EPIC);
             addToHistory(res);
             return res;
@@ -117,6 +129,7 @@ public class TaskServiceImpl implements TaskService {
             Epic res = (Epic) checkExists(id, EPIC);
             taskDao.deleteEpic(id);
             historyService.remove(id);
+            log.info("Epic with ID: {}, deleted.", id);
             return res;
         });
     }
@@ -127,6 +140,7 @@ public class TaskServiceImpl implements TaskService {
             taskDao.deleteAllEpics();
             historyService.deleteAllByType(EPIC.name());
             historyService.deleteAllByType(SUBTASK.name());
+            log.info("All Epics were deleted.");
             return null;
         });
     }
@@ -139,7 +153,12 @@ public class TaskServiceImpl implements TaskService {
             taskDao.updateEpic(epic);
             historyRemoveIfViewed(epic.isViewed(), epic.getId());
             updateEpicStatus(epic.getId());
+            log.info("Epic with ID: {} was changed. Actual name: {}, description: {}.",
+                    epic.getId(),
+                    epic.getName(),
+                    epic.getDescription());
             return taskDao.getEpic(epic.getId()).get();
+
         });
     }
 
@@ -147,10 +166,10 @@ public class TaskServiceImpl implements TaskService {
     public Subtask addSubtask(Subtask subtask) {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
-//            checkExists(subtask.getEpic().getId(), EPIC);
             checkEpicExists(subtask.getEpic().getId(), EPIC);
             taskDao.addSubtask(subtask);
             updateEpicStatus(subtask.getEpic().getId());
+            log.info("Subtask with ID: {}, added.", subtask.getId());
             return subtask;
         });
     }
@@ -183,6 +202,7 @@ public class TaskServiceImpl implements TaskService {
             taskDao.deleteSubtask(id);
             updateEpicStatus(current.getId());
             historyService.remove(id);
+            log.info("Subtask with ID: {}, deleted.", id);
             return result;
         });
     }
@@ -193,6 +213,7 @@ public class TaskServiceImpl implements TaskService {
             taskDao.deleteAllSubtasks();
             taskDao.renewAllStatuses(EPIC.name(), NEW.name());
             historyService.deleteAllByType(SUBTASK.name());
+            log.info("All Subtasks were deleted.");
             return null;
         });
     }
@@ -202,11 +223,14 @@ public class TaskServiceImpl implements TaskService {
         validator.validateTaskByType(subtask, SUBTASK);
         return wrapTransaction(() -> {
             checkExists(subtask.getId(), SUBTASK);
-//            checkExists(subtask.getEpic().getId(), EPIC);
             checkEpicExists(subtask.getEpic().getId(), EPIC);
             taskDao.updateSubtask(subtask);
             historyRemoveIfViewed(subtask.isViewed(), subtask.getId());
             updateEpicStatus(subtask.getEpic().getId());
+            log.info("Subtask with ID: {} was changed. Actual name: {}, description: {}.",
+                    subtask.getId(),
+                    subtask.getName(),
+                    subtask.getDescription());
             return subtask;
         });
     }
@@ -256,9 +280,11 @@ public class TaskServiceImpl implements TaskService {
             return result;
         } catch (TaskNotFoundException e) {
             taskDao.rollback();
+            log.error(e.getMessage());
             throw e;
         } catch (Exception e) {
             taskDao.rollback();
+            log.error(e.getMessage());
             throw new DaoException("Database connection failure: ", e);
         }
     }
