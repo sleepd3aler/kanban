@@ -3,10 +3,13 @@ package ru.kanban.dao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kanban.model.*;
 
 public class DbHistoryDao implements HistoryDao, AutoCloseable {
-    private Connection connection;
+    private static final Logger log = LoggerFactory.getLogger(DbHistoryDao.class);
+    private final Connection  connection;
 
     public DbHistoryDao(Connection connection) {
         this.connection = connection;
@@ -82,6 +85,7 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
                 result.add(generateByType(resultSet));
             }
         } catch (SQLException e) {
+            log.error("Database connection failure : {}", e.getMessage());
             throw new RuntimeException(e);
         }
         return result;

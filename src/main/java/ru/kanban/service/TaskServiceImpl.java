@@ -74,14 +74,13 @@ public class TaskServiceImpl implements TaskService {
     public Task updateTask(Task task) {
         validator.validateTaskByType(task, TASK);
         return wrapTransaction(() -> {
-            Task result = checkExists(task.getId(), TASK);
+            checkExists(task.getId(), TASK);
             taskDao.updateTask(task);
             historyRemoveIfViewed(task.isViewed(), task.getId());
             log.info("Task with ID: {} was changed. Actual name: {}, status: {}",
                     task.getId(),
                     task.getName(),
                     task.getStatus());
-
             return task;
         });
     }
@@ -266,6 +265,7 @@ public class TaskServiceImpl implements TaskService {
         var actualSubStatuses = taskDao.getEpicSubtasksStatuses(id);
         Status updatedStatus = this.checkEpicStatus(actualSubStatuses);
         taskDao.updateEpicStatus(id, updatedStatus);
+        log.info("Epic with ID : {}, status updated to : {}", id, updatedStatus);
     }
 
     private void addToHistory(Task task) {
@@ -285,7 +285,7 @@ public class TaskServiceImpl implements TaskService {
             throw e;
         } catch (Exception e) {
             taskDao.rollback();
-            log.error(e.getMessage());
+            log.error("Database connection failure :", e);
             throw new DaoException("Database connection failure: ", e);
         }
     }

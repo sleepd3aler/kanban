@@ -68,8 +68,6 @@ public class Main {
                 System.out.println(task.isViewed());
             }
             taskDao.updateTask(task1);
-            taskService.addTask(null);
-
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -4,13 +4,16 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.kanban.model.*;
 import ru.kanban.utils.DbUtils;
 
 import static ru.kanban.model.TaskType.*;
 
 public class DbTaskDao implements TaskDao, AutoCloseable {
-    private Connection connection;
+    private final Connection connection;
+    private static final Logger log = LoggerFactory.getLogger(DbTaskDao.class);
 
     public DbTaskDao(Connection connection) {
         this.connection = connection;
@@ -26,6 +29,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                 task.setId(resultSet.getInt(1));
             }
         } catch (SQLException e) {
+            log.error("Database connection failure: ", e);
             throw new RuntimeException(e);
         }
         return task;
@@ -104,6 +108,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                 epic.setId(resultSet.getInt(1));
             }
         } catch (SQLException e) {
+            log.error("Database connection failure : ", e);
             throw new RuntimeException(e);
         }
         return epic;
@@ -370,7 +375,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
 
     private <T extends Task> void printMsg(Optional<T> task, int id) {
         if (task.isEmpty()) {
-            System.out.println("Task with id: " + id + " has wrong type");
+            log.debug("Task with id : {}, has wrong type", id);
         }
     }
 
