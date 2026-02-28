@@ -71,6 +71,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                 deleteSmt.setInt(1, id);
                 deleteSmt.setString(2, TASK.name());
                 deleteSmt.executeUpdate();
+            } else {
                 printMsg(deleted, id);
             }
             return deleted;
@@ -149,6 +150,7 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
                 deleteStmt.setInt(1, id);
                 deleteStmt.setString(2, EPIC.name());
                 deleteStmt.executeUpdate();
+            } else {
                 printMsg(deleted, id);
             }
             return deleted;
@@ -305,6 +307,55 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         }
     }
 
+    @Override
+    public boolean existsById(int id, String type) {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "select id from tasks where id = ? and type = ?")) {
+            statement.setInt(1, id);
+            statement.setString(2, type);
+            return statement.executeQuery().next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        connection.close();
+    }
+
+    @Override
+    public void begin() {
+        DbUtils.setAutoCommit(connection, false);
+    }
+
+    @Override
+    public void rollback() {
+        DbUtils.rollback(connection);
+        DbUtils.setAutoCommit(connection, true);
+    }
+
+    @Override
+    public void commit() {
+        DbUtils.commit(connection);
+        DbUtils.setAutoCommit(connection, true);
+    }
+
+    /**
+     * Вспомогательный метод.
+     * Служит для получения Задачи необходимого типа
+     *
+     * @param id   айди искомой Задачи
+     * @param type тип искомой Задачи
+     * @param <T>  дженерик включающий Task и его наследников
+     * @return Optional искомой задачи
+     * @see #getTask(int)
+     * @see #deleteTask(int)
+     * @see #getEpic(int)
+     * @see #deleteEpic(int)
+     * @see #getSubtask(int)
+     * @see #deleteSubtask(int)
+     */
     private <T extends Task> Optional<T> getTaskByIdAndType(int id, String type) {
 
         try (PreparedStatement selectStmt = connection.prepareStatement("""
@@ -365,6 +416,16 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         return Optional.empty();
     }
 
+    /**
+     * Вспомогательный метод.
+     * Служит для удаления всех задач по заданному типу
+     *
+     * @param type строка описывающая тип задачи
+     * @see #deleteAllTasks()
+     * @see #deleteAllEpics()
+     * @see #deleteAllSubtasks()
+     *
+     */
     private void deleteAllByType(String type) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "delete from tasks where type = ?")) {
@@ -373,12 +434,31 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         }
     }
 
+    /**
+     * Метод - для логирования отладочной информации при попытке удаления задачи с
+     * несоответствующим типом
+     *
+     * @param task удаляемая задача
+     * @param id   уникальный идентификатор задачи
+     * @param <T>  Task и все его наследники
+     */
     private <T extends Task> void printMsg(Optional<T> task, int id) {
         if (task.isEmpty()) {
             log.debug("Task with id : {}, has wrong type", id);
         }
     }
 
+    /**
+     * Вспомогательный метод.
+     * Служит для обновления задачи в БД
+     *
+     * @param task обновлённая задача
+     * @param type тип задачи
+     * @return 0 - при неудачном обновлении. 1 - при успешном обновлении
+     * @see #updateTask(Task)
+     * @see #updateEpic(Epic)
+     * @see #updateSubtask(Subtask)
+     */
     private int updateBy(Task task, String type) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
                 "UPDATE tasks set name = ?, description = ?, status = ?, viewed = ? where id = ? and type = ?")) {
@@ -392,6 +472,15 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         }
     }
 
+    /**
+     * Вспомогательный метод для формирования запроса на вставку в БД.
+     * 
+     * @param statement Объект для формирования запроса
+     * @param task      - задача для добавления
+     * @return ResultSet - с ID сгенерированным БД
+     * @see #addTask(Task)
+     * @see #addEpic(Epic)
+     */
     private ResultSet setStatement(PreparedStatement statement, Task task) throws SQLException {
         statement.setString(1, task.getName());
         statement.setString(2, task.getDescription());
@@ -400,39 +489,5 @@ public class DbTaskDao implements TaskDao, AutoCloseable {
         statement.setString(5, task.getType().name());
         statement.execute();
         return statement.getGeneratedKeys();
-    }
-
-    @Override
-    public boolean existsById(int id, String type) {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "select id from tasks where id = ? and type = ?")) {
-            statement.setInt(1, id);
-            statement.setString(2, type);
-            return statement.executeQuery().next();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void close() throws Exception {
-        connection.close();
-    }
-
-    @Override
-    public void begin() {
-        DbUtils.setAutoCommit(connection, false);
-    }
-
-    @Override
-    public void rollback() {
-        DbUtils.rollback(connection);
-        DbUtils.setAutoCommit(connection, true);
-    }
-
-    @Override
-    public void commit() {
-        DbUtils.commit(connection);
-        DbUtils.setAutoCommit(connection, true);
     }
 }

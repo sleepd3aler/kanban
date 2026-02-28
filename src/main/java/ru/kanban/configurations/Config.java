@@ -1,4 +1,4 @@
-package ru.kanban.configutations;
+package ru.kanban.configurations;
 
 import java.io.IOException;
 import java.io.InputStream;

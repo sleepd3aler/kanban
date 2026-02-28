@@ -9,7 +9,7 @@ import ru.kanban.model.*;
 
 public class DbHistoryDao implements HistoryDao, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DbHistoryDao.class);
-    private final Connection  connection;
+    private final Connection connection;
 
     public DbHistoryDao(Connection connection) {
         this.connection = connection;
@@ -32,17 +32,17 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
     public void addToHistory(Task task) {
         try (PreparedStatement updateStmt = connection.prepareStatement(
                 "update history set viewed_at = current_timestamp where task_id = ?");
-             PreparedStatement InsertStmt = connection.prepareStatement(
-                     "INSERT INTO history (task_id, type) values (?, ?);");
-             PreparedStatement deleteStmt = connection.prepareStatement(
-                     """
-                             DELETE FROM history
-                             WHERE task_id
-                             NOT IN
-                                   (SELECT task_id
-                                    FROM history
-                                    ORDER BY viewed_at
-                                    DESC  LIMIT  10)""")) {
+                PreparedStatement InsertStmt = connection.prepareStatement(
+                        "INSERT INTO history (task_id, type) values (?, ?);");
+                PreparedStatement deleteStmt = connection.prepareStatement(
+                        """
+                                DELETE FROM history
+                                WHERE task_id
+                                NOT IN
+                                      (SELECT task_id
+                                       FROM history
+                                       ORDER BY viewed_at
+                                       DESC  LIMIT  10)""")) {
             updateStmt.setInt(1, task.getId());
             if ((updateStmt.executeUpdate() == 0)) {
                 InsertStmt.setInt(1, task.getId());
@@ -91,46 +91,6 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
         return result;
     }
 
-    private Task generateByType(ResultSet resultSet) throws SQLException {
-        TaskType actual = TaskType.valueOf(resultSet.getString("type"));
-        switch (actual) {
-            case TASK -> {
-                Task current = new Task(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")));
-                current.setId(resultSet.getInt("id"));
-                current.setViewed(true);
-                return current;
-            }
-            case EPIC -> {
-                Epic current = new Epic(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")));
-                current.setId(resultSet.getInt("id"));
-                current.setViewed(true);
-                return current;
-            }
-            case SUBTASK -> {
-                Epic epicOfSubtask = new Epic(
-                        resultSet.getString("epic_name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("epic_status")));
-                epicOfSubtask.setId(resultSet.getInt("epic_id"));
-                Subtask current = new Subtask(
-                        resultSet.getString("name"),
-                        resultSet.getString("description"),
-                        Status.valueOf(resultSet.getString("status")),
-                        epicOfSubtask);
-                current.setId(resultSet.getInt("id"));
-                current.setViewed(true);
-                return current;
-            }
-        }
-        return null;
-    }
-
     @Override
     public void addAll(List<? extends Task> tasks) {
         if (tasks.isEmpty()) {
@@ -176,5 +136,56 @@ public class DbHistoryDao implements HistoryDao, AutoCloseable {
     @Override
     public void close() throws Exception {
         connection.close();
+    }
+
+    /**
+     * Вспомогательный метод для -
+     * {@link #getViewedTasks()}
+     * Метод принимает на вход результат запроса из БД и возвращает Task
+     * необходимого типа,
+     * в зависимости от поля type в строке.
+     * 
+     * @param resultSet результат выборки из БД
+     * @return Task c соответствующим типом зависящий от поля type
+     * @throws SQLException
+     */
+    private Task generateByType(ResultSet resultSet) throws SQLException {
+        TaskType actual = TaskType.valueOf(resultSet.getString("type"));
+        switch (actual) {
+            case TASK -> {
+                Task current = new Task(
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        Status.valueOf(resultSet.getString("status")));
+                current.setId(resultSet.getInt("id"));
+                current.setViewed(true);
+                return current;
+            }
+            case EPIC -> {
+                Epic current = new Epic(
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        Status.valueOf(resultSet.getString("status")));
+                current.setId(resultSet.getInt("id"));
+                current.setViewed(true);
+                return current;
+            }
+            case SUBTASK -> {
+                Epic epicOfSubtask = new Epic(
+                        resultSet.getString("epic_name"),
+                        resultSet.getString("epic_description"),
+                        Status.valueOf(resultSet.getString("epic_status")));
+                epicOfSubtask.setId(resultSet.getInt("epic_id"));
+                Subtask current = new Subtask(
+                        resultSet.getString("name"),
+                        resultSet.getString("description"),
+                        Status.valueOf(resultSet.getString("status")),
+                        epicOfSubtask);
+                current.setId(resultSet.getInt("id"));
+                current.setViewed(true);
+                return current;
+            }
+        }
+        return null;
     }
 }

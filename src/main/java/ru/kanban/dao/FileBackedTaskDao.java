@@ -13,7 +13,6 @@ import ru.kanban.model.*;
 
 import static ru.kanban.model.Status.*;
 import static ru.kanban.model.TaskType.*;
-
 import static ru.kanban.utils.Constants.HEADER;
 
 public class FileBackedTaskDao extends InMemoryTaskDao {
@@ -23,141 +22,6 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
     public FileBackedTaskDao(String path) {
         super();
         this.filePath = path;
-    }
-
-    public void save() {
-        try (PrintWriter writer = new PrintWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(filePath), StandardCharsets.UTF_8))
-        ) {
-            writer.println(HEADER);
-            for (Task task : getTasksWithoutAddingToHistory()) {
-                writer.println(toString(task));
-            }
-
-            for (Epic epic : getEpicsWithoutAddingToHistory()) {
-                writer.println(toString(epic));
-            }
-
-            for (Subtask subtask : getSubtasksWithoutAddingToHistory()) {
-                writer.println(toString(subtask));
-            }
-        } catch (IOException e) {
-            log.error("File is missing.");
-            throw new ManagerSaveException("File writing exception");
-        }
-    }
-
-    public void writeToFile(Task task) {
-        try (PrintWriter writer = new PrintWriter(
-                new OutputStreamWriter(
-                        new FileOutputStream(filePath, true), StandardCharsets.UTF_8)
-        )
-        ) {
-            if (Files.size(Path.of(filePath)) == 0) {
-                writer.println(HEADER);
-            }
-            writer.println(toString(task));
-        } catch (IOException e) {
-            log.error("File is missing.");
-            throw new ManagerSaveException("File writing exception");
-        }
-    }
-
-    public String toString(Task task) {
-        TaskType type = task.getType();
-        return String.format("%d,%s,%s,%s,%s,%s",
-                task.getId(), task.getType(), task.getName(), task.getStatus(), task.getDescription(),
-                type.equals(SUBTASK) ? ((Subtask) task).getEpic().getId() : "");
-    }
-
-    public Task fromString(String value) {
-        String[] parts = value.split(",");
-        int id = Integer.parseInt(parts[0]);
-        TaskType type;
-        try {
-            type = TaskType.valueOf(parts[1]);
-        } catch (IllegalArgumentException e) {
-            log.error("Illegal task type, provided: {}", value);
-            throw new IllegalArgumentException("Illegal task type.");
-        }
-        String name = parts[2];
-        Status status = Status.valueOf(parts[3]);
-        String description = parts[4];
-        switch (type) {
-            case TASK:
-                Task task = new Task(name, description, status);
-                task.setId(id);
-                return task;
-            case EPIC:
-                Epic epic = new Epic(name, description, status);
-                epic.setId(id);
-                return epic;
-            case SUBTASK:
-                int epicId = Integer.parseInt(parts[5]);
-                Epic current = super.getEpicById(epicId);
-                Subtask subtask = new Subtask(name, description, status, current);
-                subtask.setId(id);
-                return subtask;
-            default:
-                log.error("Unsupported task type: {}", value);
-                throw new IllegalArgumentException("Unsupported task type.");
-        }
-    }
-
-    public static FileBackedTaskDao loadFromFile(String[] args) throws FileNotFoundException {
-        validateArgs(args);
-        String taskPath = args[0];
-        String historyPath = args[1];
-        FileBackedHistoryDao historyManager = new FileBackedHistoryDao(historyPath);
-        FileBackedTaskDao fileBackedTaskManager = new FileBackedTaskDao(
-                taskPath
-        );
-        try (BufferedReader taskReader = new BufferedReader(
-                new InputStreamReader(
-                        new FileInputStream(taskPath), StandardCharsets.UTF_8
-                ));
-             BufferedReader historyReader = new BufferedReader(new InputStreamReader(
-                     new FileInputStream(historyPath), StandardCharsets.UTF_8
-             ))
-        ) {
-            List<String> tasks = taskReader.lines().toList();
-            List<String> history = historyReader.lines().toList();
-            if (!tasks.get(0).equals(HEADER)) {
-                log.error("File contains incorrect HEADER.");
-                throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
-            }
-            tasks.stream()
-                    .skip(1)
-                    .forEach(string -> {
-                                validateFormat(string);
-                                Task task = fileBackedTaskManager.fromString(string);
-                                if (task.getType().equals(EPIC)) {
-                                    fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
-                                    return;
-                                }
-                                if (task.getType().equals(SUBTASK)) {
-                                    fileBackedTaskManager.addSubtaskWithoutSaving((Subtask) task);
-                                } else {
-                                    fileBackedTaskManager.addTaskWithoutFileSaving(task);
-                                }
-                            }
-                    );
-            history.stream()
-                    .filter(string -> !string.isEmpty())
-                    .forEach(string -> {
-                                validateFormat(string);
-                                Task task = fileBackedTaskManager.fromString(string);
-                                if (task != null) {
-                                    historyManager.addWithoutWrite(task);
-                                }
-                            }
-                    );
-        } catch (IOException e) {
-            log.error("File is missing");
-            throw new ManagerSaveException("File writing exception");
-        }
-        return fileBackedTaskManager;
     }
 
     @Override
@@ -241,6 +105,163 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
         return res;
     }
 
+    /**
+     * Метод используется во всех CRUD операциях и актуализирует состояние хранилища в файле, переданном в
+     * {@link #filePath}
+     * При первой записи в файл - так же создает Заголовок - {@link ru.kanban.utils.Constants#HEADER}
+     */
+    public void save() {
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(filePath), StandardCharsets.UTF_8))
+        ) {
+            writer.println(HEADER);
+            for (Task task : getTasks()) {
+                writer.println(toString(task));
+            }
+
+            for (Epic epic : getEpics()) {
+                writer.println(toString(epic));
+            }
+
+            for (Subtask subtask : getSubtasks()) {
+                writer.println(toString(subtask));
+            }
+        } catch (IOException e) {
+            log.error("File is missing.");
+            throw new ManagerSaveException("File writing exception");
+        }
+    }
+
+    public void writeToFile(Task task) {
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(
+                        new FileOutputStream(filePath, true), StandardCharsets.UTF_8)
+        )
+        ) {
+            if (Files.size(Path.of(filePath)) == 0) {
+                writer.println(HEADER);
+            }
+            writer.println(toString(task));
+        } catch (IOException e) {
+            log.error("File is missing.");
+            throw new ManagerSaveException("File writing exception");
+        }
+    }
+
+    public String toString(Task task) {
+        TaskType type = task.getType();
+        return String.format("%d,%s,%s,%s,%s,%s",
+                task.getId(), type, task.getName(), task.getStatus(), task.getDescription(),
+                type.equals(SUBTASK) ? ((Subtask) task).getEpic().getId() : "");
+    }
+
+    /**
+     * Метод десериализовывает из строки в задачу с соответствующим типом в {@link #loadFromFile(String[])}
+     *
+     * @param value строка в которой описан объект
+     * @return Task / Epic / Subtask
+     */
+    public Task fromString(String value) {
+        String[] parts = value.split(",");
+        int id = Integer.parseInt(parts[0]);
+        TaskType type;
+        try {
+            type = TaskType.valueOf(parts[1]);
+        } catch (IllegalArgumentException e) {
+            log.error("Illegal task type, provided: {}", value);
+            throw new IllegalArgumentException("Illegal task type.");
+        }
+        String name = parts[2];
+        Status status = Status.valueOf(parts[3]);
+        String description = parts[4];
+        switch (type) {
+            case TASK:
+                Task task = new Task(name, description, status);
+                task.setId(id);
+                return task;
+            case EPIC:
+                Epic epic = new Epic(name, description, status);
+                epic.setId(id);
+                return epic;
+            case SUBTASK:
+                int epicId = Integer.parseInt(parts[5]);
+                Epic current = super.getEpic(epicId).get();
+                Subtask subtask = new Subtask(name, description, status, current);
+                subtask.setId(id);
+                return subtask;
+            default:
+                log.error("Unsupported task type: {}", value);
+                throw new IllegalArgumentException("Unsupported task type.");
+        }
+    }
+
+    /**
+     * Метод загружает из файлов задачи в основное хранилище и хранилище истории
+     *
+     * @param args подразумевает пути к файлам в которых хранятся задачи(под [0] индексом) и история (под [1] индексом)
+     * @return Дао со всеми загруженными в память задачами
+     * @throws FileNotFoundException при отсутствии необходимых файлов
+     */
+    public static FileBackedTaskDao loadFromFile(String[] args) throws FileNotFoundException {
+        validateArgs(args);
+        String taskPath = args[0];
+        String historyPath = args[1];
+        FileBackedHistoryDao historyManager = new FileBackedHistoryDao(historyPath);
+        FileBackedTaskDao fileBackedTaskManager = new FileBackedTaskDao(
+                taskPath
+        );
+        try (BufferedReader taskReader = new BufferedReader(
+                new InputStreamReader(
+                        new FileInputStream(taskPath), StandardCharsets.UTF_8
+                ));
+             BufferedReader historyReader = new BufferedReader(new InputStreamReader(
+                     new FileInputStream(historyPath), StandardCharsets.UTF_8
+             ))
+        ) {
+            List<String> tasks = taskReader.lines().toList();
+            List<String> history = historyReader.lines().toList();
+            if (!tasks.get(0).equals(HEADER)) {
+                log.error("File contains incorrect HEADER.");
+                throw new IllegalArgumentException("Must be: id,type,name,status,description,epic id");
+            }
+            tasks.stream()
+                    .skip(1)
+                    .forEach(string -> {
+                                validateFormat(string);
+                                Task task = fileBackedTaskManager.fromString(string);
+                                if (task.getType().equals(EPIC)) {
+                                    fileBackedTaskManager.addEpicWithoutFileSaving((Epic) task);
+                                    return;
+                                }
+                                if (task.getType().equals(SUBTASK)) {
+                                    fileBackedTaskManager.addSubtaskWithoutSaving((Subtask) task);
+                                } else {
+                                    fileBackedTaskManager.addTaskWithoutFileSaving(task);
+                                }
+                            }
+                    );
+            history.stream()
+                    .filter(string -> !string.isEmpty())
+                    .forEach(string -> {
+                                validateFormat(string);
+                                Task task = fileBackedTaskManager.fromString(string);
+                                if (task != null) {
+                                    historyManager.addWithoutWrite(task);
+                                }
+                            }
+                    );
+        } catch (IOException e) {
+            log.error("File is missing");
+            throw new ManagerSaveException("File writing exception");
+        }
+        return fileBackedTaskManager;
+    }
+
+    /**
+     * Вспомогательный метод для валидации переданных параметров в {@link #loadFromFile(String[])}
+     * @param args подразумевает пути к файлам в которых хранятся задачи(под [0] индексом) и история (под [1] индексом)
+     */
     private static void validateArgs(String[] args) throws FileNotFoundException {
         if (args.length < 2) {
             log.error("Not enough arguments, for execute. Enter paths: to TaskManager and History");
@@ -263,6 +284,11 @@ public class FileBackedTaskDao extends InMemoryTaskDao {
         }
     }
 
+    /**
+     * Вспомогательный метод {@link #loadFromFile(String[])} для валидации формата записи (csv),
+     * наличия заголовка, и корректного описания всех полей для дальнейшей десериализации
+     * @param string строка описывающая заголовок или задачу
+     */
     private static void validateFormat(String string) {
         String[] parts = string.split(",");
         if (parts.length < 5 || parts.length > 6) {

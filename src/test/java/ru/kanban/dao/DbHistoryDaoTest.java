@@ -40,6 +40,7 @@ class DbHistoryDaoTest extends HistoryDaoTest {
 
     @BeforeEach
     void addTasks() {
+        wipeTable();
         taskDao.addTask(task1);
         taskDao.addTask(task2);
         taskDao.addTask(task3);
@@ -49,14 +50,13 @@ class DbHistoryDaoTest extends HistoryDaoTest {
         taskDao.addSubtask(subtask2);
     }
 
-    @AfterEach
     void wipeTable() {
         try (PreparedStatement deleteFromHistory = connection.prepareStatement(
                 "delete from history");
-             PreparedStatement deleteFromTasks = connection.prepareStatement(
-                     "delete from tasks")) {
-            deleteFromHistory.execute();
+                PreparedStatement deleteFromTasks = connection.prepareStatement(
+                        "delete from tasks")) {
             deleteFromTasks.execute();
+            deleteFromHistory.execute();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

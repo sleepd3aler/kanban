@@ -35,6 +35,14 @@ public class Epic extends Task {
         updateStatus();
     }
 
+    /**
+     * Метод обновляет статус Эпика в зависимости от статусов подзадач принадлежащих
+     * конкретному Эпику
+     * Прим.: Если все подзадачи со статусом NEW(или у Эпика нет подзадач), то
+     * статус Эпика обновится на NEW,
+     * Если статус у подзадач разный, то статус обновится на IN_Progress.
+     * Если статус подзадач Done - статус Эпика установится в аналогичное значение.
+     */
     public void updateStatus() {
         boolean allNew = true;
         boolean allDone = true;
@@ -70,11 +78,7 @@ public class Epic extends Task {
     @Override
     public String toString() {
         String ln = System.lineSeparator();
-        return "Epic {" + " ID: " + getId() + ", Name: '" + getName() + "', Description: '" + getDescription() + "'" +
-                " Status: '" + getStatus() + "' }" +
-                ln +
-                "Subtasks: " + subtasks.stream().map(Task::getId) +
-                '}';
+        return "Epic {" + " ID: " + getId() + ", Name: '" + getName() + "', Description: '" + getDescription() + "'" + " Status: '" + getStatus() + "' }" + ln + "Subtasks: " + subtasks.stream().map(Task::getId).toList() + '}';
     }
 
 }

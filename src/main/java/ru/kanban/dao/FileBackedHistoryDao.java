@@ -39,6 +39,11 @@ public class FileBackedHistoryDao extends InMemoryHistoryDao {
         return new File(historyFile);
     }
 
+    /**
+     * Вспомогательный метод {@link #addToHistory(Task)} - для сериализации задачи
+     * @param task задача
+     * @return представление задачи в виде строки
+     */
     private String toString(Task task) {
         TaskType type = task.getType();
         return String.format("%d,%s,%s,%s,%s,%s",

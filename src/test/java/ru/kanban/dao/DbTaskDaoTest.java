@@ -35,11 +35,12 @@ class DbTaskDaoTest extends DaoTest {
         connection.close();
     }
 
-    @AfterEach
+    @BeforeEach
     public void wipeTable() throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "DELETE from history; DELETE from tasks")) {
-            statement.execute();
+        try (PreparedStatement deleteHistory = connection.prepareStatement("DELETE from history");
+             PreparedStatement deleteTasks = connection.prepareStatement("DELETE from tasks")) {
+            deleteHistory.execute();
+            deleteTasks.execute();
         }
     }
 

@@ -235,6 +235,11 @@ public class TaskServiceImpl implements TaskService {
         });
     }
 
+    /**
+     * Метод пересчитывает статусы подзадач Эпика и возвращает актуальный статус для конкретного Эпика
+     * @param statuses список статусов подзадач
+     * @return актуальный статус после пересчёта
+     */
     public Status checkEpicStatus(List<Status> statuses) {
         if (statuses.isEmpty()) {
             return NEW;
@@ -261,6 +266,14 @@ public class TaskServiceImpl implements TaskService {
         return IN_PROGRESS;
     }
 
+    /**
+     * Вспомогательный метод для корректного обновления статуса эпика
+     * @param id эпика для обновления статуса
+     * @see #updateEpic(Epic)
+     * @see #addSubtask(Subtask)
+     * @see #deleteSubtask(int)
+     * @see #updateSubtask(Subtask)
+     */
     private void updateEpicStatus(int id) {
         var actualSubStatuses = taskDao.getEpicSubtasksStatuses(id);
         Status updatedStatus = this.checkEpicStatus(actualSubStatuses);
@@ -273,6 +286,12 @@ public class TaskServiceImpl implements TaskService {
         historyService.addToHistory(task);
     }
 
+    /**
+     * Метод гарантирующий атомарность выполнения транзакций в CRUD операциях данного класса
+     * @param supplier операции для выполнения
+     * @return результат операции
+     * @param <T> тип результата операции
+     */
     private <T> T wrapTransaction(Supplier<T> supplier) {
         taskDao.begin();
         try {

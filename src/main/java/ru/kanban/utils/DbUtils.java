@@ -3,7 +3,7 @@ package ru.kanban.utils;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import ru.kanban.configutations.Config;
+import ru.kanban.configurations.Config;
 
 public class DbUtils {
     private DbUtils() {

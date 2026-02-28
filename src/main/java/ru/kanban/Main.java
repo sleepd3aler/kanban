@@ -2,7 +2,7 @@ package ru.kanban;
 
 import java.sql.Connection;
 import java.util.List;
-import ru.kanban.configutations.Config;
+import ru.kanban.configurations.Config;
 import ru.kanban.dao.DbHistoryDao;
 import ru.kanban.dao.DbTaskDao;
 import ru.kanban.model.Epic;

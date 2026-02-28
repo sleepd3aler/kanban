@@ -77,10 +77,6 @@ public class InMemoryTaskDao implements TaskDao {
         return Optional.ofNullable(deleted);
     }
 
-    public Epic getEpicById(int id) {
-        return epics.get(id);
-    }
-
     @Override
     public void deleteAllEpics() {
         this.epics.clear();
@@ -188,18 +184,6 @@ public class InMemoryTaskDao implements TaskDao {
                 .stream()
                 .map(Task::getStatus)
                 .toList();
-    }
-
-    public List<Task> getTasksWithoutAddingToHistory() {
-        return new ArrayList<>(tasks.values());
-    }
-
-    public List<Epic> getEpicsWithoutAddingToHistory() {
-        return new ArrayList<>(epics.values());
-    }
-
-    public List<Subtask> getSubtasksWithoutAddingToHistory() {
-        return new ArrayList<>(subtasks.values());
     }
 
 }

@@ -7,10 +7,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Properties;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import ru.kanban.dao.DbHistoryDao;
 import ru.kanban.dao.DbTaskDao;
 import ru.kanban.dao.TaskDao;
@@ -37,7 +34,7 @@ public class DBTaskServiceTest extends TaskServiceTest {
         }
     }
 
-    @AfterEach
+    @BeforeEach
     void wipeTable() throws SQLException {
         try (PreparedStatement deleteFromTasks = connection.prepareStatement(
                 "delete from tasks"

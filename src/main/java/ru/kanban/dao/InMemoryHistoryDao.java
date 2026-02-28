@@ -28,12 +28,6 @@ public class InMemoryHistoryDao implements HistoryDao {
         historyMap.put(task.getId(), lastViewed);
     }
 
-    private  int removeFirstTask() {
-        Task task = viewedTasks.getHead().item;
-        viewedTasks.removeNode(viewedTasks.getHead());
-        return task.getId();
-    }
-
     @Override
     public void remove(int id) {
         if (historyMap.containsKey(id)) {
@@ -60,5 +54,11 @@ public class InMemoryHistoryDao implements HistoryDao {
         test.stream().filter(value -> value.getType().name().equals(type))
                 .map(Task::getId)
                 .forEach(this::remove);
+    }
+
+    private  int removeFirstTask() {
+        Task task = viewedTasks.getHead().item;
+        viewedTasks.removeNode(viewedTasks.getHead());
+        return task.getId();
     }
 }
