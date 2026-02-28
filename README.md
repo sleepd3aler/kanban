@@ -424,5 +424,6 @@
 ### Схема зависимостей проекта.
 ![Kanban_app_schema.jpg](src/main/resources/Kanban_app_schema.jpg)
 
-
+### Отчет о покрытии тестами.
+![JaCoCo_Report.png](src/main/resources/JaCoCo_Report.png)
 
